@@ -7,29 +7,30 @@ __pycache__/
 venv/
 .venv/
 
-# Environment files
+# Environment variables
 .env
 
 # Jupyter
 .ipynb_checkpoints/
 
-# VS Code
-.vscode/
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
 
-# macOS
-.DS_Store
-
-# Logs
-*.log
-
-# Build artifacts
+# Build files
 build/
 dist/
 *.egg-info/
 
-# Testing
-.pytest_cache/
+# Generated Aegis outputs
+outputs/
 
-# Coverage
-.coverage
-htmlcov/
+# Local datasets and videos
+data/videos/
+data/images/
+
+# Editor and OS files
+.vscode/
+.DS_Store
+*:Zone.Identifier
