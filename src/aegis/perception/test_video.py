@@ -10,22 +10,36 @@ from aegis.sensors.video_file import VideoFileSource
 
 INPUT_VIDEO_PATH = Path("data/videos/test.mp4")
 OUTPUT_DIRECTORY = Path("outputs/videos")
-OUTPUT_VIDEO_PATH = OUTPUT_DIRECTORY / "aegis_detection_output.mp4"
+OUTPUT_VIDEO_PATH = OUTPUT_DIRECTORY / "aegis_tracking_output.mp4"
 
 MODEL_PATH = "yolo11n.pt"
+TRACKER_CONFIG = "bytetrack.yaml"
 CONFIDENCE_THRESHOLD = 0.35
 IMAGE_SIZE = 640
 
 
+def extract_track_ids(result) -> set[int]:
+    """Return the persistent track IDs present in one result."""
+
+    if result.boxes is None or result.boxes.id is None:
+        return set()
+
+    return {
+        int(track_id)
+        for track_id in result.boxes.id.cpu().tolist()
+    }
+
+
 def main() -> int:
-    """Detect common objects in a video and save an annotated copy."""
+    """Track objects through an offline video and save the result."""
 
     print("=" * 60)
-    print("Aegis Offline Object Detection")
+    print("Aegis Offline Object Tracking")
     print("=" * 60)
     print(f"Input:      {INPUT_VIDEO_PATH}")
     print(f"Output:     {OUTPUT_VIDEO_PATH}")
     print(f"Model:      {MODEL_PATH}")
+    print(f"Tracker:    {TRACKER_CONFIG}")
     print(f"Confidence: {CONFIDENCE_THRESHOLD:.2f}")
     print(f"Image size: {IMAGE_SIZE}")
     print()
@@ -39,7 +53,8 @@ def main() -> int:
     video = None
     writer = None
     frame_count = 0
-    detection_count = 0
+    total_frame_detections = 0
+    observed_track_ids: set[int] = set()
     started_at = time.perf_counter()
 
     try:
@@ -55,7 +70,7 @@ def main() -> int:
             )
 
         if source_fps <= 0:
-            print("WARNING: Source FPS is unavailable; using 30 FPS.")
+            print("WARNING: Source FPS unavailable; using 30 FPS.")
             source_fps = 30.0
 
         print(f"Resolution: {width} x {height}")
@@ -66,6 +81,7 @@ def main() -> int:
             model_path=MODEL_PATH,
             confidence_threshold=CONFIDENCE_THRESHOLD,
             image_size=IMAGE_SIZE,
+            tracker_config=TRACKER_CONFIG,
         )
 
         codec = cv2.VideoWriter_fourcc(*"mp4v")
@@ -82,7 +98,7 @@ def main() -> int:
                 f"Could not create output video: {OUTPUT_VIDEO_PATH}"
             )
 
-        print("Processing frames...")
+        print("Tracking objects...")
 
         while True:
             frame = video.get_frame()
@@ -92,12 +108,15 @@ def main() -> int:
 
             frame_count += 1
 
-            result = detector.detect(frame)
+            result = detector.track(frame)
 
-            current_detections = (
+            frame_detection_count = (
                 0 if result.boxes is None else len(result.boxes)
             )
-            detection_count += current_detections
+            total_frame_detections += frame_detection_count
+
+            frame_track_ids = extract_track_ids(result)
+            observed_track_ids.update(frame_track_ids)
 
             annotated_frame = result.plot()
 
@@ -114,11 +133,22 @@ def main() -> int:
 
             cv2.putText(
                 annotated_frame,
-                f"Objects: {current_detections}",
+                f"Active tracks: {len(frame_track_ids)}",
                 (20, 80),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1.0,
                 (0, 255, 255),
+                2,
+                cv2.LINE_AA,
+            )
+
+            cv2.putText(
+                annotated_frame,
+                f"Unique tracks: {len(observed_track_ids)}",
+                (20, 120),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1.0,
+                (255, 200, 0),
                 2,
                 cv2.LINE_AA,
             )
@@ -131,8 +161,9 @@ def main() -> int:
 
                 print(
                     f"Frames: {frame_count} | "
-                    f"Detections: {detection_count} | "
-                    f"Processing speed: {processing_fps:.2f} FPS"
+                    f"Active tracks: {len(frame_track_ids)} | "
+                    f"Unique tracks: {len(observed_track_ids)} | "
+                    f"Speed: {processing_fps:.2f} FPS"
                 )
 
         if frame_count == 0:
@@ -144,12 +175,13 @@ def main() -> int:
         average_fps = frame_count / elapsed
 
         print()
-        print("Processing completed successfully.")
-        print(f"Frames processed:      {frame_count}")
-        print(f"Total detections:      {detection_count}")
-        print(f"Processing time:       {elapsed:.2f} seconds")
-        print(f"Average processing FPS:{average_fps:.2f}")
-        print(f"Output saved to:       {OUTPUT_VIDEO_PATH}")
+        print("Tracking completed successfully.")
+        print(f"Frames processed:       {frame_count}")
+        print(f"Frame detections:       {total_frame_detections}")
+        print(f"Unique tracks observed: {len(observed_track_ids)}")
+        print(f"Processing time:        {elapsed:.2f} seconds")
+        print(f"Average processing FPS: {average_fps:.2f}")
+        print(f"Output saved to:        {OUTPUT_VIDEO_PATH}")
 
         return 0
 
