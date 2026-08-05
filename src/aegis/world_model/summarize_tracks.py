@@ -1,35 +1,35 @@
-from pathlib import Path
 import sys
 
+from aegis.core.pipeline_config import PipelineConfig
 from aegis.world_model.track_summarizer import TrackSummarizer
 
 
-INPUT_PATH = Path(
-    "outputs/data/aegis_track_observations.csv"
-)
-
-OUTPUT_PATH = Path(
-    "outputs/data/aegis_track_summaries.csv"
-)
-
-
-def main() -> int:
-    """Create one summarized world-model record per track."""
+def summarize_tracks(config: PipelineConfig) -> int:
+    """Create one summarized record per configured track."""
 
     print("=" * 60)
     print("Aegis Track Summarizer")
     print("=" * 60)
-    print(f"Input:  {INPUT_PATH}")
-    print(f"Output: {OUTPUT_PATH}")
+    print(f"Input:  {config.observations_path}")
+    print(f"Output: {config.summaries_path}")
     print()
 
     try:
-        summarizer = TrackSummarizer(INPUT_PATH)
-        summary_count = summarizer.write_summaries(OUTPUT_PATH)
+        summarizer = TrackSummarizer(
+            config.observations_path
+        )
 
-        print("Track summarization completed successfully.")
+        summary_count = summarizer.write_summaries(
+            config.summaries_path
+        )
+
+        print(
+            "Track summarization completed successfully."
+        )
         print(f"Tracks summarized: {summary_count}")
-        print(f"Output saved to:   {OUTPUT_PATH}")
+        print(
+            f"Output saved to:   {config.summaries_path}"
+        )
 
         return 0
 
@@ -43,6 +43,19 @@ def main() -> int:
             f"{type(error).__name__}: {error}"
         )
         return 1
+
+
+def main() -> int:
+    """Load configuration and summarize track observations."""
+
+    try:
+        config = PipelineConfig.from_file()
+
+    except (FileNotFoundError, ValueError) as error:
+        print(f"CONFIGURATION ERROR: {error}")
+        return 1
+
+    return summarize_tracks(config)
 
 
 if __name__ == "__main__":

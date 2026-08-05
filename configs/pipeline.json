@@ -1,0 +1,23 @@
+{
+  "input": {
+    "video_path": "data/videos/test.mp4"
+  },
+  "model": {
+    "model_path": "yolo11n.pt",
+    "tracker_config": "bytetrack.yaml",
+    "confidence_threshold": 0.35,
+    "image_size": 640,
+    "device": "cpu"
+  },
+  "output": {
+    "video_path": "outputs/videos/aegis_tracking_output.mp4",
+    "observations_path": "outputs/data/aegis_track_observations.csv",
+    "summaries_path": "outputs/data/aegis_track_summaries.csv",
+    "quality_path": "outputs/data/aegis_track_quality.csv"
+  },
+  "quality": {
+    "minimum_stable_observations": 5,
+    "minimum_stable_duration": 0.2,
+    "minimum_stable_confidence": 0.5
+  }
+}
