@@ -1,40 +1,69 @@
+import argparse
 import sys
 import time
 from collections.abc import Callable
+from pathlib import Path
+
+from aegis.core.pipeline_config import (
+    DEFAULT_CONFIG_PATH,
+    PipelineConfig,
+)
 
 
 PipelineStage = tuple[str, Callable[[], int]]
 
 
-def build_default_stages() -> list[PipelineStage]:
-    """Import and construct the production pipeline stages.
+def parse_arguments(
+    arguments: list[str] | None = None,
+) -> argparse.Namespace:
+    """Parse command-line arguments."""
 
-    Imports are intentionally lazy so unit tests do not load
-    PyTorch and Ultralytics during test discovery.
+    parser = argparse.ArgumentParser(
+        prog="aegis-pipeline",
+        description=(
+            "Run the Aegis offline situational-awareness "
+            "pipeline."
+        ),
+    )
+
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=DEFAULT_CONFIG_PATH,
+        help=(
+            "Path to a pipeline JSON configuration "
+            f"(default: {DEFAULT_CONFIG_PATH})"
+        ),
+    )
+
+    return parser.parse_args(arguments)
+
+
+def build_default_stages(
+    config: PipelineConfig,
+) -> list[PipelineStage]:
+    """Construct production stages using one configuration.
+
+    Imports are lazy so unit tests do not load PyTorch and
+    Ultralytics during test discovery.
     """
 
-    from aegis.perception.process_video import (
-        main as process_video,
-    )
-    from aegis.world_model.evaluate_tracks import (
-        main as evaluate_tracks,
-    )
-    from aegis.world_model.summarize_tracks import (
-        main as summarize_tracks,
-    )
+    from aegis.perception.process_video import process_video
+    from aegis.world_model.evaluate_tracks import evaluate_tracks
+    from aegis.world_model.summarize_tracks import summarize_tracks
 
     return [
         (
             "Video detection and tracking",
-            process_video,
+            lambda: process_video(config),
         ),
         (
             "Per-track world-model summarization",
-            summarize_tracks,
+            lambda: summarize_tracks(config),
         ),
         (
             "Track-quality evaluation",
-            evaluate_tracks,
+            lambda: evaluate_tracks(config),
         ),
     ]
 
@@ -111,31 +140,40 @@ def run_stages(
     print(f"Total processing time: {pipeline_elapsed:.2f} seconds")
     print()
     print("Generated artifacts:")
-    print(
-        "  outputs/videos/"
-        "aegis_tracking_output.mp4"
-    )
-    print(
-        "  outputs/data/"
-        "aegis_track_observations.csv"
-    )
-    print(
-        "  outputs/data/"
-        "aegis_track_summaries.csv"
-    )
-    print(
-        "  outputs/data/"
-        "aegis_track_quality.csv"
-    )
+    print("  Annotated tracking video")
+    print("  Frame-level track observations")
+    print("  Per-track summaries")
+    print("  Track-quality evaluations")
     print("=" * 65)
 
     return 0
 
 
-def main() -> int:
-    """Run the default Aegis offline pipeline."""
+def main(
+    arguments: list[str] | None = None,
+) -> int:
+    """Load a selected configuration and run the pipeline."""
 
-    return run_stages(build_default_stages())
+    parsed_arguments = parse_arguments(arguments)
+
+    try:
+        config = PipelineConfig.from_file(
+            parsed_arguments.config
+        )
+
+    except (FileNotFoundError, ValueError) as error:
+        print(f"CONFIGURATION ERROR: {error}")
+        return 1
+
+    print(
+        f"Using configuration: "
+        f"{parsed_arguments.config}"
+    )
+    print()
+
+    return run_stages(
+        build_default_stages(config)
+    )
 
 
 if __name__ == "__main__":
