@@ -1,4 +1,5 @@
 import csv
+import json
 from collections import Counter
 from pathlib import Path
 from typing import Literal
@@ -10,15 +11,20 @@ TRACK_DATA_PATH = Path(
     "outputs/data/aegis_track_quality.csv"
 )
 
+RUN_MANIFEST_PATH = Path(
+    "outputs/data/aegis_run_manifest.json"
+)
+
 QualityLevel = Literal["stable", "tentative", "weak"]
 
 
 app = FastAPI(
     title="Aegis World Model API",
     description=(
-        "Read-only situational-awareness API for tracked objects."
+        "Read-only situational-awareness API for tracked objects "
+        "and offline pipeline runs."
     ),
-    version="0.1.0",
+    version="0.2.0",
 )
 
 
@@ -82,6 +88,57 @@ def load_tracks() -> list[dict]:
             detail=f"Invalid world-model data: {error}",
         ) from error
 
+    except OSError as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Could not read world-model data: {error}",
+        ) from error
+
+
+def load_run_manifest() -> dict:
+    """Load the latest offline pipeline run manifest."""
+
+    if not RUN_MANIFEST_PATH.is_file():
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Pipeline run manifest is unavailable. "
+                f"Expected: {RUN_MANIFEST_PATH}"
+            ),
+        )
+
+    try:
+        with RUN_MANIFEST_PATH.open(
+            mode="r",
+            encoding="utf-8",
+        ) as input_file:
+            manifest = json.load(input_file)
+
+    except json.JSONDecodeError as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Invalid pipeline run manifest: {error}",
+        ) from error
+
+    except OSError as error:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                f"Could not read pipeline run manifest: {error}"
+            ),
+        ) from error
+
+    if not isinstance(manifest, dict):
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Invalid pipeline run manifest: "
+                "the root value must be an object."
+            ),
+        )
+
+    return manifest
+
 
 @app.get("/")
 def root() -> dict:
@@ -91,21 +148,28 @@ def root() -> dict:
         "service": "Aegis World Model API",
         "version": app.version,
         "documentation": "/docs",
+        "latest_run": "/runs/latest",
     }
 
 
 @app.get("/health")
 def health() -> dict:
-    """Report service and world-model availability."""
+    """Report service and generated-data availability."""
+
+    world_model_available = TRACK_DATA_PATH.is_file()
+    run_manifest_available = RUN_MANIFEST_PATH.is_file()
 
     return {
         "status": (
             "healthy"
-            if TRACK_DATA_PATH.is_file()
+            if world_model_available
+            and run_manifest_available
             else "degraded"
         ),
-        "world_model_available": TRACK_DATA_PATH.is_file(),
-        "data_path": str(TRACK_DATA_PATH),
+        "world_model_available": world_model_available,
+        "world_model_path": str(TRACK_DATA_PATH),
+        "run_manifest_available": run_manifest_available,
+        "run_manifest_path": str(RUN_MANIFEST_PATH),
     }
 
 
@@ -194,3 +258,10 @@ def get_track(track_id: int) -> dict:
         status_code=404,
         detail=f"Track {track_id} was not found.",
     )
+
+
+@app.get("/runs/latest")
+def latest_run() -> dict:
+    """Return the latest offline pipeline run manifest."""
+
+    return load_run_manifest()

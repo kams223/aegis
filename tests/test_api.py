@@ -1,4 +1,5 @@
 import csv
+import json
 
 from fastapi.testclient import TestClient
 
@@ -85,6 +86,49 @@ def create_test_data(tmp_path):
     return data_path
 
 
+def create_test_manifest(tmp_path):
+    manifest_path = tmp_path / "aegis_run_manifest.json"
+
+    manifest = {
+        "schema_version": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "configuration_path": "configs/pipeline.json",
+        "started_at_utc": "2026-08-06T20:10:47+00:00",
+        "finished_at_utc": "2026-08-06T20:13:37+00:00",
+        "duration_seconds": 170.0,
+        "input": {
+            "path": "data/videos/test.mp4",
+            "exists": True,
+            "size_bytes": 3313134,
+            "sha256": "test-sha256",
+        },
+        "model": {
+            "model_path": "yolo11n.pt",
+            "tracker_config": "bytetrack.yaml",
+            "device": "cpu",
+            "confidence_threshold": 0.35,
+            "image_size": 640,
+        },
+        "stages": [
+            {
+                "name": "Video detection and tracking",
+                "status": "completed",
+                "duration_seconds": 127.9,
+                "exit_code": 0,
+            }
+        ],
+    }
+
+    with manifest_path.open(
+        mode="w",
+        encoding="utf-8",
+    ) as output_file:
+        json.dump(manifest, output_file)
+
+    return manifest_path
+
+
 def test_root():
     response = client.get("/")
 
@@ -92,25 +136,70 @@ def test_root():
     assert response.json()["service"] == (
         "Aegis World Model API"
     )
+    assert response.json()["latest_run"] == "/runs/latest"
 
 
-def test_health_with_available_world_model(
+def test_health_with_all_data_available(
     tmp_path,
     monkeypatch,
 ):
     data_path = create_test_data(tmp_path)
-    monkeypatch.setattr(api_module, "TRACK_DATA_PATH", data_path)
+    manifest_path = create_test_manifest(tmp_path)
+
+    monkeypatch.setattr(
+        api_module,
+        "TRACK_DATA_PATH",
+        data_path,
+    )
+    monkeypatch.setattr(
+        api_module,
+        "RUN_MANIFEST_PATH",
+        manifest_path,
+    )
 
     response = client.get("/health")
+    body = response.json()
 
     assert response.status_code == 200
-    assert response.json()["status"] == "healthy"
-    assert response.json()["world_model_available"] is True
+    assert body["status"] == "healthy"
+    assert body["world_model_available"] is True
+    assert body["run_manifest_available"] is True
+
+
+def test_health_is_degraded_without_manifest(
+    tmp_path,
+    monkeypatch,
+):
+    data_path = create_test_data(tmp_path)
+    missing_manifest = tmp_path / "missing.json"
+
+    monkeypatch.setattr(
+        api_module,
+        "TRACK_DATA_PATH",
+        data_path,
+    )
+    monkeypatch.setattr(
+        api_module,
+        "RUN_MANIFEST_PATH",
+        missing_manifest,
+    )
+
+    response = client.get("/health")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["status"] == "degraded"
+    assert body["world_model_available"] is True
+    assert body["run_manifest_available"] is False
 
 
 def test_statistics(tmp_path, monkeypatch):
     data_path = create_test_data(tmp_path)
-    monkeypatch.setattr(api_module, "TRACK_DATA_PATH", data_path)
+    monkeypatch.setattr(
+        api_module,
+        "TRACK_DATA_PATH",
+        data_path,
+    )
 
     response = client.get("/statistics")
     body = response.json()
@@ -126,7 +215,11 @@ def test_list_tracks_filters_quality(
     monkeypatch,
 ):
     data_path = create_test_data(tmp_path)
-    monkeypatch.setattr(api_module, "TRACK_DATA_PATH", data_path)
+    monkeypatch.setattr(
+        api_module,
+        "TRACK_DATA_PATH",
+        data_path,
+    )
 
     response = client.get("/tracks?quality=stable")
     body = response.json()
@@ -138,7 +231,11 @@ def test_list_tracks_filters_quality(
 
 def test_get_existing_track(tmp_path, monkeypatch):
     data_path = create_test_data(tmp_path)
-    monkeypatch.setattr(api_module, "TRACK_DATA_PATH", data_path)
+    monkeypatch.setattr(
+        api_module,
+        "TRACK_DATA_PATH",
+        data_path,
+    )
 
     response = client.get("/tracks/1")
 
@@ -148,8 +245,76 @@ def test_get_existing_track(tmp_path, monkeypatch):
 
 def test_get_missing_track(tmp_path, monkeypatch):
     data_path = create_test_data(tmp_path)
-    monkeypatch.setattr(api_module, "TRACK_DATA_PATH", data_path)
+    monkeypatch.setattr(
+        api_module,
+        "TRACK_DATA_PATH",
+        data_path,
+    )
 
     response = client.get("/tracks/999")
 
     assert response.status_code == 404
+
+
+def test_latest_run_returns_manifest(
+    tmp_path,
+    monkeypatch,
+):
+    manifest_path = create_test_manifest(tmp_path)
+
+    monkeypatch.setattr(
+        api_module,
+        "RUN_MANIFEST_PATH",
+        manifest_path,
+    )
+
+    response = client.get("/runs/latest")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["status"] == "completed"
+    assert body["exit_code"] == 0
+    assert body["schema_version"] == 1
+    assert body["model"]["model_path"] == "yolo11n.pt"
+
+
+def test_latest_run_is_unavailable(
+    tmp_path,
+    monkeypatch,
+):
+    missing_manifest = tmp_path / "missing.json"
+
+    monkeypatch.setattr(
+        api_module,
+        "RUN_MANIFEST_PATH",
+        missing_manifest,
+    )
+
+    response = client.get("/runs/latest")
+
+    assert response.status_code == 503
+    assert "unavailable" in response.json()["detail"]
+
+
+def test_latest_run_rejects_invalid_json(
+    tmp_path,
+    monkeypatch,
+):
+    manifest_path = tmp_path / "invalid.json"
+    manifest_path.write_text(
+        "{this is not valid JSON",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        api_module,
+        "RUN_MANIFEST_PATH",
+        manifest_path,
+    )
+
+    response = client.get("/runs/latest")
+
+    assert response.status_code == 500
+    assert "Invalid pipeline run manifest" in (
+        response.json()["detail"]
+    )
