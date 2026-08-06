@@ -8,6 +8,7 @@ from aegis.core.pipeline_config import (
     DEFAULT_CONFIG_PATH,
     PipelineConfig,
 )
+from aegis.pipeline.run_manifest import RunManifest
 
 
 PipelineStage = tuple[str, Callable[[], int]]
@@ -42,11 +43,7 @@ def parse_arguments(
 def build_default_stages(
     config: PipelineConfig,
 ) -> list[PipelineStage]:
-    """Construct production stages using one configuration.
-
-    Imports are lazy so unit tests do not load PyTorch and
-    Ultralytics during test discovery.
-    """
+    """Construct production stages using one configuration."""
 
     from aegis.perception.process_video import process_video
     from aegis.world_model.evaluate_tracks import evaluate_tracks
@@ -68,10 +65,37 @@ def build_default_stages(
     ]
 
 
+def record_failed_stage(
+    manifest: RunManifest | None,
+    stage_name: str,
+    duration_seconds: float,
+    exit_code: int,
+    status: str = "failed",
+) -> None:
+    """Record a failed or interrupted stage if enabled."""
+
+    if manifest is None:
+        return
+
+    manifest.record_stage(
+        name=stage_name,
+        status=status,
+        duration_seconds=duration_seconds,
+        exit_code=exit_code,
+    )
+
+    manifest.finish(
+        status=status,
+        exit_code=exit_code,
+        monotonic_time=time.perf_counter(),
+    )
+
+
 def run_stages(
     stages: list[PipelineStage],
+    manifest: RunManifest | None = None,
 ) -> int:
-    """Run pipeline stages sequentially and stop on failure."""
+    """Run stages sequentially and stop on failure."""
 
     pipeline_started_at = time.perf_counter()
 
@@ -98,6 +122,18 @@ def run_stages(
             result = stage_function()
 
         except KeyboardInterrupt:
+            stage_elapsed = (
+                time.perf_counter() - stage_started_at
+            )
+
+            record_failed_stage(
+                manifest=manifest,
+                stage_name=stage_name,
+                duration_seconds=stage_elapsed,
+                exit_code=130,
+                status="interrupted",
+            )
+
             print()
             print(
                 f"Pipeline interrupted during: {stage_name}"
@@ -105,6 +141,17 @@ def run_stages(
             return 130
 
         except Exception as error:
+            stage_elapsed = (
+                time.perf_counter() - stage_started_at
+            )
+
+            record_failed_stage(
+                manifest=manifest,
+                stage_name=stage_name,
+                duration_seconds=stage_elapsed,
+                exit_code=1,
+            )
+
             print()
             print(
                 f"UNEXPECTED PIPELINE ERROR during "
@@ -118,12 +165,27 @@ def run_stages(
         )
 
         if result != 0:
+            record_failed_stage(
+                manifest=manifest,
+                stage_name=stage_name,
+                duration_seconds=stage_elapsed,
+                exit_code=result,
+            )
+
             print()
             print(
                 f"Pipeline stopped because '{stage_name}' "
                 f"returned exit code {result}."
             )
             return result
+
+        if manifest is not None:
+            manifest.record_stage(
+                name=stage_name,
+                status="completed",
+                duration_seconds=stage_elapsed,
+                exit_code=0,
+            )
 
         print()
         print(
@@ -135,6 +197,13 @@ def run_stages(
         time.perf_counter() - pipeline_started_at
     )
 
+    if manifest is not None:
+        manifest.finish(
+            status="completed",
+            exit_code=0,
+            monotonic_time=time.perf_counter(),
+        )
+
     print("=" * 65)
     print("Aegis pipeline completed successfully.")
     print(f"Total processing time: {pipeline_elapsed:.2f} seconds")
@@ -144,6 +213,10 @@ def run_stages(
     print("  Frame-level track observations")
     print("  Per-track summaries")
     print("  Track-quality evaluations")
+
+    if manifest is not None:
+        print(f"  Run manifest: {manifest.output_path}")
+
     print("=" * 65)
 
     return 0
@@ -152,7 +225,7 @@ def run_stages(
 def main(
     arguments: list[str] | None = None,
 ) -> int:
-    """Load a selected configuration and run the pipeline."""
+    """Load configuration and execute a recorded run."""
 
     parsed_arguments = parse_arguments(arguments)
 
@@ -171,8 +244,23 @@ def main(
     )
     print()
 
+    manifest = RunManifest(
+        config=config,
+        config_path=parsed_arguments.config,
+    )
+
+    try:
+        manifest.start(
+            monotonic_time=time.perf_counter()
+        )
+
+    except OSError as error:
+        print(f"MANIFEST ERROR: {error}")
+        return 1
+
     return run_stages(
-        build_default_stages(config)
+        stages=build_default_stages(config),
+        manifest=manifest,
     )
 
 

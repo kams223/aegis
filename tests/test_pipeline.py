@@ -7,6 +7,45 @@ from aegis.pipeline.run_pipeline import (
 )
 
 
+class FakeManifest:
+    """Minimal test replacement for RunManifest."""
+
+    def __init__(self):
+        self.output_path = Path(
+            "outputs/data/test_run_manifest.json"
+        )
+        self.recorded_stages = []
+        self.finished = []
+
+    def record_stage(
+        self,
+        name,
+        status,
+        duration_seconds,
+        exit_code,
+    ):
+        self.recorded_stages.append(
+            {
+                "name": name,
+                "status": status,
+                "duration_seconds": duration_seconds,
+                "exit_code": exit_code,
+            }
+        )
+
+    def finish(
+        self,
+        status,
+        exit_code,
+        monotonic_time,
+    ):
+        self.finished = {
+            "status": status,
+            "exit_code": exit_code,
+            "monotonic_time": monotonic_time,
+        }
+
+
 def test_pipeline_runs_all_successful_stages():
     executed_stages = []
 
@@ -60,6 +99,31 @@ def test_pipeline_stops_after_failed_stage():
         "successful",
         "failed",
     ]
+
+
+def test_pipeline_records_successful_manifest():
+    manifest = FakeManifest()
+
+    result = run_stages(
+        stages=[
+            ("First stage", lambda: 0),
+            ("Second stage", lambda: 0),
+        ],
+        manifest=manifest,
+    )
+
+    assert result == 0
+    assert len(manifest.recorded_stages) == 2
+
+    assert manifest.recorded_stages[0]["status"] == (
+        "completed"
+    )
+    assert manifest.recorded_stages[1]["status"] == (
+        "completed"
+    )
+
+    assert manifest.finished["status"] == "completed"
+    assert manifest.finished["exit_code"] == 0
 
 
 def test_parse_arguments_accepts_custom_config():
