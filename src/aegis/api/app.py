@@ -7,6 +7,10 @@ from typing import Literal
 from fastapi import FastAPI, HTTPException, Query
 
 from aegis.pipeline.run_manifest import validate_run_id
+from aegis.storage.run_history_store import (
+    RunHistoryError,
+    RunHistoryStore,
+)
 
 
 TRACK_DATA_PATH = Path(
@@ -17,9 +21,16 @@ RUN_MANIFEST_PATH = Path(
     "outputs/data/aegis_run_manifest.json"
 )
 
-RUN_HISTORY_PATH = Path(
+DEFAULT_RUN_HISTORY_PATH = Path(
     "outputs/data/runs"
 )
+
+DEFAULT_DATABASE_PATH = Path(
+    "outputs/data/aegis_world_model.sqlite3"
+)
+
+RUN_HISTORY_PATH = DEFAULT_RUN_HISTORY_PATH
+DATABASE_PATH = DEFAULT_DATABASE_PATH
 
 QualityLevel = Literal["stable", "tentative", "weak"]
 
@@ -30,8 +41,28 @@ app = FastAPI(
         "Read-only situational-awareness API for tracked objects "
         "and offline pipeline runs."
     ),
-    version="0.4.0",
+    version="0.5.0",
 )
+
+
+def build_run_history_store() -> RunHistoryStore:
+    """Create the configured run-history data source."""
+
+    database_path = DATABASE_PATH
+
+    if (
+        RUN_HISTORY_PATH != DEFAULT_RUN_HISTORY_PATH
+        and DATABASE_PATH == DEFAULT_DATABASE_PATH
+    ):
+        database_path = (
+            RUN_HISTORY_PATH
+            / "aegis_world_model.sqlite3"
+        )
+
+    return RunHistoryStore(
+        database_path=database_path,
+        history_directory=RUN_HISTORY_PATH,
+    )
 
 
 def convert_track(row: dict[str, str]) -> dict:
@@ -266,24 +297,52 @@ def summarize_manifest(manifest: dict) -> dict:
     return summary
 
 
-def load_run_history() -> list[dict]:
-    """Load archived manifests from newest to oldest."""
+def load_run_history(
+    limit: int | None = None,
+) -> list[dict]:
+    """Load full run manifests from active storage."""
 
-    if not RUN_HISTORY_PATH.is_dir():
-        return []
-
-    manifest_paths = sorted(
-        RUN_HISTORY_PATH.glob("*.json"),
-        reverse=True,
-    )
-
-    return [
-        load_manifest_file(
-            path=manifest_path,
-            missing_status_code=404,
+    try:
+        return build_run_history_store().list_manifests(
+            limit=limit
         )
-        for manifest_path in manifest_paths
-    ]
+
+    except (RunHistoryError, ValueError) as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Could not load run history: {error}",
+        ) from error
+
+
+def load_archived_run(run_id: str) -> dict:
+    """Load one run from the active history store."""
+
+    try:
+        manifest = build_run_history_store().get_manifest(
+            run_id
+        )
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        ) from error
+
+    except RunHistoryError as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Could not load pipeline run: {error}",
+        ) from error
+
+    if manifest is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Pipeline run {run_id} was not found."
+            ),
+        )
+
+    return manifest
 
 
 @app.get("/")
@@ -305,7 +364,21 @@ def health() -> dict:
 
     world_model_available = TRACK_DATA_PATH.is_file()
     run_manifest_available = RUN_MANIFEST_PATH.is_file()
-    run_history_available = RUN_HISTORY_PATH.is_dir()
+
+    run_store = build_run_history_store()
+
+    database_available = (
+        run_store.database_path.is_file()
+    )
+
+    json_history_available = (
+        RUN_HISTORY_PATH.is_dir()
+    )
+
+    run_history_available = (
+        database_available
+        or json_history_available
+    )
 
     return {
         "status": (
@@ -320,6 +393,11 @@ def health() -> dict:
         "run_manifest_path": str(RUN_MANIFEST_PATH),
         "run_history_available": run_history_available,
         "run_history_path": str(RUN_HISTORY_PATH),
+        "database_available": database_available,
+        "database_path": str(
+            run_store.database_path
+        ),
+        "run_history_source": run_store.source_name,
     }
 
 
@@ -418,17 +496,29 @@ def list_runs(
         le=500,
     ),
 ) -> dict:
-    """Return compact archived-run records."""
+    """Return compact records from active run storage."""
 
-    manifests = load_run_history()
-    selected_manifests = manifests[:limit]
+    run_store = build_run_history_store()
+
+    try:
+        total_runs = run_store.count_runs()
+        manifests = run_store.list_manifests(
+            limit=limit
+        )
+
+    except (RunHistoryError, ValueError) as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Could not load run history: {error}",
+        ) from error
 
     return {
-        "total_runs": len(manifests),
-        "returned": len(selected_manifests),
+        "total_runs": total_runs,
+        "returned": len(manifests),
+        "storage_source": run_store.source_name,
         "runs": [
             summarize_manifest(manifest)
-            for manifest in selected_manifests
+            for manifest in manifests
         ],
     }
 
@@ -442,22 +532,25 @@ def latest_run() -> dict:
 
 @app.get("/runs/{run_id}")
 def get_run(run_id: str) -> dict:
-    """Return one archived pipeline run manifest."""
+    """Return one pipeline run from active storage."""
+
+    validated_run_id = validate_run_id_for_api(
+        run_id
+    )
+
+    return load_archived_run(
+        validated_run_id
+    )
+
+
+def validate_run_id_for_api(run_id: str) -> str:
+    """Convert run-ID validation failures to HTTP 400."""
 
     try:
-        validated_run_id = validate_run_id(run_id)
+        return validate_run_id(run_id)
 
     except ValueError as error:
         raise HTTPException(
             status_code=400,
             detail=str(error),
         ) from error
-
-    manifest_path = (
-        RUN_HISTORY_PATH / f"{validated_run_id}.json"
-    )
-
-    return load_manifest_file(
-        path=manifest_path,
-        missing_status_code=404,
-    )
