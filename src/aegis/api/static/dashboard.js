@@ -215,6 +215,43 @@ function ensurePerformancePanel() {
     return panel;
 }
 
+function ensureHistoryPerformanceHeaders() {
+    const historyTable = historyTableBody.closest("table");
+
+    if (!historyTable) {
+        return;
+    }
+
+    const headerRow = historyTable.querySelector(
+        "thead tr"
+    );
+
+    if (
+        !headerRow ||
+        headerRow.querySelector(
+            "[data-performance-column]"
+        )
+    ) {
+        return;
+    }
+
+    const headers = [
+        "Processing FPS",
+        "Frames",
+        "Detections",
+        "Processing time",
+    ];
+
+    for (const label of headers) {
+        const header = document.createElement("th");
+
+        header.dataset.performanceColumn = "true";
+        header.textContent = label;
+
+        headerRow.appendChild(header);
+    }
+}
+
 function renderPerformance(manifest) {
     ensurePerformancePanel();
 
@@ -392,11 +429,13 @@ function renderStages(stages) {
 
         row.appendChild(createCell(stage.name));
         row.appendChild(createStatusCell(stage.status));
+
         row.appendChild(
             createCell(
                 formatDuration(stage.duration_seconds)
             )
         );
+
         row.appendChild(createCell(stage.exit_code));
 
         stageTableBody.appendChild(row);
@@ -444,7 +483,9 @@ function renderRun(manifest, isLatest) {
         input.path || "Unavailable"
     );
 
-    const runStatus = document.getElementById("run-status");
+    const runStatus = document.getElementById(
+        "run-status"
+    );
 
     runStatus.className =
         `run-value run-status ${manifest.status || ""}`;
@@ -462,6 +503,7 @@ function renderRun(manifest, isLatest) {
 }
 
 function renderRunHistory(runs) {
+    ensureHistoryPerformanceHeaders();
     historyTableBody.replaceChildren();
 
     if (runs.length === 0) {
@@ -515,6 +557,50 @@ function renderRunHistory(runs) {
 
         row.appendChild(
             createCell(run.stage_count)
+        );
+
+        const metricsAvailable =
+            run.processing_metrics_available === true;
+
+        row.appendChild(
+            createCell(
+                metricsAvailable
+                    ? `${formatNumber(
+                        run.average_processing_fps,
+                        2
+                    )} FPS`
+                    : "Unavailable"
+            )
+        );
+
+        row.appendChild(
+            createCell(
+                metricsAvailable
+                    ? formatNumber(
+                        run.frames_processed
+                    )
+                    : "Unavailable"
+            )
+        );
+
+        row.appendChild(
+            createCell(
+                metricsAvailable
+                    ? formatNumber(
+                        run.frame_detections
+                    )
+                    : "Unavailable"
+            )
+        );
+
+        row.appendChild(
+            createCell(
+                metricsAvailable
+                    ? formatDuration(
+                        run.processing_duration_seconds
+                    )
+                    : "Unavailable"
+            )
         );
 
         historyTableBody.appendChild(row);
