@@ -2,26 +2,45 @@
 
 [![Aegis Tests](https://github.com/kams223/aegis/actions/workflows/tests.yml/badge.svg)](https://github.com/kams223/aegis/actions/workflows/tests.yml)
 
-Aegis is a software-first, multi-sensor situational-awareness platform for detecting, tracking, analyzing, and visualizing objects in recorded sensor data.
+Aegis is a software-first situational-awareness research platform for detecting, tracking, analyzing, auditing, and visualizing objects in recorded video.
 
-The current prototype processes recorded video with a pretrained object detector, assigns persistent tracking IDs, builds a structured world model, evaluates track stability, and exposes the results through an API and browser dashboard.
+The current offline MVP processes a video with a pretrained object detector, assigns persistent tracking IDs, builds a structured world model, evaluates track stability, records reproducibility and performance metadata, exposes read-only API endpoints, and provides browser dashboards for inspection and run comparison.
 
-## Current Scope
+## Responsible Scope
 
-Aegis currently focuses on benign perception and decision support:
+Aegis currently supports benign perception, research, monitoring, robotics education, and human-supervised decision support.
 
-- Recorded-video ingestion
-- Pretrained object detection
-- Persistent multi-object tracking
+It does not implement:
+
+- Autonomous engagement
+- Weapon control
+- Target selection
+- Physical countermeasures
+- Consequential autonomous decisions
+
+Detection and tracking outputs are uncertain model predictions. They must not be treated as verified facts.
+
+## Current Features
+
+- Recorded MP4 ingestion
+- Pretrained YOLO object detection
+- ByteTrack persistent multi-object tracking
+- Annotated output video
 - Frame-level observation logging
-- Per-track history summarization
-- Track-stability evaluation
-- Read-only REST API
-- Browser-based dashboard
-- Automated unit and API tests
-- Continuous integration with GitHub Actions
-
-Aegis does not implement autonomous engagement, targeting, or physical countermeasures.
+- Per-track temporal summaries
+- Stable, tentative, and weak quality classifications
+- Validated JSON pipeline configuration
+- Unified command-line pipeline
+- Atomic processing-metrics reports
+- Auditable latest-run manifest
+- Persistent archived run history
+- SHA-256 input-video fingerprints
+- Run-to-run performance comparison
+- Read-only FastAPI service
+- Interactive situational-awareness dashboard
+- Dedicated run-comparison dashboard
+- Automated unit, API, pipeline, and dashboard tests
+- GitHub Actions continuous integration
 
 ## Architecture
 
@@ -46,24 +65,35 @@ Per-Track Summaries
       v
 Track Quality Evaluation
       |
-      +-------------------+
-      |                   |
-      v                   v
-FastAPI              Annotated Video
-      |
-      v
-Situational-Awareness Dashboard
+      +-------------------------+
+      |                         |
+      v                         v
+Annotated Video          Processing Metrics
+                                |
+                                v
+                         Auditable Run Manifest
+                                |
+                                v
+                         Archived Run History
+                                |
+                 +--------------+--------------+
+                 |                             |
+                 v                             v
+             FastAPI                     Dashboards
+                 |
+                 v
+       Run Performance Comparison
 ```
 
 ## Track Quality Levels
 
-Aegis assigns one of three temporal stability levels:
+Aegis assigns one temporal quality level to every summarized track:
 
 - `stable`: persistent track with sufficient average confidence
-- `tentative`: useful observation requiring more supporting evidence
-- `weak`: short-lived or low-confidence observation
+- `tentative`: potentially useful track requiring more evidence
+- `weak`: short-lived or low-confidence track
 
-Track stability does not prove that the predicted class label is correct.
+Track stability measures temporal persistence. It does not prove that the predicted object label is correct.
 
 ## Technology Stack
 
@@ -87,21 +117,19 @@ aegis/
 ├── configs/
 │   └── pipeline.json
 ├── data/
-│   ├── images/
 │   └── videos/
 ├── outputs/
 │   ├── data/
+│   │   └── runs/
 │   └── videos/
 ├── src/
 │   └── aegis/
 │       ├── api/
+│       │   └── static/
 │       ├── core/
-│       ├── fusion/
 │       ├── perception/
 │       ├── pipeline/
 │       ├── sensors/
-│       ├── tracking/
-│       ├── visualization/
 │       └── world_model/
 ├── tests/
 ├── pytest.ini
@@ -109,11 +137,11 @@ aegis/
 └── requirements-dev.txt
 ```
 
-Local videos, generated outputs, and downloaded model weights are excluded from Git.
+Input videos, generated artifacts, downloaded model weights, cache directories, and local runtime data are excluded from Git.
 
 ## Development Environment
 
-The project is currently developed using:
+The current development environment is:
 
 ```text
 Windows 11
@@ -121,15 +149,21 @@ Windows 11
     └── Ubuntu 24.04
 ```
 
-The project directory is:
+Project directory:
 
 ```text
 /home/ali/Projects/aegis
 ```
 
+Virtual environment:
+
+```text
+/home/ali/venvs/aegis
+```
+
 ## Installation
 
-Enter Ubuntu through WSL:
+Enter WSL:
 
 ```powershell
 wsl
@@ -138,137 +172,380 @@ wsl
 Open the project:
 
 ```bash
-cd ~/Projects/aegis
+cd /home/ali/Projects/aegis
 ```
 
-Create a virtual environment if one does not exist:
+Create the virtual environment if necessary:
 
 ```bash
-python3 -m venv ~/venvs/aegis
+python3 -m venv /home/ali/venvs/aegis
 ```
 
 Activate it:
 
 ```bash
-source ~/venvs/aegis/bin/activate
+source /home/ali/venvs/aegis/bin/activate
 ```
 
-Install application dependencies:
+Upgrade pip and install application dependencies:
 
 ```bash
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-Install test dependencies:
+Install development and test dependencies:
 
 ```bash
 python -m pip install -r requirements-dev.txt
 ```
 
-Configure the Python source path:
+Configure the source path:
 
 ```bash
-export PYTHONPATH="$(pwd)/src"
+export PYTHONPATH="/home/ali/Projects/aegis/src"
+```
+
+Confirm the environment:
+
+```bash
+python -c "import cv2, torch, ultralytics; print('OpenCV:', cv2.__version__); print('PyTorch:', torch.__version__); print('Ultralytics:', ultralytics.__version__); print('CUDA:', torch.cuda.is_available())"
 ```
 
 ## Input Video
 
-Place an input video at:
+Place the input video at:
 
 ```text
 data/videos/test.mp4
 ```
 
-The input location can be changed in:
+The configured input path can be changed in:
 
 ```text
 configs/pipeline.json
 ```
 
-Input videos are intentionally excluded from Git.
+Input videos are not stored in Git.
 
 ## Pipeline Configuration
 
-The complete offline workflow is configured through:
+The offline workflow is configured through:
 
 ```text
 configs/pipeline.json
 ```
 
-Configurable values include:
+The configuration includes:
 
-- Input video path
-- Object-detection model
+- Input-video path
+- Detection model
 - Tracker configuration
 - Confidence threshold
 - Inference image size
 - Inference device
-- Output paths
-- Track-stability thresholds
+- Annotated-video output
+- Observation output
+- Summary output
+- Quality output
+- Processing-metrics output
+- Stable-track thresholds
 
-Example:
+Current example:
 
 ```json
 {
+  "input": {
+    "video_path": "data/videos/test.mp4"
+  },
   "model": {
     "model_path": "yolo11n.pt",
     "tracker_config": "bytetrack.yaml",
     "confidence_threshold": 0.35,
     "image_size": 640,
     "device": "cpu"
+  },
+  "output": {
+    "video_path": "outputs/videos/aegis_tracking_output.mp4",
+    "observations_path": "outputs/data/aegis_track_observations.csv",
+    "summaries_path": "outputs/data/aegis_track_summaries.csv",
+    "quality_path": "outputs/data/aegis_track_quality.csv",
+    "processing_metrics_path": "outputs/data/aegis_processing_metrics.json"
+  },
+  "quality": {
+    "minimum_stable_observations": 5,
+    "minimum_stable_duration": 0.2,
+    "minimum_stable_confidence": 0.5
   }
 }
 ```
+
+All configured output paths must be unique.
 
 ## Run the Complete Pipeline
 
 Activate the environment:
 
 ```bash
-cd ~/Projects/aegis
-source ~/venvs/aegis/bin/activate
-export PYTHONPATH="$(pwd)/src"
+cd /home/ali/Projects/aegis
+
+source /home/ali/venvs/aegis/bin/activate
+
+export PYTHONPATH="/home/ali/Projects/aegis/src"
 ```
 
-Run all processing stages:
+Run the configured pipeline:
 
 ```bash
-python -m aegis.pipeline.run_pipeline
+python -m aegis.pipeline.run_pipeline \
+  --config configs/pipeline.json
 ```
 
-The command executes:
+Display command-line help:
 
-1. Video detection and tracking
+```bash
+python -m aegis.pipeline.run_pipeline --help
+```
+
+The pipeline executes three stages:
+
+1. Video detection, tracking, annotation, and observation logging
 2. Per-track world-model summarization
 3. Track-quality evaluation
 
+The pipeline stops if any stage fails.
+
 ## Generated Artifacts
 
-The pipeline generates:
+A successful run creates:
 
 ```text
 outputs/videos/aegis_tracking_output.mp4
 outputs/data/aegis_track_observations.csv
 outputs/data/aegis_track_summaries.csv
 outputs/data/aegis_track_quality.csv
+outputs/data/aegis_processing_metrics.json
+outputs/data/aegis_run_manifest.json
+outputs/data/runs/<run-id>.json
 ```
 
-### Observations
+### Annotated video
 
-`aegis_track_observations.csv` contains one row per confirmed track per video frame.
+`aegis_tracking_output.mp4` contains bounding boxes, labels, persistent IDs, frame numbers, active-track counts, and unique-track counts.
 
-### Summaries
+### Frame-level observations
 
-`aegis_track_summaries.csv` contains one summarized record per track.
+`aegis_track_observations.csv` contains one row per confirmed tracked object per frame.
 
-### Quality
+Recorded fields include:
 
-`aegis_track_quality.csv` contains track-stability classifications used by the API and dashboard.
+- Frame number
+- Timestamp
+- Track ID
+- Predicted label
+- Confidence
+- Bounding-box coordinates
+- Center position
+- Width and height
 
-## Run the API and Dashboard
+### Per-track summaries
 
-Start the composed server:
+`aegis_track_summaries.csv` contains one record per persistent track, including duration, observation count, average confidence, start and end position, and image-space displacement.
+
+### Track-quality results
+
+`aegis_track_quality.csv` contains stable, tentative, or weak classifications and human-readable quality reasons.
+
+### Processing metrics
+
+`aegis_processing_metrics.json` records:
+
+- Processing status
+- Video dimensions
+- Source FPS
+- Frames processed
+- Frame detections
+- Tracked observations
+- Unique tracks
+- Processing duration
+- Average processing FPS
+- Failure information when applicable
+
+### Run manifest
+
+`aegis_run_manifest.json` represents the latest run.
+
+It records:
+
+- Unique run ID
+- Schema version
+- Start and finish timestamps
+- Configuration path
+- Input metadata
+- Input SHA-256 fingerprint
+- Model and tracker settings
+- Output paths
+- Stage results
+- Quality thresholds
+- Performance metrics
+- Quality counts
+- Exit status
+
+### Archived run history
+
+Every run is also preserved under:
+
+```text
+outputs/data/runs/
+```
+
+Archived manifests allow historical inspection and performance comparison without overwriting prior run records.
+
+## Run the API and Dashboards
+
+Activate the environment and start the composed server:
+
+```bash
+cd /home/ali/Projects/aegis
+
+source /home/ali/venvs/aegis/bin/activate
+
+export PYTHONPATH="/home/ali/Projects/aegis/src"
+
+python -m uvicorn aegis.api.server:app \
+  --host 127.0.0.1 \
+  --port 8000
+```
+
+Keep the terminal open while using the API.
+
+Open these addresses:
+
+- Main dashboard: <http://localhost:8000/dashboard/>
+- Run comparison: <http://localhost:8000/dashboard/compare.html>
+- API documentation: <http://localhost:8000/docs>
+- Health: <http://localhost:8000/health>
+- Statistics: <http://localhost:8000/statistics>
+- Tracks: <http://localhost:8000/tracks>
+- Run history: <http://localhost:8000/runs>
+- Latest run: <http://localhost:8000/runs/latest>
+
+Stop the server with:
+
+```text
+Ctrl+C
+```
+
+The server binds to `127.0.0.1`, so it is intended for local development access.
+
+## API Endpoints
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/` | Service information |
+| GET | `/health` | Data and manifest availability |
+| GET | `/statistics` | Aggregate world-model statistics |
+| GET | `/tracks` | Filtered track list |
+| GET | `/tracks/{track_id}` | One track by persistent ID |
+| GET | `/runs` | Compact archived-run history |
+| GET | `/runs/latest` | Complete latest-run manifest |
+| GET | `/runs/{run_id}` | Complete archived manifest |
+| GET | `/run-comparisons` | Compare two archived runs |
+| GET | `/dashboard/` | Main situational-awareness dashboard |
+| GET | `/dashboard/compare.html` | Run-comparison dashboard |
+| GET | `/docs` | Interactive OpenAPI documentation |
+
+Example stable-track query:
+
+```text
+http://localhost:8000/tracks?quality=stable&minimum_confidence=0.5
+```
+
+Example comparison request:
+
+```bash
+curl -sS \
+  --get \
+  --data-urlencode "baseline=<baseline-run-id>" \
+  --data-urlencode "candidate=<candidate-run-id>" \
+  "http://127.0.0.1:8000/run-comparisons" \
+  | python -m json.tool
+```
+
+Run identifiers are validated before archived files are accessed.
+
+## Performance Comparison
+
+The comparison engine evaluates:
+
+- Average processing FPS
+- Video-processing duration
+- Complete pipeline duration
+- Initialization overhead
+- Frames processed
+- Frame detections
+- Tracked observations
+- Unique tracks
+
+For each metric, it reports:
+
+- Baseline value
+- Candidate value
+- Absolute change
+- Percentage change
+- `improved`, `regressed`, `unchanged`, `changed`, or `unavailable`
+
+Higher FPS is considered better. Lower duration and overhead are considered better. Detection and tracking counts are reported as changed or unchanged without assuming that a higher count is necessarily better.
+
+At least two schema-version 3 runs with processing metrics are required for a complete comparison.
+
+## Run Tests
+
+Activate the environment:
+
+```bash
+cd /home/ali/Projects/aegis
+
+source /home/ali/venvs/aegis/bin/activate
+
+export PYTHONPATH="/home/ali/Projects/aegis/src"
+```
+
+Run the complete suite:
+
+```bash
+python -m pytest -v
+```
+
+Run selected test areas:
+
+```bash
+python -m pytest tests/test_pipeline.py -v
+python -m pytest tests/test_api.py -v
+python -m pytest tests/test_dashboard.py -v
+python -m pytest tests/test_run_manifest.py -v
+python -m pytest tests/test_run_comparison.py -v
+python -m pytest tests/test_run_comparison_api.py -v
+python -m pytest tests/test_comparison_dashboard.py -v
+```
+
+GitHub Actions executes the lightweight test suite on pushes to `main` and on pull requests.
+
+Full model inference is excluded from CI because it requires model weights, larger dependencies, input video, and substantially more processing time.
+
+## Troubleshooting
+
+### `ModuleNotFoundError: No module named 'aegis'`
+
+Set the Python source path:
+
+```bash
+export PYTHONPATH="/home/ali/Projects/aegis/src"
+```
+
+### API or dashboard does not load
+
+Confirm the composed server is running:
 
 ```bash
 python -m uvicorn aegis.api.server:app \
@@ -276,88 +553,129 @@ python -m uvicorn aegis.api.server:app \
   --port 8000
 ```
 
-Open:
+Use `aegis.api.server:app`, not `aegis.api.app:app`, when the dashboard and comparison routes are required.
 
-- Dashboard: http://localhost:8000/dashboard/
-- API documentation: http://localhost:8000/docs
-- Health: http://localhost:8000/health
-- Statistics: http://localhost:8000/statistics
-- Tracks: http://localhost:8000/tracks
+### `curl: Failed to connect`
 
-Stop the server with:
+The server is not running, was stopped with `Ctrl+C`, or is listening on another port.
 
-```text
-Ctrl + C
-```
+### Dashboard displays stale JavaScript
 
-## API Endpoints
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/` | Service information |
-| GET | `/health` | API and world-model availability |
-| GET | `/statistics` | Aggregate track statistics |
-| GET | `/tracks` | Filtered list of tracks |
-| GET | `/tracks/{track_id}` | One track by ID |
-| GET | `/dashboard/` | Situational-awareness dashboard |
-
-Example filtered query:
+Perform a hard refresh in the browser:
 
 ```text
-http://localhost:8000/tracks?quality=stable&minimum_confidence=0.5
+Ctrl+Shift+R
 ```
 
-## Run Tests
+### CUDA is unavailable
 
-Run the complete test suite:
+Check:
 
 ```bash
-export PYTHONPATH="$(pwd)/src"
-python -m pytest -v
+python -c "import torch; print(torch.cuda.is_available())"
 ```
 
-GitHub Actions runs the same lightweight test suite automatically on pushes to `main` and on pull requests.
+The pipeline can run with:
 
-Model inference is intentionally excluded from CI because it requires large dependencies, model downloads, and substantially more processing time.
+```json
+"device": "cpu"
+```
+
+CPU inference is expected to be slower than the source video frame rate.
+
+### GitHub rejects authentication
+
+Use the GitHub username when prompted:
+
+```text
+kams223
+```
+
+Use a valid personal access token as the password. GitHub does not accept an account password for Git operations over HTTPS.
+
+### GitHub rejects workflow updates
+
+The personal access token must include permission to update GitHub Actions workflow files.
+
+### Comparison metrics are unavailable
+
+Generate at least two new pipeline runs using the current manifest schema. Older archived manifests remain readable but may not contain processing metrics.
 
 ## Current Limitations
 
-The current prototype has several important limitations:
-
-- It uses a general-purpose pretrained model.
+- The detector uses a general-purpose pretrained model.
 - Predicted labels may be incorrect.
 - Confidence does not guarantee semantic accuracy.
-- Persistent false detections can appear as stable tracks.
-- Movement is measured in image pixels, not real-world distance.
-- The camera has not been geometrically calibrated.
-- Processing currently runs offline.
+- Persistent false detections can become stable tracks.
+- Tracking IDs can fragment or change after occlusion.
+- Movement is measured in image pixels.
+- The camera is not geometrically calibrated.
+- Processing is offline rather than real time.
 - CPU inference is slower than the source video frame rate.
-- The current world model is CSV-based rather than database-backed.
-- Radar, thermal, RF, acoustic, and Wi-Fi CSI inputs are not yet integrated.
+- Initialization time varies with system state.
+- The world model is CSV-based rather than database-backed.
+- Archived run data has no retention policy.
+- The development API has no authentication.
+- Radar, thermal, RF, acoustic, and Wi-Fi CSI inputs are not integrated.
+- No cross-sensor fusion is implemented in the current MVP.
 
-## Responsible Use
+## Safety and Interpretation
 
-Aegis is intended for research, monitoring, infrastructure awareness, robotics education, and human-supervised decision support.
+Aegis outputs should be interpreted as model-generated sensor observations.
 
-Detection and tracking outputs should be treated as uncertain sensor observations. They must not be treated as verified facts or used as the sole basis for consequential autonomous actions.
+Human operators should consider:
 
-## Roadmap
+- Model uncertainty
+- False positives
+- Missed detections
+- Track fragmentation
+- Class-label instability
+- Camera perspective
+- Environmental conditions
+- Dataset bias
+- System-load effects on performance
 
-Planned software milestones include:
+Track stability, confidence, and repeated observations do not independently establish identity, intent, threat, or ground truth.
 
-- Command-line configuration selection
-- Pipeline run manifests and reproducibility metadata
+## MVP Release Criteria
+
+The offline MVP is ready for release when:
+
+- The complete test suite passes.
+- GitHub Actions passes on `main`.
+- A configured video pipeline completes successfully.
+- All generated artifacts are valid.
+- The latest manifest is schema version 3.
+- Archived manifests are preserved.
+- Health, statistics, tracks, and run endpoints respond.
+- Real run comparison succeeds.
+- Both dashboards load correctly.
+- The repository is clean and synchronized.
+- The release commit is tagged `v0.1.0`.
+
+## Future Roadmap
+
+Potential post-MVP work includes:
+
 - Specialized aerial-object datasets
-- Model evaluation and confusion analysis
+- Detection accuracy evaluation
+- Confusion matrices and labeled validation data
 - Camera calibration
-- Trajectory estimation
+- Real-world trajectory estimation
 - Database-backed world model
-- Historical replay
+- Run-retention policies
+- Live-camera ingestion
+- GPU optimization
+- Historical video replay
 - Additional simulated sensor adapters
 - Multi-sensor fusion research
 - ROS 2 integration
+- Authentication and authorization
 - Deployment packaging
+- Observability and structured logging
 
 ## Status
 
-Aegis is an early-stage research prototype. The current version demonstrates a complete offline perception vertical slice from recorded video to a tested API and dashboard.
+Aegis is an early-stage research prototype.
+
+The current version demonstrates a complete offline vertical slice from recorded video through detection, persistent tracking, world-model generation, quality evaluation, auditable run history, performance comparison, tested APIs, and browser dashboards.
