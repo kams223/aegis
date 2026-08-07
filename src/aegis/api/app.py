@@ -1,5 +1,6 @@
 import csv
 import json
+import sqlite3
 from collections import Counter
 from pathlib import Path
 from typing import Literal
@@ -11,9 +12,10 @@ from aegis.storage.run_history_store import (
     RunHistoryError,
     RunHistoryStore,
 )
+from aegis.storage.track_repository import TrackRepository
 
 
-TRACK_DATA_PATH = Path(
+DEFAULT_TRACK_DATA_PATH = Path(
     "outputs/data/aegis_track_quality.csv"
 )
 
@@ -29,6 +31,7 @@ DEFAULT_DATABASE_PATH = Path(
     "outputs/data/aegis_world_model.sqlite3"
 )
 
+TRACK_DATA_PATH = DEFAULT_TRACK_DATA_PATH
 RUN_HISTORY_PATH = DEFAULT_RUN_HISTORY_PATH
 DATABASE_PATH = DEFAULT_DATABASE_PATH
 
@@ -41,7 +44,7 @@ app = FastAPI(
         "Read-only situational-awareness API for tracked objects "
         "and offline pipeline runs."
     ),
-    version="0.5.0",
+    version="0.6.0",
 )
 
 
@@ -62,6 +65,15 @@ def build_run_history_store() -> RunHistoryStore:
     return RunHistoryStore(
         database_path=database_path,
         history_directory=RUN_HISTORY_PATH,
+    )
+
+
+def database_tracks_enabled() -> bool:
+    """Return whether SQLite track lookup is configured."""
+
+    return (
+        TRACK_DATA_PATH == DEFAULT_TRACK_DATA_PATH
+        or DATABASE_PATH != DEFAULT_DATABASE_PATH
     )
 
 
@@ -98,7 +110,7 @@ def convert_track(row: dict[str, str]) -> dict:
     }
 
 
-def load_tracks() -> list[dict]:
+def load_csv_tracks() -> list[dict]:
     """Load all evaluated tracks from the world-model CSV."""
 
     if not TRACK_DATA_PATH.is_file():
@@ -130,6 +142,86 @@ def load_tracks() -> list[dict]:
             status_code=500,
             detail=f"Could not read world-model data: {error}",
         ) from error
+
+
+def find_database_track_run(
+    repository: TrackRepository,
+) -> str | None:
+    """Find the newest run containing persisted tracks."""
+
+    try:
+        manifests = build_run_history_store().list_manifests()
+
+        for manifest in manifests:
+            run_id = manifest.get("run_id")
+
+            if not isinstance(run_id, str):
+                continue
+
+            if repository.count_tracks(run_id) > 0:
+                return run_id
+
+    except (
+        RunHistoryError,
+        ValueError,
+        sqlite3.Error,
+    ):
+        return None
+
+    return None
+
+
+def load_database_track_snapshot(
+) -> tuple[list[dict], str] | None:
+    """Load the newest available SQLite track snapshot."""
+
+    if not database_tracks_enabled():
+        return None
+
+    database_path = build_run_history_store().database_path
+
+    if not database_path.is_file():
+        return None
+
+    repository = TrackRepository(database_path)
+
+    try:
+        run_id = find_database_track_run(repository)
+
+        if run_id is None:
+            return None
+
+        track_count = repository.count_tracks(run_id)
+
+        tracks = repository.list_tracks(
+            run_id=run_id,
+            limit=max(track_count, 1),
+        )
+
+    except (ValueError, sqlite3.Error):
+        return None
+
+    return tracks, run_id
+
+
+def load_track_snapshot(
+) -> tuple[list[dict], str, str | None]:
+    """Load tracks from SQLite or the CSV fallback."""
+
+    database_snapshot = load_database_track_snapshot()
+
+    if database_snapshot is not None:
+        tracks, run_id = database_snapshot
+        return tracks, "sqlite", run_id
+
+    return load_csv_tracks(), "csv", None
+
+
+def load_tracks() -> list[dict]:
+    """Load tracks from the active world-model source."""
+
+    tracks, _, _ = load_track_snapshot()
+    return tracks
 
 
 def load_manifest_file(
@@ -362,14 +454,26 @@ def root() -> dict:
 def health() -> dict:
     """Report service and generated-data availability."""
 
-    world_model_available = TRACK_DATA_PATH.is_file()
-    run_manifest_available = RUN_MANIFEST_PATH.is_file()
-
     run_store = build_run_history_store()
 
     database_available = (
         run_store.database_path.is_file()
     )
+
+    database_snapshot = load_database_track_snapshot()
+
+    database_tracks_available = (
+        database_snapshot is not None
+    )
+
+    csv_tracks_available = TRACK_DATA_PATH.is_file()
+
+    world_model_available = (
+        database_tracks_available
+        or csv_tracks_available
+    )
+
+    run_manifest_available = RUN_MANIFEST_PATH.is_file()
 
     json_history_available = (
         RUN_HISTORY_PATH.is_dir()
@@ -378,6 +482,12 @@ def health() -> dict:
     run_history_available = (
         database_available
         or json_history_available
+    )
+
+    track_run_id = (
+        database_snapshot[1]
+        if database_snapshot is not None
+        else None
     )
 
     return {
@@ -389,6 +499,12 @@ def health() -> dict:
         ),
         "world_model_available": world_model_available,
         "world_model_path": str(TRACK_DATA_PATH),
+        "track_storage_source": (
+            "sqlite"
+            if database_tracks_available
+            else "csv"
+        ),
+        "track_run_id": track_run_id,
         "run_manifest_available": run_manifest_available,
         "run_manifest_path": str(RUN_MANIFEST_PATH),
         "run_history_available": run_history_available,
@@ -405,17 +521,22 @@ def health() -> dict:
 def statistics() -> dict:
     """Return aggregate world-model statistics."""
 
-    tracks = load_tracks()
+    tracks, storage_source, run_id = (
+        load_track_snapshot()
+    )
 
     quality_counts = Counter(
         track["quality_level"] for track in tracks
     )
+
     label_counts = Counter(
         track["dominant_label"] for track in tracks
     )
 
     return {
         "total_tracks": len(tracks),
+        "storage_source": storage_source,
+        "run_id": run_id,
         "quality_counts": {
             "stable": quality_counts.get("stable", 0),
             "tentative": quality_counts.get("tentative", 0),
@@ -446,7 +567,9 @@ def list_tracks(
 ) -> dict:
     """Return tracks with optional quality and confidence filters."""
 
-    tracks = load_tracks()
+    tracks, storage_source, run_id = (
+        load_track_snapshot()
+    )
 
     filtered_tracks = [
         track
@@ -468,6 +591,8 @@ def list_tracks(
     return {
         "total_matching": len(filtered_tracks),
         "returned": min(len(filtered_tracks), limit),
+        "storage_source": storage_source,
+        "run_id": run_id,
         "tracks": filtered_tracks[:limit],
     }
 
@@ -476,7 +601,7 @@ def list_tracks(
 def get_track(track_id: int) -> dict:
     """Return one track by its persistent tracking ID."""
 
-    tracks = load_tracks()
+    tracks, _, _ = load_track_snapshot()
 
     for track in tracks:
         if track["track_id"] == track_id:
@@ -502,6 +627,7 @@ def list_runs(
 
     try:
         total_runs = run_store.count_runs()
+
         manifests = run_store.list_manifests(
             limit=limit
         )
