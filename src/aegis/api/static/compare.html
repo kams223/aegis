@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Aegis Run Comparison</title>
+
+    <style>
+        :root {
+            color-scheme: dark;
+            font-family:
+                Inter,
+                ui-sans-serif,
+                system-ui,
+                sans-serif;
+            background: #071018;
+            color: #e7f0f7;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(
+                    circle at top right,
+                    #12344b 0,
+                    transparent 34rem
+                ),
+                #071018;
+        }
+
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 2rem;
+            border-bottom: 1px solid #203342;
+            background: rgba(7, 16, 24, 0.92);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.35rem;
+            letter-spacing: 0.04em;
+        }
+
+        .subtitle {
+            margin-top: 0.3rem;
+            color: #91a9b9;
+            font-size: 0.88rem;
+        }
+
+        a {
+            color: #77cef5;
+        }
+
+        .back-link {
+            padding: 0.55rem 0.8rem;
+            border: 1px solid #315266;
+            border-radius: 0.5rem;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            background: #102b3b;
+        }
+
+        main {
+            width: min(1400px, 100%);
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .panel {
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            border: 1px solid #203746;
+            border-radius: 0.8rem;
+            background: rgba(12, 28, 39, 0.92);
+            box-shadow:
+                0 18px 60px rgba(0, 0, 0, 0.18);
+        }
+
+        .panel-header {
+            padding: 1rem;
+            border-bottom: 1px solid #203746;
+        }
+
+        .panel-header h2 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns:
+                repeat(2, minmax(240px, 1fr))
+                auto;
+            gap: 1rem;
+            padding: 1rem;
+            align-items: end;
+        }
+
+        label {
+            display: block;
+            color: #8da5b5;
+            font-size: 0.78rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        select,
+        button {
+            width: 100%;
+            margin-top: 0.45rem;
+            padding: 0.7rem;
+            border: 1px solid #315064;
+            border-radius: 0.45rem;
+            background: #091722;
+            color: #e7f0f7;
+        }
+
+        button {
+            min-width: 8rem;
+            cursor: pointer;
+            border-color: #2389bd;
+            background: #12608a;
+        }
+
+        button:hover {
+            background: #1777a8;
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        .message {
+            padding: 1rem;
+            color: #9eb2bf;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .summary-card {
+            padding: 1rem;
+            border: 1px solid #1e3949;
+            border-radius: 0.65rem;
+            background: #091923;
+        }
+
+        .summary-label {
+            color: #8da5b5;
+            font-size: 0.75rem;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+        }
+
+        .summary-value {
+            margin-top: 0.45rem;
+            font-size: 1.7rem;
+            font-weight: 700;
+        }
+
+        .improved {
+            color: #42df88;
+        }
+
+        .regressed {
+            color: #ef7181;
+        }
+
+        .unchanged {
+            color: #f6c453;
+        }
+
+        .unavailable {
+            color: #8da5b5;
+        }
+
+        .run-identifiers {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+            padding: 0 1rem 1rem;
+        }
+
+        .run-identifier {
+            min-width: 0;
+            padding: 0.85rem;
+            overflow-wrap: anywhere;
+            border: 1px solid #1e3949;
+            border-radius: 0.65rem;
+            background: #07141d;
+            font-family:
+                ui-monospace,
+                SFMono-Regular,
+                Consolas,
+                monospace;
+            font-size: 0.8rem;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.86rem;
+        }
+
+        th,
+        td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid #1b3140;
+            white-space: nowrap;
+        }
+
+        th {
+            color: #8ea7b7;
+            font-size: 0.72rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        tbody tr:hover {
+            background: #102b3b;
+        }
+
+        .badge {
+            display: inline-block;
+            min-width: 6.5rem;
+            padding: 0.25rem 0.55rem;
+            text-align: center;
+            border-radius: 999px;
+            background: #142d3b;
+        }
+
+        footer {
+            padding: 1rem 1.5rem 2rem;
+            text-align: center;
+            color: #698493;
+            font-size: 0.78rem;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 760px) {
+            header {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 1rem;
+            }
+
+            main {
+                padding: 1rem;
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<header>
+    <div>
+        <h1>AEGIS RUN COMPARISON</h1>
+
+        <div class="subtitle">
+            Compare archived offline-pipeline performance
+        </div>
+    </div>
+
+    <a
+        class="back-link"
+        href="/dashboard/"
+    >
+        Back to dashboard
+    </a>
+</header>
+
+<main>
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Select archived runs</h2>
+        </div>
+
+        <div class="controls">
+            <label>
+                Baseline run
+
+                <select
+                    id="baseline-select"
+                    aria-label="Baseline run"
+                >
+                    <option value="">
+                        Loading runs…
+                    </option>
+                </select>
+            </label>
+
+            <label>
+                Candidate run
+
+                <select
+                    id="candidate-select"
+                    aria-label="Candidate run"
+                >
+                    <option value="">
+                        Loading runs…
+                    </option>
+                </select>
+            </label>
+
+            <button
+                id="compare-button"
+                type="button"
+                disabled
+            >
+                Compare
+            </button>
+        </div>
+
+        <div id="selection-message" class="message">
+            Loading archived runs…
+        </div>
+    </section>
+
+    <section
+        id="comparison-panel"
+        class="panel"
+        hidden
+    >
+        <div class="panel-header">
+            <h2>Comparison result</h2>
+        </div>
+
+        <div class="summary">
+            <article class="summary-card">
+                <div class="summary-label">
+                    Metrics available
+                </div>
+
+                <div
+                    id="available-count"
+                    class="summary-value"
+                >
+                    —
+                </div>
+            </article>
+
+            <article class="summary-card">
+                <div class="summary-label">
+                    Improved
+                </div>
+
+                <div
+                    id="improved-count"
+                    class="summary-value improved"
+                >
+                    —
+                </div>
+            </article>
+
+            <article class="summary-card">
+                <div class="summary-label">
+                    Regressed
+                </div>
+
+                <div
+                    id="regressed-count"
+                    class="summary-value regressed"
+                >
+                    —
+                </div>
+            </article>
+
+            <article class="summary-card">
+                <div class="summary-label">
+                    Unchanged
+                </div>
+
+                <div
+                    id="unchanged-count"
+                    class="summary-value unchanged"
+                >
+                    —
+                </div>
+            </article>
+        </div>
+
+        <div class="run-identifiers">
+            <div
+                id="baseline-run-id"
+                class="run-identifier"
+            >
+                Baseline: —
+            </div>
+
+            <div
+                id="candidate-run-id"
+                class="run-identifier"
+            >
+                Candidate: —
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Baseline</th>
+                    <th>Candidate</th>
+                    <th>Absolute change</th>
+                    <th>Percentage change</th>
+                    <th>Assessment</th>
+                </tr>
+                </thead>
+
+                <tbody id="comparison-table-body">
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer>
+    Performance comparisons are observational.
+    System load and initialization state can affect results.
+</footer>
+
+<script>
+"use strict";
+
+const baselineSelect = document.getElementById(
+    "baseline-select"
+);
+const candidateSelect = document.getElementById(
+    "candidate-select"
+);
+const compareButton = document.getElementById(
+    "compare-button"
+);
+const selectionMessage = document.getElementById(
+    "selection-message"
+);
+const comparisonPanel = document.getElementById(
+    "comparison-panel"
+);
+const comparisonTableBody = document.getElementById(
+    "comparison-table-body"
+);
+
+function setText(id, value) {
+    document.getElementById(id).textContent =
+        String(value);
+}
+
+function formatRunOption(run) {
+    const timestamp = new Date(run.finished_at_utc);
+
+    const finished = Number.isNaN(timestamp.getTime())
+        ? "unknown time"
+        : timestamp.toLocaleString();
+
+    const fps = Number(run.average_processing_fps);
+
+    const fpsText = Number.isFinite(fps)
+        ? `${fps.toFixed(2)} FPS`
+        : "metrics unavailable";
+
+    return `${finished} | ${fpsText} | ${run.run_id}`;
+}
+
+function formatMetricValue(value, unit) {
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+        return "Unavailable";
+    }
+
+    if (unit === "seconds") {
+        return `${number.toFixed(3)} s`;
+    }
+
+    if (unit === "fps") {
+        return `${number.toFixed(3)} FPS`;
+    }
+
+    return `${number} ${unit}`;
+}
+
+function formatAbsoluteChange(metric) {
+    const change = Number(metric.absolute_change);
+
+    if (!Number.isFinite(change)) {
+        return "Unavailable";
+    }
+
+    const prefix = change > 0 ? "+" : "";
+
+    if (metric.unit === "seconds") {
+        return `${prefix}${change.toFixed(3)} s`;
+    }
+
+    if (metric.unit === "fps") {
+        return `${prefix}${change.toFixed(3)} FPS`;
+    }
+
+    return `${prefix}${change} ${metric.unit}`;
+}
+
+function formatPercentageChange(value) {
+    const percentage = Number(value);
+
+    if (!Number.isFinite(percentage)) {
+        return "Unavailable";
+    }
+
+    const prefix = percentage > 0 ? "+" : "";
+
+    return `${prefix}${percentage.toFixed(3)}%`;
+}
+
+function createCell(value) {
+    const cell = document.createElement("td");
+    cell.textContent = String(value);
+    return cell;
+}
+
+function createAssessmentCell(assessment) {
+    const cell = document.createElement("td");
+    const badge = document.createElement("span");
+
+    badge.className =
+        `badge ${assessment || "unavailable"}`;
+
+    badge.textContent =
+        assessment || "unavailable";
+
+    cell.appendChild(badge);
+
+    return cell;
+}
+
+async function requestJson(path) {
+    const response = await fetch(path, {
+        headers: {
+            Accept: "application/json",
+        },
+        cache: "no-store",
+    });
+
+    if (!response.ok) {
+        let detail = `HTTP ${response.status}`;
+
+        try {
+            const body = await response.json();
+            detail = body.detail || detail;
+        } catch {
+            detail = `HTTP ${response.status}`;
+        }
+
+        throw new Error(detail);
+    }
+
+    return response.json();
+}
+
+function populateRunSelectors(runs) {
+    baselineSelect.replaceChildren();
+    candidateSelect.replaceChildren();
+
+    const comparableRuns = runs.filter(
+        (run) =>
+            run.processing_metrics_available === true
+    );
+
+    for (const run of comparableRuns) {
+        const baselineOption =
+            document.createElement("option");
+
+        baselineOption.value = run.run_id;
+        baselineOption.textContent =
+            formatRunOption(run);
+
+        baselineSelect.appendChild(
+            baselineOption
+        );
+
+        const candidateOption =
+            baselineOption.cloneNode(true);
+
+        candidateSelect.appendChild(
+            candidateOption
+        );
+    }
+
+    if (comparableRuns.length < 2) {
+        compareButton.disabled = true;
+        selectionMessage.textContent =
+            "At least two measured runs are required.";
+        return;
+    }
+
+    baselineSelect.selectedIndex = 1;
+    candidateSelect.selectedIndex = 0;
+
+    compareButton.disabled = false;
+    selectionMessage.textContent =
+        `${comparableRuns.length} measured runs available.`;
+}
+
+function renderComparison(comparison) {
+    comparisonTableBody.replaceChildren();
+
+    setText(
+        "available-count",
+        `${comparison.available_metric_count}/` +
+        `${comparison.total_metric_count}`
+    );
+
+    setText(
+        "improved-count",
+        comparison.improved_metric_count
+    );
+
+    setText(
+        "regressed-count",
+        comparison.regressed_metric_count
+    );
+
+    setText(
+        "unchanged-count",
+        comparison.unchanged_metric_count
+    );
+
+    setText(
+        "baseline-run-id",
+        `Baseline: ${comparison.baseline_run_id}`
+    );
+
+    setText(
+        "candidate-run-id",
+        `Candidate: ${comparison.candidate_run_id}`
+    );
+
+    for (
+        const metric of Object.values(
+            comparison.metrics
+        )
+    ) {
+        const row = document.createElement("tr");
+
+        row.appendChild(createCell(metric.label));
+
+        row.appendChild(
+            createCell(
+                formatMetricValue(
+                    metric.baseline,
+                    metric.unit
+                )
+            )
+        );
+
+        row.appendChild(
+            createCell(
+                formatMetricValue(
+                    metric.candidate,
+                    metric.unit
+                )
+            )
+        );
+
+        row.appendChild(
+            createCell(
+                formatAbsoluteChange(metric)
+            )
+        );
+
+        row.appendChild(
+            createCell(
+                formatPercentageChange(
+                    metric.percentage_change
+                )
+            )
+        );
+
+        row.appendChild(
+            createAssessmentCell(
+                metric.assessment
+            )
+        );
+
+        comparisonTableBody.appendChild(row);
+    }
+
+    comparisonPanel.hidden = false;
+}
+
+async function loadRuns() {
+    selectionMessage.textContent =
+        "Loading archived runs…";
+
+    try {
+        const data = await requestJson(
+            "/runs?limit=500"
+        );
+
+        populateRunSelectors(data.runs);
+    } catch (error) {
+        console.error(
+            "Run history could not be loaded:",
+            error
+        );
+
+        compareButton.disabled = true;
+        selectionMessage.textContent =
+            `Could not load runs: ${error.message}`;
+    }
+}
+
+async function compareSelectedRuns() {
+    const baseline = baselineSelect.value;
+    const candidate = candidateSelect.value;
+
+    if (!baseline || !candidate) {
+        selectionMessage.textContent =
+            "Select both a baseline and candidate run.";
+        return;
+    }
+
+    if (baseline === candidate) {
+        selectionMessage.textContent =
+            "Baseline and candidate must be different.";
+        return;
+    }
+
+    compareButton.disabled = true;
+    compareButton.textContent = "Comparing…";
+    selectionMessage.textContent =
+        "Calculating performance comparison…";
+
+    const parameters = new URLSearchParams({
+        baseline,
+        candidate,
+    });
+
+    try {
+        const comparison = await requestJson(
+            `/run-comparisons?${parameters.toString()}`
+        );
+
+        renderComparison(comparison);
+
+        selectionMessage.textContent =
+            "Comparison completed successfully.";
+    } catch (error) {
+        console.error(
+            "Run comparison failed:",
+            error
+        );
+
+        comparisonPanel.hidden = true;
+        selectionMessage.textContent =
+            `Comparison failed: ${error.message}`;
+    } finally {
+        compareButton.disabled = false;
+        compareButton.textContent = "Compare";
+    }
+}
+
+compareButton.addEventListener(
+    "click",
+    compareSelectedRuns
+);
+
+window.addEventListener(
+    "DOMContentLoaded",
+    loadRuns
+);
+</script>
+</body>
+</html>
