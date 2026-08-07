@@ -215,7 +215,14 @@ def run_stages(
     print("  Track-quality evaluations")
 
     if manifest is not None:
-        print(f"  Run manifest: {manifest.output_path}")
+        print(
+            f"  Latest run manifest: "
+            f"{manifest.output_path}"
+        )
+        print(
+            f"  Archived run manifest: "
+            f"{manifest.archive_path}"
+        )
 
     print("=" * 65)
 
@@ -254,7 +261,7 @@ def main(
             monotonic_time=time.perf_counter()
         )
 
-    except OSError as error:
+    except (OSError, ValueError) as error:
         print(f"MANIFEST ERROR: {error}")
         return 1
 

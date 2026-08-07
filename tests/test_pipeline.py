@@ -14,6 +14,9 @@ class FakeManifest:
         self.output_path = Path(
             "outputs/data/test_run_manifest.json"
         )
+        self.archive_path = Path(
+            "outputs/data/runs/test-run.json"
+        )
         self.recorded_stages = []
         self.finished = []
 
