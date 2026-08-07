@@ -109,7 +109,8 @@
             padding: 1rem;
         }
 
-        .card-label {
+        .card-label,
+        .run-label {
             color: #8da5b5;
             font-size: 0.78rem;
             letter-spacing: 0.08em;
@@ -122,7 +123,8 @@
             font-weight: 700;
         }
 
-        .stable {
+        .stable,
+        .completed {
             color: #42df88;
         }
 
@@ -130,11 +132,14 @@
             color: #f6c453;
         }
 
-        .weak {
+        .weak,
+        .failed,
+        .interrupted {
             color: #ef7181;
         }
 
         .panel {
+            margin-bottom: 1.5rem;
             overflow: hidden;
         }
 
@@ -181,6 +186,58 @@
 
         button:hover {
             background: #1777a8;
+        }
+
+        .run-content {
+            padding: 1rem;
+        }
+
+        .run-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(190px, 1fr));
+            gap: 1rem;
+        }
+
+        .run-item {
+            min-width: 0;
+            padding: 0.9rem;
+            border: 1px solid #1e3949;
+            border-radius: 0.65rem;
+            background: #091923;
+        }
+
+        .run-value {
+            margin-top: 0.45rem;
+            overflow-wrap: anywhere;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .run-status {
+            text-transform: capitalize;
+        }
+
+        .fingerprint {
+            display: block;
+            margin-top: 1rem;
+            padding: 0.9rem;
+            overflow-wrap: anywhere;
+            border: 1px solid #1e3949;
+            border-radius: 0.65rem;
+            background: #07141d;
+            color: #8fcde9;
+            font-family:
+                ui-monospace,
+                SFMono-Regular,
+                Consolas,
+                monospace;
+            font-size: 0.78rem;
+        }
+
+        .stage-heading {
+            margin: 1.2rem 0 0.7rem;
+            font-size: 0.9rem;
         }
 
         .table-wrap {
@@ -233,6 +290,10 @@
             font-size: 0.78rem;
         }
 
+        [hidden] {
+            display: none !important;
+        }
+
         @media (max-width: 650px) {
             header {
                 align-items: flex-start;
@@ -276,23 +337,12 @@
 <main>
     <section class="cards">
         <article class="card">
-            <div class="card-label">
-                Total tracks
-            </div>
-
-            <div
-                id="total-count"
-                class="card-value"
-            >
-                —
-            </div>
+            <div class="card-label">Total tracks</div>
+            <div id="total-count" class="card-value">—</div>
         </article>
 
         <article class="card">
-            <div class="card-label">
-                Stable
-            </div>
-
+            <div class="card-label">Stable</div>
             <div
                 id="stable-count"
                 class="card-value stable"
@@ -302,10 +352,7 @@
         </article>
 
         <article class="card">
-            <div class="card-label">
-                Tentative
-            </div>
-
+            <div class="card-label">Tentative</div>
             <div
                 id="tentative-count"
                 class="card-value tentative"
@@ -315,10 +362,7 @@
         </article>
 
         <article class="card">
-            <div class="card-label">
-                Weak
-            </div>
-
+            <div class="card-label">Weak</div>
             <div
                 id="weak-count"
                 class="card-value weak"
@@ -330,9 +374,104 @@
 
     <section class="panel">
         <div class="toolbar">
-            <h2>
-                Tracked-object world model
-            </h2>
+            <h2>Latest pipeline run</h2>
+
+            <button
+                id="run-refresh-button"
+                type="button"
+            >
+                Refresh run
+            </button>
+        </div>
+
+        <div
+            id="run-message"
+            class="message"
+        >
+            Loading latest pipeline run…
+        </div>
+
+        <div
+            id="run-content"
+            class="run-content"
+            hidden
+        >
+            <div class="run-grid">
+                <article class="run-item">
+                    <div class="run-label">Status</div>
+                    <div
+                        id="run-status"
+                        class="run-value run-status"
+                    >
+                        —
+                    </div>
+                </article>
+
+                <article class="run-item">
+                    <div class="run-label">Finished</div>
+                    <div id="run-finished" class="run-value">
+                        —
+                    </div>
+                </article>
+
+                <article class="run-item">
+                    <div class="run-label">Total duration</div>
+                    <div id="run-duration" class="run-value">
+                        —
+                    </div>
+                </article>
+
+                <article class="run-item">
+                    <div class="run-label">Model</div>
+                    <div id="run-model" class="run-value">
+                        —
+                    </div>
+                </article>
+
+                <article class="run-item">
+                    <div class="run-label">Device</div>
+                    <div id="run-device" class="run-value">
+                        —
+                    </div>
+                </article>
+
+                <article class="run-item">
+                    <div class="run-label">Input</div>
+                    <div id="run-input" class="run-value">
+                        —
+                    </div>
+                </article>
+            </div>
+
+            <code id="run-fingerprint" class="fingerprint">
+                SHA-256: —
+            </code>
+
+            <h3 class="stage-heading">
+                Pipeline stages
+            </h3>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Stage</th>
+                        <th>Status</th>
+                        <th>Duration</th>
+                        <th>Exit code</th>
+                    </tr>
+                    </thead>
+
+                    <tbody id="stage-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="toolbar">
+            <h2>Tracked-object world model</h2>
 
             <div class="controls">
                 <select
@@ -343,17 +482,9 @@
                         All quality levels
                     </option>
 
-                    <option value="stable">
-                        Stable
-                    </option>
-
-                    <option value="tentative">
-                        Tentative
-                    </option>
-
-                    <option value="weak">
-                        Weak
-                    </option>
+                    <option value="stable">Stable</option>
+                    <option value="tentative">Tentative</option>
+                    <option value="weak">Weak</option>
                 </select>
 
                 <input
@@ -371,7 +502,7 @@
                     id="refresh-button"
                     type="button"
                 >
-                    Refresh
+                    Refresh tracks
                 </button>
             </div>
         </div>

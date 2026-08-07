@@ -2,17 +2,52 @@
 
 const statusElement = document.getElementById("system-status");
 const statusText = document.getElementById("status-text");
+
 const tableBody = document.getElementById("track-table-body");
 const tableMessage = document.getElementById("table-message");
 
+const runContent = document.getElementById("run-content");
+const runMessage = document.getElementById("run-message");
+const stageTableBody = document.getElementById(
+    "stage-table-body"
+);
+
 function setText(id, value) {
-    document.getElementById(id).textContent = String(value);
+    const element = document.getElementById(id);
+
+    if (element) {
+        element.textContent = String(value);
+    }
 }
 
 function createCell(value) {
     const cell = document.createElement("td");
     cell.textContent = String(value);
     return cell;
+}
+
+function formatDuration(value) {
+    const duration = Number(value);
+
+    if (!Number.isFinite(duration)) {
+        return "Unavailable";
+    }
+
+    if (duration < 1) {
+        return `${duration.toFixed(3)} s`;
+    }
+
+    return `${duration.toFixed(2)} s`;
+}
+
+function formatTimestamp(value) {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return "Unavailable";
+    }
+
+    return date.toLocaleString();
 }
 
 function renderTracks(tracks) {
@@ -57,9 +92,7 @@ function renderTracks(tracks) {
 
         row.appendChild(
             createCell(
-                `${Number(
-                    track.duration_seconds
-                ).toFixed(3)} s`
+                formatDuration(track.duration_seconds)
             )
         );
 
@@ -79,6 +112,81 @@ function renderTracks(tracks) {
 
         tableBody.appendChild(row);
     }
+}
+
+function renderStages(stages) {
+    stageTableBody.replaceChildren();
+
+    for (const stage of stages) {
+        const row = document.createElement("tr");
+
+        row.appendChild(createCell(stage.name));
+
+        const statusCell = document.createElement("td");
+        const statusBadge = document.createElement("span");
+
+        statusBadge.className =
+            `badge ${stage.status}`;
+        statusBadge.textContent = stage.status;
+
+        statusCell.appendChild(statusBadge);
+        row.appendChild(statusCell);
+
+        row.appendChild(
+            createCell(
+                formatDuration(stage.duration_seconds)
+            )
+        );
+
+        row.appendChild(createCell(stage.exit_code));
+
+        stageTableBody.appendChild(row);
+    }
+}
+
+function renderRun(manifest) {
+    const model = manifest.model || {};
+    const input = manifest.input || {};
+    const stages = Array.isArray(manifest.stages)
+        ? manifest.stages
+        : [];
+
+    setText("run-status", manifest.status || "unknown");
+    setText(
+        "run-finished",
+        formatTimestamp(manifest.finished_at_utc)
+    );
+    setText(
+        "run-duration",
+        formatDuration(manifest.duration_seconds)
+    );
+    setText(
+        "run-model",
+        model.model_path || "Unavailable"
+    );
+    setText(
+        "run-device",
+        model.device || "Unavailable"
+    );
+    setText(
+        "run-input",
+        input.path || "Unavailable"
+    );
+
+    const runStatus = document.getElementById("run-status");
+
+    runStatus.className =
+        `run-value run-status ${manifest.status || ""}`;
+
+    setText(
+        "run-fingerprint",
+        `SHA-256: ${input.sha256 || "Unavailable"}`
+    );
+
+    renderStages(stages);
+
+    runMessage.hidden = true;
+    runContent.hidden = false;
 }
 
 async function requestJson(path) {
@@ -155,6 +263,31 @@ async function loadTracks() {
     renderTracks(data.tracks);
 }
 
+async function loadLatestRun() {
+    runMessage.hidden = false;
+    runMessage.textContent =
+        "Loading latest pipeline run…";
+    runContent.hidden = true;
+
+    try {
+        const manifest = await requestJson(
+            "/runs/latest"
+        );
+
+        renderRun(manifest);
+    } catch (error) {
+        console.error(
+            "Latest pipeline run could not be loaded:",
+            error
+        );
+
+        runContent.hidden = true;
+        runMessage.hidden = false;
+        runMessage.textContent =
+            `Latest pipeline run unavailable: ${error.message}`;
+    }
+}
+
 async function refreshDashboard() {
     statusText.textContent = "Loading…";
 
@@ -171,11 +304,16 @@ async function refreshDashboard() {
         tableMessage.hidden = false;
         tableMessage.textContent = error.message;
     }
+
+    await loadLatestRun();
 }
 
 function initializeDashboard() {
     const refreshButton =
         document.getElementById("refresh-button");
+
+    const runRefreshButton =
+        document.getElementById("run-refresh-button");
 
     const qualityFilter =
         document.getElementById("quality-filter");
@@ -188,7 +326,11 @@ function initializeDashboard() {
         !statusText ||
         !tableBody ||
         !tableMessage ||
+        !runContent ||
+        !runMessage ||
+        !stageTableBody ||
         !refreshButton ||
+        !runRefreshButton ||
         !qualityFilter ||
         !confidenceFilter
     ) {
@@ -202,6 +344,11 @@ function initializeDashboard() {
     refreshButton.addEventListener(
         "click",
         refreshDashboard
+    );
+
+    runRefreshButton.addEventListener(
+        "click",
+        loadLatestRun
     );
 
     qualityFilter.addEventListener(

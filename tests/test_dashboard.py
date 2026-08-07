@@ -14,7 +14,10 @@ def test_dashboard_is_available():
 
     assert response.status_code == 200
     assert "AEGIS SITUATIONAL AWARENESS" in response.text
+    assert "Latest pipeline run" in response.text
     assert "Tracked-object world model" in response.text
+    assert 'id="run-status"' in response.text
+    assert 'id="stage-table-body"' in response.text
     assert "/dashboard/dashboard.js" in response.text
 
 
@@ -36,3 +39,6 @@ def test_dashboard_javascript_is_available():
 
     assert "initializeDashboard" in response.text
     assert "refreshDashboard" in response.text
+    assert "loadLatestRun" in response.text
+    assert '"/runs/latest"' in response.text
+    assert "renderStages" in response.text
