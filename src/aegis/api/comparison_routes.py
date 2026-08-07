@@ -2,20 +2,50 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query
 
-from aegis.api.app import load_manifest_file
 from aegis.pipeline.run_comparison import compare_runs
 from aegis.pipeline.run_manifest import validate_run_id
+from aegis.storage.run_history_store import (
+    RunHistoryError,
+    RunHistoryStore,
+)
 
 
-RUN_HISTORY_PATH = Path(
+DEFAULT_RUN_HISTORY_PATH = Path(
     "outputs/data/runs"
 )
+
+DEFAULT_DATABASE_PATH = Path(
+    "outputs/data/aegis_world_model.sqlite3"
+)
+
+RUN_HISTORY_PATH = DEFAULT_RUN_HISTORY_PATH
+DATABASE_PATH = DEFAULT_DATABASE_PATH
 
 
 router = APIRouter(
     prefix="/run-comparisons",
     tags=["run comparisons"],
 )
+
+
+def build_run_history_store() -> RunHistoryStore:
+    """Create the configured comparison data source."""
+
+    database_path = DATABASE_PATH
+
+    if (
+        RUN_HISTORY_PATH != DEFAULT_RUN_HISTORY_PATH
+        and DATABASE_PATH == DEFAULT_DATABASE_PATH
+    ):
+        database_path = (
+            RUN_HISTORY_PATH
+            / "aegis_world_model.sqlite3"
+        )
+
+    return RunHistoryStore(
+        database_path=database_path,
+        history_directory=RUN_HISTORY_PATH,
+    )
 
 
 def load_archived_run(run_id: str) -> dict:
@@ -30,14 +60,30 @@ def load_archived_run(run_id: str) -> dict:
             detail=str(error),
         ) from error
 
-    manifest_path = (
-        RUN_HISTORY_PATH / f"{validated_run_id}.json"
-    )
+    try:
+        manifest = build_run_history_store().get_manifest(
+            validated_run_id
+        )
 
-    return load_manifest_file(
-        path=manifest_path,
-        missing_status_code=404,
-    )
+    except RunHistoryError as error:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Could not load pipeline run "
+                f"{validated_run_id}: {error}"
+            ),
+        ) from error
+
+    if manifest is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Pipeline run {validated_run_id} "
+                "was not found."
+            ),
+        )
+
+    return manifest
 
 
 @router.get("")
