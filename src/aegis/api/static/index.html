@@ -128,7 +128,8 @@
             color: #42df88;
         }
 
-        .tentative {
+        .tentative,
+        .running {
             color: #f6c453;
         }
 
@@ -186,6 +187,11 @@
 
         button:hover {
             background: #1777a8;
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: 0.65;
         }
 
         .run-content {
@@ -278,6 +284,25 @@
             background: #142d3b;
         }
 
+        .run-link {
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #69c9f5;
+            font-family:
+                ui-monospace,
+                SFMono-Regular,
+                Consolas,
+                monospace;
+            text-decoration: underline;
+            text-underline-offset: 0.2rem;
+        }
+
+        .run-link:hover {
+            background: transparent;
+            color: #a8e3ff;
+        }
+
         .message {
             padding: 1rem;
             color: #9eb2bf;
@@ -311,7 +336,7 @@
 
             select,
             input,
-            button {
+            .controls button {
                 width: 100%;
             }
         }
@@ -374,13 +399,15 @@
 
     <section class="panel">
         <div class="toolbar">
-            <h2>Latest pipeline run</h2>
+            <h2 id="run-panel-title">
+                Latest pipeline run
+            </h2>
 
             <button
                 id="run-refresh-button"
                 type="button"
             >
-                Refresh run
+                Show latest
             </button>
         </div>
 
@@ -397,6 +424,13 @@
             hidden
         >
             <div class="run-grid">
+                <article class="run-item">
+                    <div class="run-label">Run ID</div>
+                    <div id="run-id" class="run-value">
+                        —
+                    </div>
+                </article>
+
                 <article class="run-item">
                     <div class="run-label">Status</div>
                     <div
@@ -465,6 +499,45 @@
                     <tbody id="stage-table-body">
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="toolbar">
+            <h2>Pipeline run history</h2>
+
+            <button
+                id="history-refresh-button"
+                type="button"
+            >
+                Reload history
+            </button>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Run ID</th>
+                    <th>Status</th>
+                    <th>Finished</th>
+                    <th>Duration</th>
+                    <th>Model</th>
+                    <th>Device</th>
+                    <th>Stages</th>
+                </tr>
+                </thead>
+
+                <tbody id="history-table-body">
+                </tbody>
+            </table>
+
+            <div
+                id="history-message"
+                class="message"
+            >
+                Loading run history…
             </div>
         </div>
     </section>

@@ -8,8 +8,18 @@ const tableMessage = document.getElementById("table-message");
 
 const runContent = document.getElementById("run-content");
 const runMessage = document.getElementById("run-message");
+const runPanelTitle = document.getElementById(
+    "run-panel-title"
+);
 const stageTableBody = document.getElementById(
     "stage-table-body"
+);
+
+const historyTableBody = document.getElementById(
+    "history-table-body"
+);
+const historyMessage = document.getElementById(
+    "history-message"
 );
 
 function setText(id, value) {
@@ -50,6 +60,18 @@ function formatTimestamp(value) {
     return date.toLocaleString();
 }
 
+function createStatusCell(status) {
+    const cell = document.createElement("td");
+    const badge = document.createElement("span");
+
+    badge.className = `badge ${status || ""}`;
+    badge.textContent = status || "unknown";
+
+    cell.appendChild(badge);
+
+    return cell;
+}
+
 function renderTracks(tracks) {
     tableBody.replaceChildren();
 
@@ -67,16 +89,9 @@ function renderTracks(tracks) {
 
         row.appendChild(createCell(track.track_id));
         row.appendChild(createCell(track.dominant_label));
-
-        const qualityCell = document.createElement("td");
-        const qualityBadge = document.createElement("span");
-
-        qualityBadge.className =
-            `badge ${track.quality_level}`;
-        qualityBadge.textContent = track.quality_level;
-
-        qualityCell.appendChild(qualityBadge);
-        row.appendChild(qualityCell);
+        row.appendChild(
+            createStatusCell(track.quality_level)
+        );
 
         row.appendChild(
             createCell(
@@ -121,36 +136,32 @@ function renderStages(stages) {
         const row = document.createElement("tr");
 
         row.appendChild(createCell(stage.name));
-
-        const statusCell = document.createElement("td");
-        const statusBadge = document.createElement("span");
-
-        statusBadge.className =
-            `badge ${stage.status}`;
-        statusBadge.textContent = stage.status;
-
-        statusCell.appendChild(statusBadge);
-        row.appendChild(statusCell);
-
+        row.appendChild(createStatusCell(stage.status));
         row.appendChild(
             createCell(
                 formatDuration(stage.duration_seconds)
             )
         );
-
         row.appendChild(createCell(stage.exit_code));
 
         stageTableBody.appendChild(row);
     }
 }
 
-function renderRun(manifest) {
+function renderRun(manifest, isLatest) {
     const model = manifest.model || {};
     const input = manifest.input || {};
     const stages = Array.isArray(manifest.stages)
         ? manifest.stages
         : [];
 
+    const runId = manifest.run_id || "legacy-run";
+
+    runPanelTitle.textContent = isLatest
+        ? "Latest pipeline run"
+        : `Archived pipeline run: ${runId}`;
+
+    setText("run-id", runId);
     setText("run-status", manifest.status || "unknown");
     setText(
         "run-finished",
@@ -187,6 +198,65 @@ function renderRun(manifest) {
 
     runMessage.hidden = true;
     runContent.hidden = false;
+}
+
+function renderRunHistory(runs) {
+    historyTableBody.replaceChildren();
+
+    if (runs.length === 0) {
+        historyMessage.textContent =
+            "No archived pipeline runs are available.";
+        historyMessage.hidden = false;
+        return;
+    }
+
+    historyMessage.hidden = true;
+
+    for (const run of runs) {
+        const row = document.createElement("tr");
+
+        const runIdCell = document.createElement("td");
+        const runButton = document.createElement("button");
+
+        runButton.type = "button";
+        runButton.className = "run-link";
+        runButton.textContent = run.run_id || "unknown";
+        runButton.addEventListener(
+            "click",
+            () => loadArchivedRun(run.run_id)
+        );
+
+        runIdCell.appendChild(runButton);
+        row.appendChild(runIdCell);
+
+        row.appendChild(createStatusCell(run.status));
+
+        row.appendChild(
+            createCell(
+                formatTimestamp(run.finished_at_utc)
+            )
+        );
+
+        row.appendChild(
+            createCell(
+                formatDuration(run.duration_seconds)
+            )
+        );
+
+        row.appendChild(
+            createCell(run.model_path || "Unavailable")
+        );
+
+        row.appendChild(
+            createCell(run.device || "Unavailable")
+        );
+
+        row.appendChild(
+            createCell(run.stage_count)
+        );
+
+        historyTableBody.appendChild(row);
+    }
 }
 
 async function requestJson(path) {
@@ -264,6 +334,13 @@ async function loadTracks() {
 }
 
 async function loadLatestRun() {
+    const button = document.getElementById(
+        "run-refresh-button"
+    );
+
+    button.disabled = true;
+    button.textContent = "Loading…";
+
     runMessage.hidden = false;
     runMessage.textContent =
         "Loading latest pipeline run…";
@@ -274,7 +351,7 @@ async function loadLatestRun() {
             "/runs/latest"
         );
 
-        renderRun(manifest);
+        renderRun(manifest, true);
     } catch (error) {
         console.error(
             "Latest pipeline run could not be loaded:",
@@ -285,6 +362,71 @@ async function loadLatestRun() {
         runMessage.hidden = false;
         runMessage.textContent =
             `Latest pipeline run unavailable: ${error.message}`;
+    } finally {
+        button.disabled = false;
+        button.textContent = "Show latest";
+    }
+}
+
+async function loadArchivedRun(runId) {
+    runMessage.hidden = false;
+    runMessage.textContent =
+        `Loading archived run ${runId}…`;
+    runContent.hidden = true;
+
+    try {
+        const manifest = await requestJson(
+            `/runs/${encodeURIComponent(runId)}`
+        );
+
+        renderRun(manifest, false);
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
+    } catch (error) {
+        console.error(
+            "Archived pipeline run could not be loaded:",
+            error
+        );
+
+        runContent.hidden = true;
+        runMessage.hidden = false;
+        runMessage.textContent =
+            `Archived run unavailable: ${error.message}`;
+    }
+}
+
+async function loadRunHistory() {
+    const button = document.getElementById(
+        "history-refresh-button"
+    );
+
+    button.disabled = true;
+    button.textContent = "Loading…";
+
+    historyMessage.hidden = false;
+    historyMessage.textContent =
+        "Loading run history…";
+
+    try {
+        const data = await requestJson(
+            "/runs?limit=100"
+        );
+
+        renderRunHistory(data.runs);
+    } catch (error) {
+        console.error(
+            "Run history could not be loaded:",
+            error
+        );
+
+        historyMessage.hidden = false;
+        historyMessage.textContent =
+            `Run history unavailable: ${error.message}`;
+    } finally {
+        button.disabled = false;
+        button.textContent = "Reload history";
     }
 }
 
@@ -306,6 +448,7 @@ async function refreshDashboard() {
     }
 
     await loadLatestRun();
+    await loadRunHistory();
 }
 
 function initializeDashboard() {
@@ -314,6 +457,11 @@ function initializeDashboard() {
 
     const runRefreshButton =
         document.getElementById("run-refresh-button");
+
+    const historyRefreshButton =
+        document.getElementById(
+            "history-refresh-button"
+        );
 
     const qualityFilter =
         document.getElementById("quality-filter");
@@ -328,9 +476,13 @@ function initializeDashboard() {
         !tableMessage ||
         !runContent ||
         !runMessage ||
+        !runPanelTitle ||
         !stageTableBody ||
+        !historyTableBody ||
+        !historyMessage ||
         !refreshButton ||
         !runRefreshButton ||
+        !historyRefreshButton ||
         !qualityFilter ||
         !confidenceFilter
     ) {
@@ -349,6 +501,11 @@ function initializeDashboard() {
     runRefreshButton.addEventListener(
         "click",
         loadLatestRun
+    );
+
+    historyRefreshButton.addEventListener(
+        "click",
+        loadRunHistory
     );
 
     qualityFilter.addEventListener(
