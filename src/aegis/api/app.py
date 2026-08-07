@@ -6,6 +6,8 @@ from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Query
 
+from aegis.pipeline.run_manifest import validate_run_id
+
 
 TRACK_DATA_PATH = Path(
     "outputs/data/aegis_track_quality.csv"
@@ -13,6 +15,10 @@ TRACK_DATA_PATH = Path(
 
 RUN_MANIFEST_PATH = Path(
     "outputs/data/aegis_run_manifest.json"
+)
+
+RUN_HISTORY_PATH = Path(
+    "outputs/data/runs"
 )
 
 QualityLevel = Literal["stable", "tentative", "weak"]
@@ -24,7 +30,7 @@ app = FastAPI(
         "Read-only situational-awareness API for tracked objects "
         "and offline pipeline runs."
     ),
-    version="0.2.0",
+    version="0.3.0",
 )
 
 
@@ -95,20 +101,20 @@ def load_tracks() -> list[dict]:
         ) from error
 
 
-def load_run_manifest() -> dict:
-    """Load the latest offline pipeline run manifest."""
+def load_manifest_file(
+    path: Path,
+    missing_status_code: int,
+) -> dict:
+    """Load and validate one pipeline run manifest."""
 
-    if not RUN_MANIFEST_PATH.is_file():
+    if not path.is_file():
         raise HTTPException(
-            status_code=503,
-            detail=(
-                "Pipeline run manifest is unavailable. "
-                f"Expected: {RUN_MANIFEST_PATH}"
-            ),
+            status_code=missing_status_code,
+            detail=f"Pipeline run manifest was not found: {path}",
         )
 
     try:
-        with RUN_MANIFEST_PATH.open(
+        with path.open(
             mode="r",
             encoding="utf-8",
         ) as input_file:
@@ -140,6 +146,72 @@ def load_run_manifest() -> dict:
     return manifest
 
 
+def load_run_manifest() -> dict:
+    """Load the latest offline pipeline run manifest."""
+
+    if not RUN_MANIFEST_PATH.is_file():
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Pipeline run manifest is unavailable. "
+                f"Expected: {RUN_MANIFEST_PATH}"
+            ),
+        )
+
+    return load_manifest_file(
+        path=RUN_MANIFEST_PATH,
+        missing_status_code=503,
+    )
+
+
+def summarize_manifest(manifest: dict) -> dict:
+    """Create a compact representation of one run."""
+
+    model = manifest.get("model", {})
+    input_metadata = manifest.get("input", {})
+    stages = manifest.get("stages", [])
+
+    return {
+        "run_id": manifest.get("run_id"),
+        "schema_version": manifest.get("schema_version"),
+        "status": manifest.get("status"),
+        "exit_code": manifest.get("exit_code"),
+        "started_at_utc": manifest.get("started_at_utc"),
+        "finished_at_utc": manifest.get("finished_at_utc"),
+        "duration_seconds": manifest.get(
+            "duration_seconds"
+        ),
+        "model_path": model.get("model_path"),
+        "device": model.get("device"),
+        "input_path": input_metadata.get("path"),
+        "stage_count": (
+            len(stages)
+            if isinstance(stages, list)
+            else 0
+        ),
+    }
+
+
+def load_run_history() -> list[dict]:
+    """Load archived manifests from newest to oldest."""
+
+    if not RUN_HISTORY_PATH.is_dir():
+        return []
+
+    manifest_paths = sorted(
+        RUN_HISTORY_PATH.glob("*.json"),
+        reverse=True,
+    )
+
+    return [
+        load_manifest_file(
+            path=manifest_path,
+            missing_status_code=404,
+        )
+        for manifest_path in manifest_paths
+    ]
+
+
 @app.get("/")
 def root() -> dict:
     """Return basic API information."""
@@ -149,6 +221,7 @@ def root() -> dict:
         "version": app.version,
         "documentation": "/docs",
         "latest_run": "/runs/latest",
+        "run_history": "/runs",
     }
 
 
@@ -158,6 +231,7 @@ def health() -> dict:
 
     world_model_available = TRACK_DATA_PATH.is_file()
     run_manifest_available = RUN_MANIFEST_PATH.is_file()
+    run_history_available = RUN_HISTORY_PATH.is_dir()
 
     return {
         "status": (
@@ -170,6 +244,8 @@ def health() -> dict:
         "world_model_path": str(TRACK_DATA_PATH),
         "run_manifest_available": run_manifest_available,
         "run_manifest_path": str(RUN_MANIFEST_PATH),
+        "run_history_available": run_history_available,
+        "run_history_path": str(RUN_HISTORY_PATH),
     }
 
 
@@ -260,8 +336,54 @@ def get_track(track_id: int) -> dict:
     )
 
 
+@app.get("/runs")
+def list_runs(
+    limit: int = Query(
+        default=50,
+        ge=1,
+        le=500,
+    ),
+) -> dict:
+    """Return compact archived-run records."""
+
+    manifests = load_run_history()
+    selected_manifests = manifests[:limit]
+
+    return {
+        "total_runs": len(manifests),
+        "returned": len(selected_manifests),
+        "runs": [
+            summarize_manifest(manifest)
+            for manifest in selected_manifests
+        ],
+    }
+
+
 @app.get("/runs/latest")
 def latest_run() -> dict:
     """Return the latest offline pipeline run manifest."""
 
     return load_run_manifest()
+
+
+@app.get("/runs/{run_id}")
+def get_run(run_id: str) -> dict:
+    """Return one archived pipeline run manifest."""
+
+    try:
+        validated_run_id = validate_run_id(run_id)
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        ) from error
+
+    manifest_path = (
+        RUN_HISTORY_PATH / f"{validated_run_id}.json"
+    )
+
+    return load_manifest_file(
+        path=manifest_path,
+        missing_status_code=404,
+    )

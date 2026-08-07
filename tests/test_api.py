@@ -86,13 +86,28 @@ def create_test_data(tmp_path):
     return data_path
 
 
-def create_test_manifest(tmp_path):
-    manifest_path = tmp_path / "aegis_run_manifest.json"
+def create_test_manifest(
+    directory,
+    run_id="test-run-001",
+    filename=None,
+    status="completed",
+):
+    directory.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    manifest_path = directory / (
+        filename
+        if filename is not None
+        else f"{run_id}.json"
+    )
 
     manifest = {
-        "schema_version": 1,
-        "status": "completed",
-        "exit_code": 0,
+        "schema_version": 2,
+        "run_id": run_id,
+        "status": status,
+        "exit_code": 0 if status == "completed" else 1,
         "configuration_path": "configs/pipeline.json",
         "started_at_utc": "2026-08-06T20:10:47+00:00",
         "finished_at_utc": "2026-08-06T20:13:37+00:00",
@@ -113,9 +128,11 @@ def create_test_manifest(tmp_path):
         "stages": [
             {
                 "name": "Video detection and tracking",
-                "status": "completed",
+                "status": status,
                 "duration_seconds": 127.9,
-                "exit_code": 0,
+                "exit_code": (
+                    0 if status == "completed" else 1
+                ),
             }
         ],
     }
@@ -137,6 +154,7 @@ def test_root():
         "Aegis World Model API"
     )
     assert response.json()["latest_run"] == "/runs/latest"
+    assert response.json()["run_history"] == "/runs"
 
 
 def test_health_with_all_data_available(
@@ -144,7 +162,14 @@ def test_health_with_all_data_available(
     monkeypatch,
 ):
     data_path = create_test_data(tmp_path)
-    manifest_path = create_test_manifest(tmp_path)
+
+    manifest_path = create_test_manifest(
+        directory=tmp_path,
+        filename="aegis_run_manifest.json",
+    )
+
+    history_path = tmp_path / "runs"
+    history_path.mkdir()
 
     monkeypatch.setattr(
         api_module,
@@ -156,6 +181,11 @@ def test_health_with_all_data_available(
         "RUN_MANIFEST_PATH",
         manifest_path,
     )
+    monkeypatch.setattr(
+        api_module,
+        "RUN_HISTORY_PATH",
+        history_path,
+    )
 
     response = client.get("/health")
     body = response.json()
@@ -164,6 +194,7 @@ def test_health_with_all_data_available(
     assert body["status"] == "healthy"
     assert body["world_model_available"] is True
     assert body["run_manifest_available"] is True
+    assert body["run_history_available"] is True
 
 
 def test_health_is_degraded_without_manifest(
@@ -183,6 +214,11 @@ def test_health_is_degraded_without_manifest(
         "RUN_MANIFEST_PATH",
         missing_manifest,
     )
+    monkeypatch.setattr(
+        api_module,
+        "RUN_HISTORY_PATH",
+        tmp_path / "missing-runs",
+    )
 
     response = client.get("/health")
     body = response.json()
@@ -191,10 +227,12 @@ def test_health_is_degraded_without_manifest(
     assert body["status"] == "degraded"
     assert body["world_model_available"] is True
     assert body["run_manifest_available"] is False
+    assert body["run_history_available"] is False
 
 
 def test_statistics(tmp_path, monkeypatch):
     data_path = create_test_data(tmp_path)
+
     monkeypatch.setattr(
         api_module,
         "TRACK_DATA_PATH",
@@ -215,6 +253,7 @@ def test_list_tracks_filters_quality(
     monkeypatch,
 ):
     data_path = create_test_data(tmp_path)
+
     monkeypatch.setattr(
         api_module,
         "TRACK_DATA_PATH",
@@ -231,6 +270,7 @@ def test_list_tracks_filters_quality(
 
 def test_get_existing_track(tmp_path, monkeypatch):
     data_path = create_test_data(tmp_path)
+
     monkeypatch.setattr(
         api_module,
         "TRACK_DATA_PATH",
@@ -245,6 +285,7 @@ def test_get_existing_track(tmp_path, monkeypatch):
 
 def test_get_missing_track(tmp_path, monkeypatch):
     data_path = create_test_data(tmp_path)
+
     monkeypatch.setattr(
         api_module,
         "TRACK_DATA_PATH",
@@ -260,7 +301,10 @@ def test_latest_run_returns_manifest(
     tmp_path,
     monkeypatch,
 ):
-    manifest_path = create_test_manifest(tmp_path)
+    manifest_path = create_test_manifest(
+        directory=tmp_path,
+        filename="aegis_run_manifest.json",
+    )
 
     monkeypatch.setattr(
         api_module,
@@ -274,7 +318,8 @@ def test_latest_run_returns_manifest(
     assert response.status_code == 200
     assert body["status"] == "completed"
     assert body["exit_code"] == 0
-    assert body["schema_version"] == 1
+    assert body["schema_version"] == 2
+    assert body["run_id"] == "test-run-001"
     assert body["model"]["model_path"] == "yolo11n.pt"
 
 
@@ -318,3 +363,117 @@ def test_latest_run_rejects_invalid_json(
     assert "Invalid pipeline run manifest" in (
         response.json()["detail"]
     )
+
+
+def test_list_runs_returns_newest_first(
+    tmp_path,
+    monkeypatch,
+):
+    history_path = tmp_path / "runs"
+
+    create_test_manifest(
+        directory=history_path,
+        run_id="20260806T100000000000Z-first",
+    )
+    create_test_manifest(
+        directory=history_path,
+        run_id="20260807T100000000000Z-second",
+    )
+
+    monkeypatch.setattr(
+        api_module,
+        "RUN_HISTORY_PATH",
+        history_path,
+    )
+
+    response = client.get("/runs")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["total_runs"] == 2
+    assert body["returned"] == 2
+
+    assert body["runs"][0]["run_id"] == (
+        "20260807T100000000000Z-second"
+    )
+    assert body["runs"][1]["run_id"] == (
+        "20260806T100000000000Z-first"
+    )
+
+
+def test_list_runs_respects_limit(
+    tmp_path,
+    monkeypatch,
+):
+    history_path = tmp_path / "runs"
+
+    create_test_manifest(
+        directory=history_path,
+        run_id="run-one",
+    )
+    create_test_manifest(
+        directory=history_path,
+        run_id="run-two",
+    )
+
+    monkeypatch.setattr(
+        api_module,
+        "RUN_HISTORY_PATH",
+        history_path,
+    )
+
+    response = client.get("/runs?limit=1")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["total_runs"] == 2
+    assert body["returned"] == 1
+
+
+def test_get_archived_run(
+    tmp_path,
+    monkeypatch,
+):
+    history_path = tmp_path / "runs"
+
+    create_test_manifest(
+        directory=history_path,
+        run_id="archived-run-001",
+    )
+
+    monkeypatch.setattr(
+        api_module,
+        "RUN_HISTORY_PATH",
+        history_path,
+    )
+
+    response = client.get("/runs/archived-run-001")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["run_id"] == "archived-run-001"
+    assert body["status"] == "completed"
+
+
+def test_get_missing_archived_run(
+    tmp_path,
+    monkeypatch,
+):
+    history_path = tmp_path / "runs"
+    history_path.mkdir()
+
+    monkeypatch.setattr(
+        api_module,
+        "RUN_HISTORY_PATH",
+        history_path,
+    )
+
+    response = client.get("/runs/missing-run")
+
+    assert response.status_code == 404
+
+
+def test_get_run_rejects_unsafe_identifier():
+    response = client.get("/runs/bad$id")
+
+    assert response.status_code == 400
