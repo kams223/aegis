@@ -29,6 +29,9 @@ def valid_config() -> dict:
             "processing_metrics_path": (
                 "outputs/data/processing_metrics.json"
             ),
+            "database_path": (
+                "outputs/data/aegis_test.sqlite3"
+            ),
         },
         "quality": {
             "minimum_stable_observations": 5,
@@ -58,6 +61,10 @@ def test_pipeline_config_loads_valid_json(tmp_path):
         "outputs/data/processing_metrics.json"
     )
 
+    assert str(config.database_path) == (
+        "outputs/data/aegis_test.sqlite3"
+    )
+
 
 def test_pipeline_config_uses_default_metrics_path():
     raw_config = valid_config()
@@ -68,6 +75,18 @@ def test_pipeline_config_uses_default_metrics_path():
 
     assert str(config.processing_metrics_path) == (
         "outputs/data/aegis_processing_metrics.json"
+    )
+
+
+def test_pipeline_config_uses_default_database_path():
+    raw_config = valid_config()
+
+    del raw_config["output"]["database_path"]
+
+    config = PipelineConfig.from_dict(raw_config)
+
+    assert str(config.database_path) == (
+        "outputs/data/aegis_world_model.sqlite3"
     )
 
 
@@ -96,7 +115,7 @@ def test_pipeline_config_rejects_missing_section():
 def test_pipeline_config_rejects_duplicate_outputs():
     raw_config = valid_config()
 
-    raw_config["output"]["processing_metrics_path"] = (
+    raw_config["output"]["database_path"] = (
         raw_config["output"]["quality_path"]
     )
 

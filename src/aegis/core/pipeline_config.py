@@ -24,6 +24,7 @@ class PipelineConfig:
     summaries_path: Path
     quality_path: Path
     processing_metrics_path: Path
+    database_path: Path
 
     minimum_stable_observations: int
     minimum_stable_duration: float
@@ -72,9 +73,18 @@ class PipelineConfig:
                 output_config["observations_path"]
             )
 
-            default_metrics_path = (
+            output_data_directory = (
                 observations_path.parent
+            )
+
+            default_metrics_path = (
+                output_data_directory
                 / "aegis_processing_metrics.json"
+            )
+
+            default_database_path = (
+                output_data_directory
+                / "aegis_world_model.sqlite3"
             )
 
             config = cls(
@@ -110,6 +120,12 @@ class PipelineConfig:
                     output_config.get(
                         "processing_metrics_path",
                         default_metrics_path,
+                    )
+                ),
+                database_path=Path(
+                    output_config.get(
+                        "database_path",
+                        default_database_path,
                     )
                 ),
                 minimum_stable_observations=int(
@@ -179,6 +195,7 @@ class PipelineConfig:
             self.summaries_path,
             self.quality_path,
             self.processing_metrics_path,
+            self.database_path,
         ]
 
         if len(set(output_paths)) != len(output_paths):

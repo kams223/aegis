@@ -14,7 +14,8 @@
     "observations_path": "outputs/data/aegis_track_observations.csv",
     "summaries_path": "outputs/data/aegis_track_summaries.csv",
     "quality_path": "outputs/data/aegis_track_quality.csv",
-    "processing_metrics_path": "outputs/data/aegis_processing_metrics.json"
+    "processing_metrics_path": "outputs/data/aegis_processing_metrics.json",
+    "database_path": "outputs/data/aegis_world_model.sqlite3"
   },
   "quality": {
     "minimum_stable_observations": 5,
