@@ -21,9 +21,14 @@ def valid_config() -> dict:
         },
         "output": {
             "video_path": "outputs/videos/tracked.mp4",
-            "observations_path": "outputs/data/observations.csv",
+            "observations_path": (
+                "outputs/data/observations.csv"
+            ),
             "summaries_path": "outputs/data/summaries.csv",
             "quality_path": "outputs/data/quality.csv",
+            "processing_metrics_path": (
+                "outputs/data/processing_metrics.json"
+            ),
         },
         "quality": {
             "minimum_stable_observations": 5,
@@ -48,6 +53,22 @@ def test_pipeline_config_loads_valid_json(tmp_path):
     assert config.image_size == 640
     assert config.device == "cpu"
     assert config.minimum_stable_observations == 5
+
+    assert str(config.processing_metrics_path) == (
+        "outputs/data/processing_metrics.json"
+    )
+
+
+def test_pipeline_config_uses_default_metrics_path():
+    raw_config = valid_config()
+
+    del raw_config["output"]["processing_metrics_path"]
+
+    config = PipelineConfig.from_dict(raw_config)
+
+    assert str(config.processing_metrics_path) == (
+        "outputs/data/aegis_processing_metrics.json"
+    )
 
 
 def test_pipeline_config_rejects_invalid_confidence():
@@ -75,8 +96,8 @@ def test_pipeline_config_rejects_missing_section():
 def test_pipeline_config_rejects_duplicate_outputs():
     raw_config = valid_config()
 
-    raw_config["output"]["quality_path"] = (
-        raw_config["output"]["summaries_path"]
+    raw_config["output"]["processing_metrics_path"] = (
+        raw_config["output"]["quality_path"]
     )
 
     with pytest.raises(

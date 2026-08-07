@@ -1,3 +1,4 @@
+import csv
 import json
 from pathlib import Path
 
@@ -43,6 +44,10 @@ def create_config(
                 "quality_path": str(
                     output_directory / "quality.csv"
                 ),
+                "processing_metrics_path": str(
+                    output_directory
+                    / "processing_metrics.json"
+                ),
             },
             "quality": {
                 "minimum_stable_observations": 5,
@@ -51,6 +56,87 @@ def create_config(
             },
         }
     )
+
+
+def write_processing_metrics(
+    config: PipelineConfig,
+) -> None:
+    """Write a synthetic completed metrics artifact."""
+
+    config.processing_metrics_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    config.processing_metrics_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "status": "completed",
+                "duration_seconds": 2.5,
+                "video": {
+                    "width": 1920,
+                    "height": 1080,
+                    "source_fps": 30.0,
+                },
+                "results": {
+                    "frames_processed": 75,
+                    "frame_detections": 120,
+                    "tracked_observations": 100,
+                    "unique_tracks": 8,
+                    "average_processing_fps": 30.0,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def write_quality_data(
+    config: PipelineConfig,
+) -> None:
+    """Write synthetic quality results."""
+
+    config.quality_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    with config.quality_path.open(
+        mode="w",
+        newline="",
+        encoding="utf-8",
+    ) as output_file:
+        writer = csv.DictWriter(
+            output_file,
+            fieldnames=[
+                "track_id",
+                "quality_level",
+            ],
+        )
+
+        writer.writeheader()
+
+        writer.writerows(
+            [
+                {
+                    "track_id": 1,
+                    "quality_level": "stable",
+                },
+                {
+                    "track_id": 2,
+                    "quality_level": "stable",
+                },
+                {
+                    "track_id": 3,
+                    "quality_level": "tentative",
+                },
+                {
+                    "track_id": 4,
+                    "quality_level": "weak",
+                },
+            ]
+        )
 
 
 def test_calculate_sha256(tmp_path):
@@ -90,6 +176,9 @@ def test_run_manifest_records_successful_run(tmp_path):
         output_directory=output_directory,
     )
 
+    write_processing_metrics(config)
+    write_quality_data(config)
+
     manifest = RunManifest(
         config=config,
         config_path=Path("configs/test.json"),
@@ -125,7 +214,7 @@ def test_run_manifest_records_successful_run(tmp_path):
     )
 
     assert latest == archived
-    assert latest["schema_version"] == 2
+    assert latest["schema_version"] == 3
     assert latest["run_id"] == "test-run-001"
     assert latest["status"] == "completed"
     assert latest["exit_code"] == 0
@@ -148,6 +237,74 @@ def test_run_manifest_records_successful_run(tmp_path):
     assert latest["outputs"]["archived_manifest"] == (
         str(archived_path)
     )
+
+    performance = latest["performance"]
+
+    assert performance["pipeline_duration_seconds"] == 3.0
+    assert performance["stage_duration_seconds"] == 2.5
+
+    assert performance[
+        "initialization_overhead_seconds"
+    ] == 0.5
+
+    assert performance[
+        "processing_metrics_available"
+    ] is True
+
+    assert performance["processing_metrics"]["results"][
+        "frames_processed"
+    ] == 75
+
+    assert performance["quality_counts_available"] is True
+
+    assert performance["quality_counts"] == {
+        "stable": 2,
+        "tentative": 1,
+        "weak": 1,
+        "total": 4,
+    }
+
+
+def test_completed_manifest_handles_missing_metrics(
+    tmp_path,
+):
+    input_path = tmp_path / "input.mp4"
+    input_path.write_bytes(b"synthetic-video")
+
+    output_directory = tmp_path / "outputs"
+
+    config = create_config(
+        input_path=input_path,
+        output_directory=output_directory,
+    )
+
+    manifest = RunManifest(
+        config=config,
+        config_path=Path("configs/test.json"),
+        output_path=output_directory / "manifest.json",
+        history_directory=output_directory / "runs",
+        run_id="missing-metrics-run",
+    )
+
+    manifest.start(monotonic_time=10.0)
+
+    manifest.finish(
+        status="completed",
+        exit_code=0,
+        monotonic_time=11.0,
+    )
+
+    assert manifest.data["performance"][
+        "processing_metrics_available"
+    ] is False
+
+    assert manifest.data["performance"][
+        "processing_metrics_error"
+    ] is not None
+
+    assert manifest.data["performance"][
+        "quality_counts_available"
+    ] is False
 
 
 def test_multiple_runs_preserve_history(tmp_path):

@@ -23,6 +23,7 @@ class PipelineConfig:
     observations_path: Path
     summaries_path: Path
     quality_path: Path
+    processing_metrics_path: Path
 
     minimum_stable_observations: int
     minimum_stable_duration: float
@@ -67,6 +68,15 @@ class PipelineConfig:
             output_config = raw_config["output"]
             quality_config = raw_config["quality"]
 
+            observations_path = Path(
+                output_config["observations_path"]
+            )
+
+            default_metrics_path = (
+                observations_path.parent
+                / "aegis_processing_metrics.json"
+            )
+
             config = cls(
                 input_video_path=Path(
                     input_config["video_path"]
@@ -89,14 +99,18 @@ class PipelineConfig:
                 output_video_path=Path(
                     output_config["video_path"]
                 ),
-                observations_path=Path(
-                    output_config["observations_path"]
-                ),
+                observations_path=observations_path,
                 summaries_path=Path(
                     output_config["summaries_path"]
                 ),
                 quality_path=Path(
                     output_config["quality_path"]
+                ),
+                processing_metrics_path=Path(
+                    output_config.get(
+                        "processing_metrics_path",
+                        default_metrics_path,
+                    )
                 ),
                 minimum_stable_observations=int(
                     quality_config[
@@ -164,6 +178,7 @@ class PipelineConfig:
             self.observations_path,
             self.summaries_path,
             self.quality_path,
+            self.processing_metrics_path,
         ]
 
         if len(set(output_paths)) != len(output_paths):

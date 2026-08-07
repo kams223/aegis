@@ -5,6 +5,9 @@ import cv2
 
 from aegis.core.pipeline_config import PipelineConfig
 from aegis.perception.object_detector import ObjectDetector
+from aegis.perception.processing_metrics import (
+    ProcessingMetricsRecorder,
+)
 from aegis.sensors.video_file import VideoFileSource
 from aegis.world_model.track_logger import TrackLogger
 
@@ -30,6 +33,7 @@ def process_video(config: PipelineConfig) -> int:
     print(f"Input video: {config.input_video_path}")
     print(f"Output video:{config.output_video_path}")
     print(f"Track data:  {config.observations_path}")
+    print(f"Metrics:     {config.processing_metrics_path}")
     print(f"Model:       {config.model_path}")
     print(f"Tracker:     {config.tracker_config}")
     print(f"Device:      {config.device}")
@@ -37,11 +41,25 @@ def process_video(config: PipelineConfig) -> int:
     print(f"Image size:  {config.image_size}")
     print()
 
+    started_at = time.perf_counter()
+
+    metrics = ProcessingMetricsRecorder(
+        config.processing_metrics_path
+    )
+    metrics.start(monotonic_time=started_at)
+
     if not config.input_video_path.is_file():
-        print(
-            "ERROR: Input video does not exist: "
+        error_message = (
+            "Input video does not exist: "
             f"{config.input_video_path}"
         )
+
+        metrics.finish_failure(
+            monotonic_time=time.perf_counter(),
+            error=error_message,
+        )
+
+        print(f"ERROR: {error_message}")
         return 1
 
     config.output_video_path.parent.mkdir(
@@ -60,7 +78,7 @@ def process_video(config: PipelineConfig) -> int:
     frame_count = 0
     total_frame_detections = 0
     observed_track_ids: set[int] = set()
-    started_at = time.perf_counter()
+    metrics_finished = False
 
     try:
         video = VideoFileSource(
@@ -87,6 +105,12 @@ def process_video(config: PipelineConfig) -> int:
                 "WARNING: Source FPS unavailable; using 30 FPS."
             )
             source_fps = 30.0
+
+        metrics.set_video_metadata(
+            width=width,
+            height=height,
+            source_fps=source_fps,
+        )
 
         print(f"Resolution: {width} x {height}")
         print(f"Source FPS: {source_fps:.2f}")
@@ -218,8 +242,18 @@ def process_video(config: PipelineConfig) -> int:
                 "but no frames were decoded."
             )
 
-        elapsed = time.perf_counter() - started_at
+        finished_at = time.perf_counter()
+        elapsed = finished_at - started_at
         average_fps = frame_count / elapsed
+
+        metrics.finish_success(
+            monotonic_time=finished_at,
+            frames_processed=frame_count,
+            frame_detections=total_frame_detections,
+            tracked_observations=track_logger.row_count,
+            unique_tracks=len(observed_track_ids),
+        )
+        metrics_finished = True
 
         print()
         print(
@@ -242,21 +276,58 @@ def process_video(config: PipelineConfig) -> int:
         print(f"Average processing FPS: {average_fps:.2f}")
         print(f"Output video:           {config.output_video_path}")
         print(f"Track data:             {config.observations_path}")
+        print(
+            f"Processing metrics:     "
+            f"{config.processing_metrics_path}"
+        )
 
         return 0
 
+    except KeyboardInterrupt:
+        metrics.finish_failure(
+            monotonic_time=time.perf_counter(),
+            error="Processing interrupted by user.",
+            status="interrupted",
+        )
+        metrics_finished = True
+        raise
+
     except (RuntimeError, ValueError, cv2.error) as error:
+        metrics.finish_failure(
+            monotonic_time=time.perf_counter(),
+            error=str(error),
+        )
+        metrics_finished = True
+
         print(f"\nERROR: {error}")
         return 1
 
     except Exception as error:
-        print(
-            f"\nUNEXPECTED ERROR: "
+        error_message = (
             f"{type(error).__name__}: {error}"
         )
+
+        metrics.finish_failure(
+            monotonic_time=time.perf_counter(),
+            error=error_message,
+        )
+        metrics_finished = True
+
+        print(f"\nUNEXPECTED ERROR: {error_message}")
         return 1
 
     finally:
+        if (
+            not metrics_finished
+            and metrics.started_monotonic is not None
+        ):
+            metrics.finish_failure(
+                monotonic_time=time.perf_counter(),
+                error=(
+                    "Processing ended without a final status."
+                ),
+            )
+
         if video is not None:
             video.release()
 

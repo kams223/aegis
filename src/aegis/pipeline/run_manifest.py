@@ -1,7 +1,9 @@
+import csv
 import hashlib
 import json
 import re
 import uuid
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -122,7 +124,7 @@ class RunManifest:
         }
 
         self.data = {
-            "schema_version": 2,
+            "schema_version": 3,
             "run_id": self.run_id,
             "status": "running",
             "started_at_utc": self.started_at,
@@ -170,12 +172,31 @@ class RunManifest:
                 "quality": str(
                     self.config.quality_path
                 ),
+                "processing_metrics": str(
+                    self.config.processing_metrics_path
+                ),
                 "latest_manifest": str(
                     self.output_path
                 ),
                 "archived_manifest": str(
                     self.archive_path
                 ),
+            },
+            "performance": {
+                "pipeline_duration_seconds": None,
+                "stage_duration_seconds": 0.0,
+                "initialization_overhead_seconds": None,
+                "processing_metrics_available": False,
+                "processing_metrics": None,
+                "processing_metrics_error": None,
+                "quality_counts_available": False,
+                "quality_counts": {
+                    "stable": 0,
+                    "tentative": 0,
+                    "weak": 0,
+                    "total": 0,
+                },
+                "quality_counts_error": None,
             },
             "stages": [],
         }
@@ -218,15 +239,125 @@ class RunManifest:
                 "Manifest must be started before it is finished"
             )
 
+        pipeline_duration = (
+            monotonic_time - self.started_monotonic
+        )
+
+        stage_duration = sum(
+            float(stage.get("duration_seconds", 0.0))
+            for stage in self.data.get("stages", [])
+        )
+
+        initialization_overhead = max(
+            pipeline_duration - stage_duration,
+            0.0,
+        )
+
         self.data["status"] = status
         self.data["finished_at_utc"] = utc_now()
         self.data["duration_seconds"] = round(
-            monotonic_time - self.started_monotonic,
+            pipeline_duration,
             3,
         )
         self.data["exit_code"] = exit_code
 
+        performance = self.data["performance"]
+
+        performance["pipeline_duration_seconds"] = round(
+            pipeline_duration,
+            3,
+        )
+        performance["stage_duration_seconds"] = round(
+            stage_duration,
+            3,
+        )
+        performance[
+            "initialization_overhead_seconds"
+        ] = round(
+            initialization_overhead,
+            3,
+        )
+
+        if status == "completed":
+            self._attach_processing_metrics()
+            self._attach_quality_counts()
+
         self.write()
+
+    def _attach_processing_metrics(self) -> None:
+        """Attach the dedicated processing-metrics artifact."""
+
+        performance = self.data["performance"]
+        metrics_path = self.config.processing_metrics_path
+
+        if not metrics_path.is_file():
+            performance["processing_metrics_error"] = (
+                f"Metrics file not found: {metrics_path}"
+            )
+            return
+
+        try:
+            loaded_metrics = json.loads(
+                metrics_path.read_text(encoding="utf-8")
+            )
+
+        except (OSError, json.JSONDecodeError) as error:
+            performance["processing_metrics_error"] = str(
+                error
+            )
+            return
+
+        if not isinstance(loaded_metrics, dict):
+            performance["processing_metrics_error"] = (
+                "Metrics root value must be an object."
+            )
+            return
+
+        performance["processing_metrics_available"] = True
+        performance["processing_metrics"] = loaded_metrics
+        performance["processing_metrics_error"] = None
+
+    def _attach_quality_counts(self) -> None:
+        """Count track-quality levels from the current output."""
+
+        performance = self.data["performance"]
+        quality_path = self.config.quality_path
+
+        if not quality_path.is_file():
+            performance["quality_counts_error"] = (
+                f"Quality file not found: {quality_path}"
+            )
+            return
+
+        try:
+            with quality_path.open(
+                mode="r",
+                newline="",
+                encoding="utf-8",
+            ) as input_file:
+                reader = csv.DictReader(input_file)
+
+                quality_levels = [
+                    row["quality_level"]
+                    for row in reader
+                ]
+
+        except (OSError, KeyError) as error:
+            performance["quality_counts_error"] = str(
+                error
+            )
+            return
+
+        counts = Counter(quality_levels)
+
+        performance["quality_counts_available"] = True
+        performance["quality_counts"] = {
+            "stable": counts.get("stable", 0),
+            "tentative": counts.get("tentative", 0),
+            "weak": counts.get("weak", 0),
+            "total": len(quality_levels),
+        }
+        performance["quality_counts_error"] = None
 
     def write(self) -> None:
         """Atomically save the latest and archived manifests."""
