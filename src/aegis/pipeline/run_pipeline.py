@@ -8,7 +8,9 @@ from aegis.core.pipeline_config import (
     DEFAULT_CONFIG_PATH,
     PipelineConfig,
 )
-from aegis.pipeline.run_manifest import RunManifest
+from aegis.pipeline.persistent_manifest import (
+    PersistentRunManifest,
+)
 
 
 PipelineStage = tuple[str, Callable[[], int]]
@@ -66,7 +68,7 @@ def build_default_stages(
 
 
 def record_failed_stage(
-    manifest: RunManifest | None,
+    manifest: PersistentRunManifest | None,
     stage_name: str,
     duration_seconds: float,
     exit_code: int,
@@ -93,7 +95,7 @@ def record_failed_stage(
 
 def run_stages(
     stages: list[PipelineStage],
-    manifest: RunManifest | None = None,
+    manifest: PersistentRunManifest | None = None,
 ) -> int:
     """Run stages sequentially and stop on failure."""
 
@@ -224,6 +226,24 @@ def run_stages(
             f"{manifest.archive_path}"
         )
 
+        manifest_config = getattr(
+            manifest,
+            "config",
+            None,
+        )
+
+        database_path = getattr(
+            manifest_config,
+            "database_path",
+            None,
+        )
+
+        if database_path is not None:
+            print(
+                f"  SQLite world model: "
+                f"{database_path}"
+            )
+
     print("=" * 65)
 
     return 0
@@ -251,7 +271,7 @@ def main(
     )
     print()
 
-    manifest = RunManifest(
+    manifest = PersistentRunManifest(
         config=config,
         config_path=parsed_arguments.config,
     )
