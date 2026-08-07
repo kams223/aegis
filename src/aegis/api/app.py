@@ -30,7 +30,7 @@ app = FastAPI(
         "Read-only situational-awareness API for tracked objects "
         "and offline pipeline runs."
     ),
-    version="0.3.0",
+    version="0.4.0",
 )
 
 
@@ -164,6 +164,68 @@ def load_run_manifest() -> dict:
     )
 
 
+def get_processing_summary(
+    manifest: dict,
+) -> dict:
+    """Extract compact processing metrics from one manifest."""
+
+    performance = manifest.get("performance", {})
+
+    if not isinstance(performance, dict):
+        performance = {}
+
+    processing_metrics = performance.get(
+        "processing_metrics",
+        {},
+    )
+
+    if not isinstance(processing_metrics, dict):
+        processing_metrics = {}
+
+    results = processing_metrics.get("results", {})
+
+    if not isinstance(results, dict):
+        results = {}
+
+    return {
+        "processing_metrics_available": (
+            performance.get(
+                "processing_metrics_available",
+                False,
+            )
+            is True
+        ),
+        "average_processing_fps": results.get(
+            "average_processing_fps"
+        ),
+        "frames_processed": results.get(
+            "frames_processed"
+        ),
+        "frame_detections": results.get(
+            "frame_detections"
+        ),
+        "tracked_observations": results.get(
+            "tracked_observations"
+        ),
+        "unique_tracks": results.get(
+            "unique_tracks"
+        ),
+        "processing_duration_seconds": (
+            processing_metrics.get("duration_seconds")
+        ),
+        "initialization_overhead_seconds": (
+            performance.get(
+                "initialization_overhead_seconds"
+            )
+        ),
+        "pipeline_duration_seconds": (
+            performance.get(
+                "pipeline_duration_seconds"
+            )
+        ),
+    }
+
+
 def summarize_manifest(manifest: dict) -> dict:
     """Create a compact representation of one run."""
 
@@ -171,7 +233,13 @@ def summarize_manifest(manifest: dict) -> dict:
     input_metadata = manifest.get("input", {})
     stages = manifest.get("stages", [])
 
-    return {
+    if not isinstance(model, dict):
+        model = {}
+
+    if not isinstance(input_metadata, dict):
+        input_metadata = {}
+
+    summary = {
         "run_id": manifest.get("run_id"),
         "schema_version": manifest.get("schema_version"),
         "status": manifest.get("status"),
@@ -190,6 +258,12 @@ def summarize_manifest(manifest: dict) -> dict:
             else 0
         ),
     }
+
+    summary.update(
+        get_processing_summary(manifest)
+    )
+
+    return summary
 
 
 def load_run_history() -> list[dict]:
