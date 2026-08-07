@@ -50,6 +50,16 @@ function formatDuration(value) {
     return `${duration.toFixed(2)} s`;
 }
 
+function formatNumber(value, decimalPlaces = 0) {
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+        return "Unavailable";
+    }
+
+    return number.toFixed(decimalPlaces);
+}
+
 function formatTimestamp(value) {
     const date = new Date(value);
 
@@ -70,6 +80,251 @@ function createStatusCell(status) {
     cell.appendChild(badge);
 
     return cell;
+}
+
+function createPerformanceItem(label, value, id) {
+    const item = document.createElement("article");
+    item.className = "run-item";
+
+    const labelElement = document.createElement("div");
+    labelElement.className = "run-label";
+    labelElement.textContent = label;
+
+    const valueElement = document.createElement("div");
+    valueElement.id = id;
+    valueElement.className = "run-value";
+    valueElement.textContent = value;
+
+    item.appendChild(labelElement);
+    item.appendChild(valueElement);
+
+    return item;
+}
+
+function ensurePerformancePanel() {
+    let panel = document.getElementById(
+        "performance-panel"
+    );
+
+    if (panel) {
+        return panel;
+    }
+
+    panel = document.createElement("section");
+    panel.id = "performance-panel";
+
+    const heading = document.createElement("h3");
+    heading.className = "stage-heading";
+    heading.textContent = "Processing performance";
+
+    const grid = document.createElement("div");
+    grid.className = "run-grid";
+
+    grid.appendChild(
+        createPerformanceItem(
+            "Processing FPS",
+            "Unavailable",
+            "performance-fps"
+        )
+    );
+
+    grid.appendChild(
+        createPerformanceItem(
+            "Frames processed",
+            "Unavailable",
+            "performance-frames"
+        )
+    );
+
+    grid.appendChild(
+        createPerformanceItem(
+            "Frame detections",
+            "Unavailable",
+            "performance-detections"
+        )
+    );
+
+    grid.appendChild(
+        createPerformanceItem(
+            "Tracked observations",
+            "Unavailable",
+            "performance-observations"
+        )
+    );
+
+    grid.appendChild(
+        createPerformanceItem(
+            "Unique tracks",
+            "Unavailable",
+            "performance-unique-tracks"
+        )
+    );
+
+    grid.appendChild(
+        createPerformanceItem(
+            "Source resolution",
+            "Unavailable",
+            "performance-resolution"
+        )
+    );
+
+    grid.appendChild(
+        createPerformanceItem(
+            "Source FPS",
+            "Unavailable",
+            "performance-source-fps"
+        )
+    );
+
+    grid.appendChild(
+        createPerformanceItem(
+            "Processing duration",
+            "Unavailable",
+            "performance-duration"
+        )
+    );
+
+    grid.appendChild(
+        createPerformanceItem(
+            "Initialization overhead",
+            "Unavailable",
+            "performance-overhead"
+        )
+    );
+
+    grid.appendChild(
+        createPerformanceItem(
+            "Pipeline duration",
+            "Unavailable",
+            "performance-pipeline-duration"
+        )
+    );
+
+    panel.appendChild(heading);
+    panel.appendChild(grid);
+
+    const fingerprint = document.getElementById(
+        "run-fingerprint"
+    );
+
+    fingerprint.insertAdjacentElement(
+        "afterend",
+        panel
+    );
+
+    return panel;
+}
+
+function renderPerformance(manifest) {
+    ensurePerformancePanel();
+
+    const performance = manifest.performance || {};
+    const metrics = performance.processing_metrics || {};
+    const results = metrics.results || {};
+    const video = metrics.video || {};
+
+    const metricsAvailable =
+        performance.processing_metrics_available === true;
+
+    if (!metricsAvailable) {
+        setText("performance-fps", "Unavailable");
+        setText("performance-frames", "Unavailable");
+        setText(
+            "performance-detections",
+            "Unavailable"
+        );
+        setText(
+            "performance-observations",
+            "Unavailable"
+        );
+        setText(
+            "performance-unique-tracks",
+            "Unavailable"
+        );
+        setText(
+            "performance-resolution",
+            "Unavailable"
+        );
+        setText(
+            "performance-source-fps",
+            "Unavailable"
+        );
+        setText(
+            "performance-duration",
+            "Unavailable"
+        );
+    } else {
+        setText(
+            "performance-fps",
+            `${formatNumber(
+                results.average_processing_fps,
+                2
+            )} FPS`
+        );
+
+        setText(
+            "performance-frames",
+            formatNumber(results.frames_processed)
+        );
+
+        setText(
+            "performance-detections",
+            formatNumber(results.frame_detections)
+        );
+
+        setText(
+            "performance-observations",
+            formatNumber(results.tracked_observations)
+        );
+
+        setText(
+            "performance-unique-tracks",
+            formatNumber(results.unique_tracks)
+        );
+
+        const width = Number(video.width);
+        const height = Number(video.height);
+
+        const resolution = (
+            Number.isFinite(width) &&
+            Number.isFinite(height)
+        )
+            ? `${width} × ${height}`
+            : "Unavailable";
+
+        setText(
+            "performance-resolution",
+            resolution
+        );
+
+        const sourceFps = Number(video.source_fps);
+
+        setText(
+            "performance-source-fps",
+            Number.isFinite(sourceFps)
+                ? `${sourceFps.toFixed(2)} FPS`
+                : "Unavailable"
+        );
+
+        setText(
+            "performance-duration",
+            formatDuration(metrics.duration_seconds)
+        );
+    }
+
+    setText(
+        "performance-overhead",
+        formatDuration(
+            performance.initialization_overhead_seconds
+        )
+    );
+
+    setText(
+        "performance-pipeline-duration",
+        formatDuration(
+            performance.pipeline_duration_seconds
+        )
+    );
 }
 
 function renderTracks(tracks) {
@@ -163,22 +418,27 @@ function renderRun(manifest, isLatest) {
 
     setText("run-id", runId);
     setText("run-status", manifest.status || "unknown");
+
     setText(
         "run-finished",
         formatTimestamp(manifest.finished_at_utc)
     );
+
     setText(
         "run-duration",
         formatDuration(manifest.duration_seconds)
     );
+
     setText(
         "run-model",
         model.model_path || "Unavailable"
     );
+
     setText(
         "run-device",
         model.device || "Unavailable"
     );
+
     setText(
         "run-input",
         input.path || "Unavailable"
@@ -194,6 +454,7 @@ function renderRun(manifest, isLatest) {
         `SHA-256: ${input.sha256 || "Unavailable"}`
     );
 
+    renderPerformance(manifest);
     renderStages(stages);
 
     runMessage.hidden = true;
@@ -221,6 +482,7 @@ function renderRunHistory(runs) {
         runButton.type = "button";
         runButton.className = "run-link";
         runButton.textContent = run.run_id || "unknown";
+
         runButton.addEventListener(
             "click",
             () => loadArchivedRun(run.run_id)
@@ -291,14 +553,17 @@ async function loadStatistics() {
     const statistics = await requestJson("/statistics");
 
     setText("total-count", statistics.total_tracks);
+
     setText(
         "stable-count",
         statistics.quality_counts.stable
     );
+
     setText(
         "tentative-count",
         statistics.quality_counts.tentative
     );
+
     setText(
         "weak-count",
         statistics.quality_counts.weak
@@ -380,6 +645,7 @@ async function loadArchivedRun(runId) {
         );
 
         renderRun(manifest, false);
+
         window.scrollTo({
             top: 0,
             behavior: "smooth",
