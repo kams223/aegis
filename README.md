@@ -34,6 +34,10 @@ Detection and tracking outputs are uncertain model predictions. They must not be
 - Atomic processing-metrics reports
 - Auditable latest-run manifest
 - Persistent archived run history
+- SQLite-backed pipeline run and evaluated-track storage
+- Automatic evaluated-track persistence after successful runs
+- Idempotent JSON-manifest and evaluated-track import tools
+- Historical per-run track and statistics API
 - SHA-256 input-video fingerprints
 - Run-to-run performance comparison
 - Read-only FastAPI service
@@ -101,6 +105,7 @@ Track stability measures temporal persistence. It does not prove that the predic
 - OpenCV
 - Ultralytics YOLO
 - ByteTrack
+- SQLite
 - FastAPI
 - Uvicorn
 - HTML, CSS, and JavaScript
@@ -326,6 +331,7 @@ outputs/data/aegis_track_summaries.csv
 outputs/data/aegis_track_quality.csv
 outputs/data/aegis_processing_metrics.json
 outputs/data/aegis_run_manifest.json
+outputs/data/aegis_world_model.sqlite3
 outputs/data/runs/<run-id>.json
 ```
 
@@ -401,6 +407,28 @@ outputs/data/runs/
 
 Archived manifests allow historical inspection and performance comparison without overwriting prior run records.
 
+The SQLite world model is stored at:
+
+```text
+outputs/data/aegis_world_model.sqlite3
+```
+
+It persists run manifests, stage records, and evaluated tracks. Successful pipeline runs update both the JSON manifests and SQLite storage. The API prefers SQLite when it is available and retains JSON and CSV fallbacks for compatibility.
+
+Existing archived JSON manifests can be imported idempotently:
+
+```bash
+python -m aegis.storage.import_run_history \
+  --config configs/pipeline.json
+```
+
+The latest evaluated-track CSV can also be imported idempotently:
+
+```bash
+python -m aegis.storage.import_evaluated_tracks \
+  --config configs/pipeline.json
+```
+
 ## Run the API and Dashboards
 
 Activate the environment and start the composed server:
@@ -450,6 +478,9 @@ The server binds to `127.0.0.1`, so it is intended for local development access.
 | GET | `/runs` | Compact archived-run history |
 | GET | `/runs/latest` | Complete latest-run manifest |
 | GET | `/runs/{run_id}` | Complete archived manifest |
+| GET | `/runs/{run_id}/statistics` | Aggregate evaluated-track statistics for one run |
+| GET | `/runs/{run_id}/tracks` | Filtered evaluated tracks for one run |
+| GET | `/runs/{run_id}/tracks/{track_id}` | One evaluated track from one run |
 | GET | `/run-comparisons` | Compare two archived runs |
 | GET | `/dashboard/` | Main situational-awareness dashboard |
 | GET | `/dashboard/compare.html` | Run-comparison dashboard |
@@ -459,6 +490,12 @@ Example stable-track query:
 
 ```text
 http://localhost:8000/tracks?quality=stable&minimum_confidence=0.5
+```
+
+Example historical stable-track query:
+
+```text
+http://localhost:8000/runs/<run-id>/tracks?quality=stable&minimum_confidence=0.5
 ```
 
 Example comparison request:
@@ -473,6 +510,7 @@ curl -sS \
 ```
 
 Run identifiers are validated before archived files are accessed.
+
 
 ## Performance Comparison
 
@@ -613,7 +651,7 @@ Generate at least two new pipeline runs using the current manifest schema. Older
 - Processing is offline rather than real time.
 - CPU inference is slower than the source video frame rate.
 - Initialization time varies with system state.
-- The world model is CSV-based rather than database-backed.
+- Raw frame observations and per-track summaries remain CSV artifacts.
 - Archived run data has no retention policy.
 - The development API has no authentication.
 - Radar, thermal, RF, acoustic, and Wi-Fi CSI inputs are not integrated.
@@ -651,7 +689,7 @@ The offline MVP is ready for release when:
 - Real run comparison succeeds.
 - Both dashboards load correctly.
 - The repository is clean and synchronized.
-- The release commit is tagged `v0.1.0`.
+- The database-world-model release commit is tagged `v0.2.0`.
 
 ## Future Roadmap
 
@@ -661,8 +699,7 @@ Potential post-MVP work includes:
 - Detection accuracy evaluation
 - Confusion matrices and labeled validation data
 - Camera calibration
-- Real-world trajectory estimation
-- Database-backed world model
+- Real-world trajectory estimation.
 - Run-retention policies
 - Live-camera ingestion
 - GPU optimization
@@ -676,6 +713,4 @@ Potential post-MVP work includes:
 
 ## Status
 
-Aegis is an early-stage research prototype.
-
-The current version demonstrates a complete offline vertical slice from recorded video through detection, persistent tracking, world-model generation, quality evaluation, auditable run history, performance comparison, tested APIs, and browser dashboards.
+The current version demonstrates a complete offline vertical slice from recorded video through detection, persistent tracking, SQLite-backed world-model persistence, quality evaluation, auditable run history, historical track queries, performance comparison, tested APIs, and browser dashboards.
