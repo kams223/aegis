@@ -2,6 +2,21 @@
 
 All notable changes to Aegis are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Historical world-model dashboard for selecting archived runs.
+- Historical track statistics with stable, tentative, and weak counts.
+- Historical evaluated-track filtering by quality and confidence.
+- Detailed inspection of individual archived tracks.
+- Navigation between the latest, historical, and comparison dashboards.
+- Automated tests for the historical dashboard and its static assets.
+
+### Changed
+
+- The main dashboard now links directly to historical inspection and run comparison.
+
 ## [0.2.0] - 2026-08-08
 
 ### Added

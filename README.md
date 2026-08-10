@@ -42,6 +42,7 @@ Detection and tracking outputs are uncertain model predictions. They must not be
 - Run-to-run performance comparison
 - Read-only FastAPI service
 - Interactive situational-awareness dashboard
+- Historical world-model dashboard with per-run track inspection
 - Dedicated run-comparison dashboard
 - Automated unit, API, pipeline, and dashboard tests
 - GitHub Actions continuous integration
@@ -450,6 +451,7 @@ Keep the terminal open while using the API.
 Open these addresses:
 
 - Main dashboard: <http://localhost:8000/dashboard/>
+- Historical world model: <http://localhost:8000/dashboard/history.html>
 - Run comparison: <http://localhost:8000/dashboard/compare.html>
 - API documentation: <http://localhost:8000/docs>
 - Health: <http://localhost:8000/health>
@@ -483,6 +485,7 @@ The server binds to `127.0.0.1`, so it is intended for local development access.
 | GET | `/runs/{run_id}/tracks/{track_id}` | One evaluated track from one run |
 | GET | `/run-comparisons` | Compare two archived runs |
 | GET | `/dashboard/` | Main situational-awareness dashboard |
+| GET | `/dashboard/history.html` | Historical world-model dashboard |
 | GET | `/dashboard/compare.html` | Run-comparison dashboard |
 | GET | `/docs` | Interactive OpenAPI documentation |
 
@@ -561,6 +564,7 @@ Run selected test areas:
 python -m pytest tests/test_pipeline.py -v
 python -m pytest tests/test_api.py -v
 python -m pytest tests/test_dashboard.py -v
+python -m pytest tests/test_historical_dashboard.py -v
 python -m pytest tests/test_run_manifest.py -v
 python -m pytest tests/test_run_comparison.py -v
 python -m pytest tests/test_run_comparison_api.py -v
@@ -687,7 +691,7 @@ The offline MVP is ready for release when:
 - Archived manifests are preserved.
 - Health, statistics, tracks, and run endpoints respond.
 - Real run comparison succeeds.
-- Both dashboards load correctly.
+- The latest, historical, and comparison dashboards load correctly.
 - The repository is clean and synchronized.
 - The database-world-model release commit is tagged `v0.2.0`.
 
