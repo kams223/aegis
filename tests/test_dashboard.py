@@ -42,3 +42,16 @@ def test_dashboard_javascript_is_available():
     assert "loadLatestRun" in response.text
     assert '"/runs/latest"' in response.text
     assert "renderStages" in response.text
+
+
+def test_dashboard_links_to_historical_tools():
+    response = client.get(
+        "/dashboard/",
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert 'href="/dashboard/history.html"' in response.text
+    assert "Historical world model" in response.text
+    assert 'href="/dashboard/compare.html"' in response.text
+    assert "Compare runs" in response.text

@@ -60,6 +60,25 @@
             font-size: 0.88rem;
         }
 
+        .header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .header-link {
+            padding: 0.55rem 0.8rem;
+            border: 1px solid #315266;
+            border-radius: 0.5rem;
+            color: #77cef5;
+            text-decoration: none;
+        }
+
+        .header-link:hover {
+            background: #102b3b;
+        }
         .status {
             display: inline-flex;
             align-items: center;
@@ -353,9 +372,25 @@
         </div>
     </div>
 
-    <div id="system-status" class="status">
-        <span class="status-dot"></span>
-        <span id="status-text">Checking API…</span>
+    <div class="header-actions">
+        <a
+            class="header-link"
+            href="/dashboard/history.html"
+        >
+            Historical world model
+        </a>
+
+        <a
+            class="header-link"
+            href="/dashboard/compare.html"
+        >
+            Compare runs
+        </a>
+
+        <div id="system-status" class="status">
+            <span class="status-dot"></span>
+            <span id="status-text">Checking API…</span>
+        </div>
     </div>
 </header>
 

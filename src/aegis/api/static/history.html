@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Aegis Historical World Model</title>
+
+    <link
+        rel="stylesheet"
+        href="/dashboard/history.css"
+    >
+</head>
+
+<body>
+<header>
+    <div>
+        <h1>AEGIS HISTORICAL WORLD MODEL</h1>
+
+        <div class="subtitle">
+            Inspect evaluated tracks from archived pipeline runs
+        </div>
+    </div>
+
+    <nav>
+        <a href="/dashboard/">Latest dashboard</a>
+        <a href="/dashboard/compare.html">Compare runs</a>
+    </nav>
+</header>
+
+<main>
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Select an archived run</h2>
+        </div>
+
+        <div class="controls">
+            <label>
+                Pipeline run
+
+                <select id="run-select">
+                    <option value="">Loading runs…</option>
+                </select>
+            </label>
+
+            <button id="load-run-button" type="button" disabled>
+                Load run
+            </button>
+        </div>
+
+        <div id="run-message" class="message">
+            Loading archived runs…
+        </div>
+    </section>
+
+    <section id="statistics-panel" class="panel" hidden>
+        <div class="panel-header">
+            <h2>Track statistics</h2>
+        </div>
+
+        <div class="summary">
+            <article class="summary-card">
+                <div class="summary-label">Total tracks</div>
+                <div id="total-tracks" class="summary-value">—</div>
+            </article>
+
+            <article class="summary-card">
+                <div class="summary-label">Stable</div>
+                <div id="stable-count" class="summary-value">—</div>
+            </article>
+
+            <article class="summary-card">
+                <div class="summary-label">Tentative</div>
+                <div id="tentative-count" class="summary-value">—</div>
+            </article>
+
+            <article class="summary-card">
+                <div class="summary-label">Weak</div>
+                <div id="weak-count" class="summary-value">—</div>
+            </article>
+        </div>
+    </section>
+
+    <section id="tracks-panel" class="panel" hidden>
+        <div class="panel-header">
+            <h2>Evaluated tracks</h2>
+        </div>
+
+        <div class="filters">
+            <label>
+                Quality
+
+                <select id="quality-filter">
+                    <option value="">All qualities</option>
+                    <option value="stable">Stable</option>
+                    <option value="tentative">Tentative</option>
+                    <option value="weak">Weak</option>
+                </select>
+            </label>
+
+            <label>
+                Minimum confidence
+
+                <input
+                    id="confidence-filter"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value="0"
+                >
+            </label>
+
+            <label>
+                Maximum results
+
+                <input
+                    id="track-limit"
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value="100"
+                >
+            </label>
+
+            <button id="apply-filters-button" type="button">
+                Apply filters
+            </button>
+        </div>
+
+        <div id="tracks-message" class="message"></div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Track ID</th>
+                    <th>Label</th>
+                    <th>Quality</th>
+                    <th>Confidence</th>
+                    <th>Observations</th>
+                    <th>Duration</th>
+                    <th>Displacement</th>
+                </tr>
+                </thead>
+
+                <tbody id="track-table-body"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="details-panel" class="panel" hidden>
+        <div class="panel-header">
+            <h2>Track details</h2>
+        </div>
+
+        <div id="track-details" class="details"></div>
+    </section>
+</main>
+
+<footer>
+    Historical tracks are model-generated observations and should
+    not be interpreted as verified facts.
+</footer>
+
+<script src="/dashboard/history.js"></script>
+</body>
+</html>

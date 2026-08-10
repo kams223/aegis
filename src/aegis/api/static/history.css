@@ -1,0 +1,271 @@
+:root {
+    color-scheme: dark;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    background: #071018;
+    color: #e7f0f7;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(
+            circle at top right,
+            #12344b 0,
+            transparent 34rem
+        ),
+        #071018;
+}
+
+header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid #203342;
+    background: rgba(7, 16, 24, 0.92);
+}
+
+h1,
+h2 {
+    margin: 0;
+}
+
+h1 {
+    font-size: 1.35rem;
+    letter-spacing: 0.04em;
+}
+
+h2 {
+    font-size: 1rem;
+}
+
+.subtitle,
+.message {
+    color: #91a9b9;
+}
+
+.subtitle {
+    margin-top: 0.3rem;
+    font-size: 0.88rem;
+}
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+nav a {
+    padding: 0.55rem 0.8rem;
+    border: 1px solid #315266;
+    border-radius: 0.5rem;
+    color: #77cef5;
+    text-decoration: none;
+}
+
+nav a:hover {
+    background: #102b3b;
+}
+
+main {
+    width: min(1500px, 100%);
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+.panel {
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    border: 1px solid #203746;
+    border-radius: 0.8rem;
+    background: rgba(12, 28, 39, 0.92);
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.18);
+}
+
+.panel-header {
+    padding: 1rem;
+    border-bottom: 1px solid #203746;
+}
+
+.controls,
+.filters {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+    align-items: end;
+}
+
+.controls {
+    grid-template-columns: minmax(260px, 1fr) auto;
+}
+
+.filters {
+    grid-template-columns:
+        repeat(3, minmax(160px, 1fr))
+        auto;
+}
+
+label {
+    display: block;
+    color: #8da5b5;
+    font-size: 0.76rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+select,
+input,
+button {
+    width: 100%;
+    margin-top: 0.45rem;
+    padding: 0.7rem;
+    border: 1px solid #315064;
+    border-radius: 0.45rem;
+    background: #091722;
+    color: #e7f0f7;
+}
+
+button {
+    min-width: 8rem;
+    cursor: pointer;
+    border-color: #2389bd;
+    background: #12608a;
+}
+
+button:hover {
+    background: #1777a8;
+}
+
+button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+.message {
+    padding: 1rem;
+}
+
+.summary {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.summary-card,
+.detail-card {
+    padding: 1rem;
+    border: 1px solid #1e3949;
+    border-radius: 0.65rem;
+    background: #091923;
+}
+
+.summary-label,
+.detail-label {
+    color: #8da5b5;
+    font-size: 0.72rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.summary-value {
+    margin-top: 0.4rem;
+    font-size: 1.65rem;
+    font-weight: 700;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid #1d3443;
+    text-align: left;
+    white-space: nowrap;
+}
+
+th {
+    color: #91a9b9;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+tbody tr {
+    cursor: pointer;
+}
+
+tbody tr:hover {
+    background: #102b3b;
+}
+
+.quality {
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+}
+
+.stable {
+    background: #123f34;
+    color: #70e0b4;
+}
+
+.tentative {
+    background: #483b16;
+    color: #f1cd67;
+}
+
+.weak {
+    background: #47242b;
+    color: #f29aa8;
+}
+
+.details {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.detail-value {
+    margin-top: 0.35rem;
+    overflow-wrap: anywhere;
+}
+
+footer {
+    padding: 1rem 1.5rem 2rem;
+    color: #78909f;
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 800px) {
+    .controls,
+    .filters {
+        grid-template-columns: 1fr;
+    }
+
+    header {
+        padding: 1rem;
+    }
+
+    main {
+        padding: 1rem;
+    }
+}
