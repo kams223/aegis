@@ -6,6 +6,15 @@ const applyFiltersButton = document.getElementById(
     "apply-filters-button"
 );
 
+const previousPageButton = document.getElementById(
+    "previous-page-button"
+);
+const nextPageButton = document.getElementById(
+    "next-page-button"
+);
+
+let currentOffset = 0;
+
 function setText(id, value) {
     document.getElementById(id).textContent = value;
 }
@@ -143,13 +152,47 @@ function renderTracks(data) {
         tableBody.append(row);
     }
 
+        currentOffset = data.offset;
+
+    const firstResult = (
+        data.total_matching === 0
+            ? 0
+            : data.offset + 1
+    );
+
+    const lastResult = (
+        data.offset + data.returned
+    );
+
+    const pageNumber = (
+        Math.floor(data.offset / data.limit) + 1
+    );
+
+    const pageCount = Math.max(
+        1,
+        Math.ceil(data.total_matching / data.limit)
+    );
+
     setText(
         "tracks-message",
         (
             `${data.total_matching} matching tracks; ` +
-            `${data.returned} displayed. ` +
+            `showing ${firstResult}–${lastResult}. ` +
             "Select a row for details."
         )
+    );
+
+    setText(
+        "page-message",
+        `Page ${pageNumber} of ${pageCount}`
+    );
+
+    previousPageButton.disabled = (
+        !data.has_previous
+    );
+
+    nextPageButton.disabled = (
+        !data.has_next
     );
 
     document.getElementById(
@@ -288,14 +331,26 @@ function buildTrackQuery() {
         limit: document.getElementById(
             "track-limit"
         ).value,
+        offset: currentOffset,
     });
 
     const quality = document.getElementById(
         "quality-filter"
     ).value;
 
+    const dominantLabel = document.getElementById(
+        "label-filter"
+    ).value.trim();
+
     if (quality) {
         parameters.set("quality", quality);
+    }
+
+    if (dominantLabel) {
+        parameters.set(
+            "dominant_label",
+            dominantLabel
+        );
     }
 
     return parameters.toString();
@@ -320,7 +375,7 @@ async function loadSelectedRun() {
     if (!runId) {
         return;
     }
-
+    currentOffset = 0;
     loadRunButton.disabled = true;
     applyFiltersButton.disabled = true;
 
@@ -418,6 +473,7 @@ loadRunButton.addEventListener(
 applyFiltersButton.addEventListener(
     "click",
     async () => {
+        currentOffset = 0;
         applyFiltersButton.disabled = true;
 
         try {
@@ -430,6 +486,38 @@ applyFiltersButton.addEventListener(
         } finally {
             applyFiltersButton.disabled = false;
         }
+    }
+);
+
+previousPageButton.addEventListener(
+    "click",
+    async () => {
+        const limit = Number(
+            document.getElementById(
+                "track-limit"
+            ).value
+        );
+
+        currentOffset = Math.max(
+            0,
+            currentOffset - limit
+        );
+
+        await loadTracks();
+    }
+);
+
+nextPageButton.addEventListener(
+    "click",
+    async () => {
+        const limit = Number(
+            document.getElementById(
+                "track-limit"
+            ).value
+        );
+
+        currentOffset += limit;
+        await loadTracks();
     }
 );
 

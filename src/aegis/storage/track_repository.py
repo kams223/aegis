@@ -197,29 +197,11 @@ class TrackRepository:
     def count_tracks(
         self,
         run_id: str,
-    ) -> int:
-        """Return the number of tracks for one run."""
-
-        with self.connect() as connection:
-            row = connection.execute(
-                """
-                SELECT COUNT(*) AS track_count
-                FROM evaluated_tracks
-                WHERE run_id = ?
-                """,
-                (run_id,),
-            ).fetchone()
-
-        return int(row["track_count"])
-
-    def list_tracks(
-        self,
-        run_id: str,
         quality: str | None = None,
         minimum_confidence: float = 0.0,
-        limit: int = 100,
-    ) -> list[dict[str, Any]]:
-        """Return filtered evaluated tracks."""
+        dominant_label: str | None = None,
+    ) -> int:
+        """Return the number of matching tracks for one run."""
 
         if quality is not None:
             self._validate_quality(quality)
@@ -229,8 +211,80 @@ class TrackRepository:
                 "minimum_confidence must be between 0 and 1"
             )
 
+        if (
+            dominant_label is not None
+            and not dominant_label.strip()
+        ):
+            raise ValueError(
+                "dominant_label must not be empty"
+            )
+
+        query = """
+            SELECT COUNT(*) AS track_count
+            FROM evaluated_tracks
+            WHERE run_id = ?
+              AND average_confidence >= ?
+        """
+
+        parameters: list[Any] = [
+            run_id,
+            minimum_confidence,
+        ]
+
+        if quality is not None:
+            query += """
+              AND quality_level = ?
+            """
+            parameters.append(quality)
+
+        if dominant_label is not None:
+            query += """
+              AND dominant_label = ?
+            """
+            parameters.append(dominant_label)
+
+        with self.connect() as connection:
+            row = connection.execute(
+                query,
+                parameters,
+            ).fetchone()
+
+        return int(row["track_count"])
+
+    def list_tracks(
+        self,
+        run_id: str,
+        quality: str | None = None,
+        minimum_confidence: float = 0.0,
+        dominant_label: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[dict[str, Any]]:
+        """Return filtered and paginated evaluated tracks."""
+
+        if quality is not None:
+            self._validate_quality(quality)
+
+        if not 0.0 <= minimum_confidence <= 1.0:
+            raise ValueError(
+                "minimum_confidence must be between 0 and 1"
+            )
+
+        if (
+            dominant_label is not None
+            and not dominant_label.strip()
+        ):
+            raise ValueError(
+                "dominant_label must not be empty"
+            )
+
         if limit < 1:
             raise ValueError("limit must be positive")
+
+        if offset < 0:
+            raise ValueError(
+                "offset must be non-negative"
+            )
 
         query = """
             SELECT *
@@ -250,14 +304,26 @@ class TrackRepository:
             """
             parameters.append(quality)
 
+        if dominant_label is not None:
+            query += """
+              AND dominant_label = ?
+            """
+            parameters.append(dominant_label)
+
         query += """
             ORDER BY
                 average_confidence DESC,
                 track_id ASC
             LIMIT ?
+            OFFSET ?
         """
 
-        parameters.append(limit)
+        parameters.extend(
+            [
+                limit,
+                offset,
+            ]
+        )
 
         with self.connect() as connection:
             rows = connection.execute(
@@ -269,6 +335,7 @@ class TrackRepository:
             self._row_to_track(row)
             for row in rows
         ]
+
 
     def get_track(
         self,

@@ -103,6 +103,17 @@
             </label>
 
             <label>
+                Predicted label
+
+                <input
+                    id="label-filter"
+                    type="text"
+                    maxlength="200"
+                    placeholder="All labels"
+                >
+            </label>
+
+            <label>
                 Minimum confidence
 
                 <input
@@ -116,14 +127,14 @@
             </label>
 
             <label>
-                Maximum results
+                Results per page
 
                 <input
                     id="track-limit"
                     type="number"
                     min="1"
                     max="1000"
-                    value="100"
+                    value="25"
                 >
             </label>
 
@@ -150,6 +161,28 @@
 
                 <tbody id="track-table-body"></tbody>
             </table>
+        </div>
+
+        <div class="pagination">
+            <button
+                id="previous-page-button"
+                type="button"
+                disabled
+            >
+                Previous page
+            </button>
+
+            <div id="page-message">
+                Page —
+            </div>
+
+            <button
+                id="next-page-button"
+                type="button"
+                disabled
+            >
+                Next page
+            </button>
         </div>
     </section>
 

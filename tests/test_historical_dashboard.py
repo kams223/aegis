@@ -28,10 +28,24 @@ def test_historical_dashboard_has_track_filters():
 
     assert response.status_code == 200
     assert 'id="quality-filter"' in response.text
+    assert 'id="label-filter"' in response.text
     assert 'id="confidence-filter"' in response.text
     assert 'id="track-limit"' in response.text
     assert 'id="apply-filters-button"' in response.text
     assert 'id="track-table-body"' in response.text
+
+
+def test_historical_dashboard_has_pagination_controls():
+    response = client.get(
+        "/dashboard/history.html"
+    )
+
+    assert response.status_code == 200
+    assert 'id="previous-page-button"' in response.text
+    assert 'id="next-page-button"' in response.text
+    assert 'id="page-message"' in response.text
+    assert "Previous page" in response.text
+    assert "Next page" in response.text
 
 
 def test_historical_dashboard_links_to_other_dashboards():
@@ -56,6 +70,7 @@ def test_historical_dashboard_stylesheet_is_available():
         "content-type"
     ].startswith("text/css")
     assert ".summary-card" in response.text
+    assert ".pagination" in response.text
     assert ".quality" in response.text
     assert ".stable" in response.text
     assert ".tentative" in response.text
@@ -81,6 +96,11 @@ def test_historical_dashboard_uses_historical_api():
     assert '"/runs?limit=500"' in response.text
     assert '"/statistics"' in response.text
     assert "`/tracks?" in response.text
+    assert '"dominant_label"' in response.text
+    assert "offset: currentOffset" in response.text
+    assert "currentOffset" in response.text
+    assert "has_previous" in response.text
+    assert "has_next" in response.text
     assert "loadRuns" in response.text
     assert "loadSelectedRun" in response.text
     assert "loadTrackDetails" in response.text

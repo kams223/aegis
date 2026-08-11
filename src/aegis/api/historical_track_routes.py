@@ -128,45 +128,76 @@ def historical_tracks(
         ge=0.0,
         le=1.0,
     ),
+    dominant_label: str | None = Query(
+        default=None,
+        min_length=1,
+        max_length=200,
+    ),
     limit: int = Query(
         default=100,
         ge=1,
         le=1000,
     ),
+    offset: int = Query(
+        default=0,
+        ge=0,
+    ),
 ) -> dict:
-    """Return filtered evaluated tracks for one run."""
+    """Return filtered and paginated tracks for one run."""
 
-    validated_run_id, tracks = load_run_tracks(
-        run_id
+    validated_run_id, repository = (
+        build_track_repository(run_id)
     )
 
-    filtered_tracks = [
-        track
-        for track in tracks
-        if (
-            quality is None
-            or track["quality_level"] == quality
+    try:
+        total_matching = repository.count_tracks(
+            run_id=validated_run_id,
+            quality=quality,
+            minimum_confidence=minimum_confidence,
+            dominant_label=dominant_label,
         )
-        and track["average_confidence"] >= minimum_confidence
-    ]
 
-    filtered_tracks.sort(
-        key=lambda track: (
-            -track["average_confidence"],
-            track["track_id"],
+        tracks = repository.list_tracks(
+            run_id=validated_run_id,
+            quality=quality,
+            minimum_confidence=minimum_confidence,
+            dominant_label=dominant_label,
+            limit=limit,
+            offset=offset,
         )
-    )
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        ) from error
+
+    except sqlite3.Error as error:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Historical track storage could not be read: "
+                f"{error}"
+            ),
+        ) from error
+
+    returned = len(tracks)
 
     return {
         "run_id": validated_run_id,
         "storage_source": "sqlite",
-        "total_matching": len(filtered_tracks),
-        "returned": min(
-            len(filtered_tracks),
-            limit,
+        "total_matching": total_matching,
+        "returned": returned,
+        "offset": offset,
+        "limit": limit,
+        "has_previous": offset > 0,
+        "has_next": (
+            offset + returned < total_matching
         ),
-        "tracks": filtered_tracks[:limit],
+        "tracks": tracks,
     }
+
+
 
 
 @router.get("/tracks/{track_id}")

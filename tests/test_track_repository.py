@@ -31,12 +31,12 @@ def create_track(
     track_id: int,
     quality_level: str = "stable",
     confidence: float = 0.8,
+    label: str = "person",
 ) -> dict:
-    """Create one evaluated test track."""
 
     return {
         "track_id": track_id,
-        "dominant_label": "person",
+        "dominant_label": label,
         "quality_level": quality_level,
         "quality_reason": "Test quality reason",
         "observation_count": 20,
@@ -411,4 +411,130 @@ def test_rejects_invalid_filter_values(tmp_path):
         track_repository.list_tracks(
             run_id="run-001",
             limit=0,
+        )
+def test_list_tracks_applies_label_and_offset(tmp_path):
+    (
+        _,
+        run_repository,
+        track_repository,
+    ) = create_repositories(tmp_path)
+
+    run_repository.save_manifest(
+        create_manifest("run-001")
+    )
+
+    track_repository.replace_run_tracks(
+        run_id="run-001",
+        tracks=[
+            create_track(
+                track_id=1,
+                confidence=0.95,
+                label="person",
+            ),
+            create_track(
+                track_id=2,
+                confidence=0.90,
+                label="car",
+            ),
+            create_track(
+                track_id=3,
+                confidence=0.85,
+                label="person",
+            ),
+            create_track(
+                track_id=4,
+                confidence=0.80,
+                label="person",
+            ),
+        ],
+    )
+
+    tracks = track_repository.list_tracks(
+        run_id="run-001",
+        dominant_label="person",
+        limit=1,
+        offset=1,
+    )
+
+    assert len(tracks) == 1
+    assert tracks[0]["track_id"] == 3
+
+
+def test_count_tracks_applies_filters(tmp_path):
+    (
+        _,
+        run_repository,
+        track_repository,
+    ) = create_repositories(tmp_path)
+
+    run_repository.save_manifest(
+        create_manifest("run-001")
+    )
+
+    track_repository.replace_run_tracks(
+        run_id="run-001",
+        tracks=[
+            create_track(
+                track_id=1,
+                quality_level="stable",
+                confidence=0.9,
+                label="person",
+            ),
+            create_track(
+                track_id=2,
+                quality_level="stable",
+                confidence=0.7,
+                label="car",
+            ),
+            create_track(
+                track_id=3,
+                quality_level="weak",
+                confidence=0.4,
+                label="person",
+            ),
+        ],
+    )
+
+    count = track_repository.count_tracks(
+        run_id="run-001",
+        quality="stable",
+        minimum_confidence=0.8,
+        dominant_label="person",
+    )
+
+    assert count == 1
+
+
+def test_rejects_invalid_pagination_and_label(tmp_path):
+    (
+        _,
+        _,
+        track_repository,
+    ) = create_repositories(tmp_path)
+
+    with pytest.raises(
+        ValueError,
+        match="offset must be non-negative",
+    ):
+        track_repository.list_tracks(
+            run_id="run-001",
+            offset=-1,
+        )
+
+    with pytest.raises(
+        ValueError,
+        match="dominant_label must not be empty",
+    ):
+        track_repository.list_tracks(
+            run_id="run-001",
+            dominant_label="",
+        )
+
+    with pytest.raises(
+        ValueError,
+        match="dominant_label must not be empty",
+    ):
+        track_repository.count_tracks(
+            run_id="run-001",
+            dominant_label="   ",
         )

@@ -291,3 +291,97 @@ def test_unsafe_historical_run_id_returns_400():
     )
 
     assert response.status_code == 400
+def test_historical_tracks_filter_by_label(
+    tmp_path,
+    monkeypatch,
+):
+    configure_history(
+        tmp_path,
+        monkeypatch,
+    )
+
+    response = client.get(
+        "/runs/historical-run-one/tracks",
+        params={
+            "dominant_label": "car",
+        },
+    )
+
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["total_matching"] == 1
+    assert body["returned"] == 1
+    assert body["offset"] == 0
+    assert body["limit"] == 100
+    assert body["has_previous"] is False
+    assert body["has_next"] is False
+    assert body["tracks"][0]["track_id"] == 2
+    assert body["tracks"][0]["dominant_label"] == "car"
+
+
+def test_historical_tracks_apply_pagination(
+    tmp_path,
+    monkeypatch,
+):
+    configure_history(
+        tmp_path,
+        monkeypatch,
+    )
+
+    first_response = client.get(
+        "/runs/historical-run-one/tracks",
+        params={
+            "limit": 1,
+            "offset": 0,
+        },
+    )
+
+    second_response = client.get(
+        "/runs/historical-run-one/tracks",
+        params={
+            "limit": 1,
+            "offset": 1,
+        },
+    )
+
+    first = first_response.json()
+    second = second_response.json()
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 200
+
+    assert first["total_matching"] == 2
+    assert first["returned"] == 1
+    assert first["offset"] == 0
+    assert first["limit"] == 1
+    assert first["has_previous"] is False
+    assert first["has_next"] is True
+    assert first["tracks"][0]["track_id"] == 1
+
+    assert second["total_matching"] == 2
+    assert second["returned"] == 1
+    assert second["offset"] == 1
+    assert second["limit"] == 1
+    assert second["has_previous"] is True
+    assert second["has_next"] is False
+    assert second["tracks"][0]["track_id"] == 2
+
+
+def test_historical_tracks_reject_empty_label(
+    tmp_path,
+    monkeypatch,
+):
+    configure_history(
+        tmp_path,
+        monkeypatch,
+    )
+
+    response = client.get(
+        "/runs/historical-run-one/tracks",
+        params={
+            "dominant_label": "",
+        },
+    )
+
+    assert response.status_code == 422
