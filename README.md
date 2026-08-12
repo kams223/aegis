@@ -495,11 +495,21 @@ Example stable-track query:
 http://localhost:8000/tracks?quality=stable&minimum_confidence=0.5
 ```
 
-Example historical stable-track query:
+Example historical track query with filtering and pagination:
 
 ```text
-http://localhost:8000/runs/<run-id>/tracks?quality=stable&minimum_confidence=0.5
+http://localhost:8000/runs/<run-id>/tracks?quality=stable&dominant_label=airplane&minimum_confidence=0.5&limit=25&offset=0
 ```
+
+Historical track queries support:
+
+- `quality`: `stable`, `tentative`, or `weak`
+- `dominant_label`: exact predicted-label match
+- `minimum_confidence`: value from `0.0` through `1.0`
+- `limit`: results returned per page
+- `offset`: number of matching tracks skipped
+
+Responses include `total_matching`, `returned`, `offset`, `limit`, `has_previous`, and `has_next`.
 
 Example comparison request:
 
@@ -513,7 +523,6 @@ curl -sS \
 ```
 
 Run identifiers are validated before archived files are accessed.
-
 
 ## Performance Comparison
 

@@ -8,7 +8,8 @@ All notable changes to Aegis are documented in this file.
 
 - Historical world-model dashboard for selecting archived runs.
 - Historical track statistics with stable, tentative, and weak counts.
-- Historical evaluated-track filtering by quality and confidence.
+- Historical evaluated-track filtering by quality, label, and confidence.
+- Paginated historical track queries and dashboard navigation.
 - Detailed inspection of individual archived tracks.
 - Navigation between the latest, historical, and comparison dashboards.
 - Automated tests for the historical dashboard and its static assets.
