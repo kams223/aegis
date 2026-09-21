@@ -178,8 +178,9 @@ def test_logger_writes_no_rows_without_assigned_tracks(tmp_path, kind):
         assert list(csv.reader(output)) == [CSV_FIELDS]
 
 
+@pytest.mark.parametrize("source_fps", [25.0, 0.0, -1.0])
 def test_processing_counts_returned_boxes_and_plots_every_frame(
-    fake_runtime, tmp_path,
+    fake_runtime, tmp_path, source_fps,
 ):
     config = PipelineConfig.from_dict({
         "input": {"video_path": str(tmp_path / "input.mp4")},
@@ -214,7 +215,7 @@ def test_processing_counts_returned_boxes_and_plots_every_frame(
     capture.get.side_effect = {
         cv2.CAP_PROP_FRAME_WIDTH: 640,
         cv2.CAP_PROP_FRAME_HEIGHT: 480,
-        cv2.CAP_PROP_FPS: 25.0,
+        cv2.CAP_PROP_FPS: source_fps,
     }.__getitem__
     capture.read.side_effect = [(True, frame) for frame in frames] + [(False, None)]
     cv2.VideoCapture.return_value = capture
@@ -232,7 +233,10 @@ def test_processing_counts_returned_boxes_and_plots_every_frame(
 
     metrics = json.loads(config.processing_metrics_path.read_text(encoding="utf-8"))
     assert metrics["status"] == "completed"
-    assert metrics["video"] == {"width": 640, "height": 480, "source_fps": 25.0}
+    effective_fps = source_fps if source_fps > 0 else 30.0
+    assert metrics["video"] == {
+        "width": 640, "height": 480, "source_fps": effective_fps,
+    }
     assert metrics["results"]["frames_processed"] == 5
     # 2 tracked + 1 untracked + 0 empty + 0 absent + 2 tracked boxes.
     assert metrics["results"]["frame_detections"] == 5
@@ -243,7 +247,10 @@ def test_processing_counts_returned_boxes_and_plots_every_frame(
         rows = list(csv.DictReader(output))
     assert [row["track_id"] for row in rows] == ["9", "3", "9", "3"]
     assert [row["frame_number"] for row in rows] == ["1", "1", "5", "5"]
-    assert [row["timestamp_seconds"] for row in rows] == ["0.0", "0.0", "0.16", "0.16"]
+    last_timestamp = "0.16" if source_fps > 0 else "0.133"
+    assert [row["timestamp_seconds"] for row in rows] == [
+        "0.0", "0.0", last_timestamp, last_timestamp,
+    ]
 
     for result in results:
         result.plot.assert_called_once_with()
@@ -259,7 +266,7 @@ def test_processing_counts_returned_boxes_and_plots_every_frame(
     ]
     cv2.VideoWriter_fourcc.assert_called_once_with(*"mp4v")
     cv2.VideoWriter.assert_called_once_with(
-        str(config.output_video_path), 123, 25.0, (640, 480),
+        str(config.output_video_path), 123, effective_fps, (640, 480),
     )
     capture.release.assert_called_once_with()
     writer.release.assert_called_once_with()

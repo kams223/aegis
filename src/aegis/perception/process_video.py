@@ -85,26 +85,14 @@ def process_video(config: PipelineConfig) -> int:
             str(config.input_video_path)
         )
 
-        width = int(
-            video.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        )
-        height = int(
-            video.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        )
-        source_fps = float(
-            video.cap.get(cv2.CAP_PROP_FPS)
-        )
+        width = video.metadata.width
+        height = video.metadata.height
+        source_fps = video.metadata.fps
 
         if width <= 0 or height <= 0:
             raise RuntimeError(
                 f"Invalid video dimensions: {width} x {height}"
             )
-
-        if source_fps <= 0:
-            print(
-                "WARNING: Source FPS unavailable; using 30 FPS."
-            )
-            source_fps = 30.0
 
         metrics.set_video_metadata(
             width=width,
@@ -151,17 +139,16 @@ def process_video(config: PipelineConfig) -> int:
         )
 
         while True:
-            frame = video.get_frame()
+            frame = video.read_frame()
 
             if frame is None:
                 break
 
             frame_count += 1
-            timestamp_seconds = (
-                frame_count - 1
-            ) / source_fps
+            frame_number = frame.metadata.frame_number
+            timestamp_seconds = frame.metadata.timestamp_seconds
 
-            result = detector.track(frame)
+            result = detector.track(frame.image)
 
             frame_detection_count = (
                 0
@@ -178,7 +165,7 @@ def process_video(config: PipelineConfig) -> int:
 
             track_logger.write_result(
                 result=result,
-                frame_number=frame_count,
+                frame_number=frame_number,
                 timestamp_seconds=timestamp_seconds,
             )
 
@@ -186,7 +173,7 @@ def process_video(config: PipelineConfig) -> int:
 
             cv2.putText(
                 annotated_frame,
-                f"Aegis | Frame: {frame_count}",
+                f"Aegis | Frame: {frame_number}",
                 (20, 40),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1.0,

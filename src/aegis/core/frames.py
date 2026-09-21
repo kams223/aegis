@@ -11,6 +11,20 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True)
+class SourceMetadata:
+    """Original dimensions and effective FPS for one source opening.
+
+    stream_id identifies this opening, not a physical sensor or pipeline run.
+    fps is the positive finite rate used for frame timing and output video.
+    """
+
+    stream_id: str
+    width: int
+    height: int
+    fps: float
+
+
+@dataclass(frozen=True)
 class FrameMetadata:
     """One-based frame position and dimensions for a single stream.
 
