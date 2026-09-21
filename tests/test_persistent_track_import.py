@@ -2,6 +2,10 @@ import csv
 import json
 from pathlib import Path
 
+import pytest
+from fastapi.testclient import TestClient
+
+import aegis.api.app as api_module
 from aegis.core.pipeline_config import PipelineConfig
 from aegis.pipeline.persistent_manifest import (
     PersistentRunManifest,
@@ -340,3 +344,76 @@ def test_failed_run_does_not_import_tracks(
 
     assert performance["database_track_count"] == 0
     assert performance["database_tracks_error"] is None
+
+
+@pytest.mark.parametrize("endpoint", ["/tracks", "/statistics"])
+def test_latest_snapshot_uses_successfully_published_empty_run(
+    tmp_path,
+    monkeypatch,
+    endpoint,
+):
+    """A published empty run supersedes an older nonempty snapshot."""
+
+    input_path = tmp_path / "input.mp4"
+    input_path.write_bytes(b"synthetic-video")
+    output_directory = tmp_path / "outputs"
+    config = create_config(input_path, output_directory)
+
+    write_quality_csv(config.quality_path)
+    run_a = create_manifest(config, output_directory, "run-a")
+    run_a.start(monotonic_time=100.0)
+    run_a.finish(status="completed", exit_code=0, monotonic_time=101.0)
+
+    repository = TrackRepository(config.database_path)
+    assert repository.count_tracks("run-a") == 2
+
+    with config.quality_path.open("w", newline="", encoding="utf-8") as output:
+        csv.DictWriter(output, fieldnames=FIELD_NAMES).writeheader()
+
+    run_b = create_manifest(config, output_directory, "run-b")
+    run_b.start(monotonic_time=102.0)
+    run_b.finish(status="completed", exit_code=0, monotonic_time=103.0)
+
+    stored = RunRepository(config.database_path).get_manifest("run-b")
+    assert stored is not None
+    assert stored["performance"]["database_tracks_available"] is True
+    assert stored["performance"]["database_track_count"] == 0
+    assert stored["performance"]["database_tracks_error"] is None
+    assert repository.count_tracks("run-b") == 0
+    assert repository.count_tracks("run-a") == 2
+
+    monkeypatch.setattr(api_module, "DATABASE_PATH", config.database_path)
+    monkeypatch.setattr(api_module, "RUN_HISTORY_PATH", run_b.history_directory)
+    monkeypatch.setattr(api_module, "RUN_MANIFEST_PATH", run_b.output_path)
+    # Missing fallback data ensures an empty SQLite result remains authoritative.
+    monkeypatch.setattr(api_module, "TRACK_DATA_PATH", tmp_path / "missing.csv")
+
+    with TestClient(api_module.app) as client:
+        latest = client.get("/runs/latest")
+        assert latest.status_code == 200
+        assert latest.json() == stored
+
+        response = client.get(endpoint)
+        assert response.status_code == 200
+        body = response.json()
+        assert body["storage_source"] == "sqlite"
+        assert body["run_id"] == "run-b"
+
+        if endpoint == "/tracks":
+            assert body["tracks"] == []
+            assert body["total_matching"] == 0
+            assert body["returned"] == 0
+        else:
+            assert body["total_tracks"] == 0
+            assert body["quality_counts"] == {
+                "stable": 0,
+                "tentative": 0,
+                "weak": 0,
+            }
+            assert body["label_counts"] == {}
+
+        health = client.get("/health")
+        assert health.status_code == 200
+        assert health.json()["track_run_id"] == "run-b"
+        assert health.json()["world_model_available"] is True
+        assert client.get("/tracks/1").status_code == 404

@@ -144,10 +144,8 @@ def load_csv_tracks() -> list[dict]:
         ) from error
 
 
-def find_database_track_run(
-    repository: TrackRepository,
-) -> str | None:
-    """Find the newest run containing persisted tracks."""
+def find_database_track_run() -> str | None:
+    """Find the newest successful run with a published track snapshot."""
 
     try:
         manifests = build_run_history_store().list_manifests()
@@ -158,7 +156,15 @@ def find_database_track_run(
             if not isinstance(run_id, str):
                 continue
 
-            if repository.count_tracks(run_id) > 0:
+            performance = manifest.get("performance")
+
+            # Publication is explicit: zero tracks is a valid snapshot.
+            if (
+                manifest.get("status") == "completed"
+                and manifest.get("exit_code") == 0
+                and isinstance(performance, dict)
+                and performance.get("database_tracks_available") is True
+            ):
                 return run_id
 
     except (
@@ -186,7 +192,7 @@ def load_database_track_snapshot(
     repository = TrackRepository(database_path)
 
     try:
-        run_id = find_database_track_run(repository)
+        run_id = find_database_track_run()
 
         if run_id is None:
             return None

@@ -1,3 +1,5 @@
+import pytest
+
 from fastapi.testclient import TestClient
 
 import aegis.api.app as api_module
@@ -260,9 +262,23 @@ def test_health_reports_sqlite_track_source(
     assert body["database_path"] == str(database_path)
 
 
-def test_newest_run_without_tracks_is_skipped(
+@pytest.mark.parametrize(
+    ("status", "exit_code", "published"),
+    [
+        ("completed", 0, False),
+        ("completed", 0, None),
+        ("running", None, True),
+        ("failed", 1, True),
+        ("interrupted", 130, True),
+        ("completed", 1, True),
+    ],
+)
+def test_newest_unpublished_or_unsuccessful_run_is_skipped(
     tmp_path,
     monkeypatch,
+    status,
+    exit_code,
+    published,
 ):
     database_path, track_run_id = configure_database(
         tmp_path,
@@ -271,13 +287,19 @@ def test_newest_run_without_tracks_is_skipped(
 
     repository = RunRepository(database_path)
 
-    repository.save_manifest(
-        create_manifest(
-            run_id="newer-run-without-tracks",
-            finished_at_utc=(
-                "2026-08-07T15:00:00+00:00"
-            ),
-        )
+    manifest = create_manifest(
+        run_id="newer-ineligible-run",
+        finished_at_utc="2026-08-07T15:00:00+00:00",
+    )
+    manifest["status"] = status
+    manifest["exit_code"] = exit_code
+    manifest["performance"]["database_tracks_available"] = published
+    repository.save_manifest(manifest)
+
+    # Rows alone must not make an unfinished or unpublished run eligible.
+    TrackRepository(database_path).replace_run_tracks(
+        run_id=manifest["run_id"],
+        tracks=[create_track(99, "person", "stable", 0.9)],
     )
 
     response = client.get("/tracks")
