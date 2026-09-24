@@ -1,4 +1,4 @@
-"""Characterize legacy inference and Aegis processing without heavy dependencies."""
+"""Characterize Aegis processing without heavy dependencies."""
 
 import csv
 import importlib.util
@@ -23,51 +23,6 @@ CSV_FIELDS = [
 ]
 
 
-class FakeTensor:
-    def __init__(self, values):
-        self.values = values
-
-    def cpu(self):
-        return self
-
-    def tolist(self):
-        return self.values
-
-
-class FakeBoxes:
-    def __init__(self, coordinates, confidences, classes, ids):
-        self.xyxy = FakeTensor(coordinates)
-        self.conf = FakeTensor(confidences)
-        self.cls = FakeTensor(classes)
-        self.id = None if ids is None else FakeTensor(ids)
-        self.count = len(coordinates)
-
-    def __len__(self):
-        return self.count
-
-
-def make_result(kind):
-    if kind == "tracked":
-        boxes = FakeBoxes(
-            [[10.126, 20.234, 30.134, 60.242], [0, 2, 6, 10]],
-            [0.876543, 0.5], [1.0, 0.0], [9.0, 3.0],
-        )
-    elif kind == "untracked":
-        boxes = FakeBoxes([[1, 2, 3, 4]], [0.7], [0.0], None)
-    elif kind == "empty":
-        boxes = FakeBoxes([], [], [], [])
-    elif kind == "no_boxes":
-        boxes = None
-    else:
-        raise ValueError(kind)
-
-    return SimpleNamespace(
-        boxes=boxes,
-        names={0: "person", 1: "car"},
-        plot=Mock(return_value=object()),
-    )
-
-
 def make_batch(metadata, tracked=True):
     objects = (
         TrackedObject(9, ObjectDetection(1, "car", 0.876543, 10.126, 20.234, 30.134, 60.242)),
@@ -83,10 +38,6 @@ def fake_runtime(monkeypatch):
     Do not import optional packages or leave production modules cached with fake
     dependencies: CI intentionally installs only requirements-dev.txt.
     """
-    numpy = ModuleType("numpy")
-    numpy.ndarray = object
-    ultralytics = ModuleType("ultralytics")
-    ultralytics.YOLO = Mock()
     cv2 = ModuleType("cv2")
     cv2.CAP_PROP_FRAME_WIDTH = 1
     cv2.CAP_PROP_FRAME_HEIGHT = 2
@@ -99,8 +50,7 @@ def fake_runtime(monkeypatch):
     cv2.VideoWriter_fourcc = Mock(return_value=123)
     cv2.putText = Mock()
 
-    for module in (numpy, ultralytics, cv2):
-        monkeypatch.setitem(sys.modules, module.__name__, module)
+    monkeypatch.setitem(sys.modules, "cv2", cv2)
 
     def load_module(name):
         path = Path(__file__).resolve().parents[1] / "src"
@@ -113,7 +63,6 @@ def fake_runtime(monkeypatch):
 
     load_module("aegis.sensors.frame_source")
     load_module("aegis.sensors.video_file")
-    detector = load_module("aegis.perception.object_detector")
     processing = load_module("aegis.perception.process_video")
     session = Mock(spec=["track", "close"])
     session.track.side_effect = lambda frame: TrackingFrameOutput(
@@ -124,39 +73,8 @@ def fake_runtime(monkeypatch):
     monkeypatch.setattr(processing, "UltralyticsTrackingSession", session_factory, raising=False)
     return SimpleNamespace(
         session=session, session_factory=session_factory,
-        cv2=cv2, yolo=ultralytics.YOLO,
-        detector=detector, processing=processing,
+        cv2=cv2, processing=processing,
     )
-
-
-@pytest.mark.parametrize(
-    "settings, expected",
-    [
-        ({}, ("yolo11n.pt", "bytetrack.yaml", 0.35, 640, "cpu")),
-        (
-            dict(model_path="custom.pt", tracker_config="custom-tracker.yaml",
-                 confidence_threshold=0.62, image_size=320, device="cuda:1"),
-            ("custom.pt", "custom-tracker.yaml", 0.62, 320, "cuda:1"),
-        ),
-    ],
-)
-def test_track_calls_model_once_without_predict(fake_runtime, settings, expected):
-    frame = object()
-    result = make_result("tracked")
-    model = Mock(spec=["track", "predict"])
-    model.track.return_value = [result, object()]
-    fake_runtime.yolo.return_value = model
-
-    detector = fake_runtime.detector.ObjectDetector(**settings)
-    assert detector.track(frame) is result
-
-    model_path, tracker, confidence, size, device = expected
-    fake_runtime.yolo.assert_called_once_with(model_path)
-    assert model.mock_calls == [call.track(
-        source=frame, persist=True, tracker=tracker,
-        conf=confidence, imgsz=size, device=device, verbose=False,
-    )]
-    model.predict.assert_not_called()
 
 
 def test_logger_preserves_csv_order_geometry_and_rounding(tmp_path):
@@ -261,7 +179,6 @@ def test_processing_counts_backend_boxes_and_uses_annotated_images(
     )
     assert fake_runtime.session.track.call_count == len(frames)
     fake_runtime.session.close.assert_called_once_with()
-    fake_runtime.yolo.assert_not_called()
 
     metrics = json.loads(config.processing_metrics_path.read_text(encoding="utf-8"))
     assert metrics["status"] == "completed"
