@@ -10,7 +10,8 @@ import pytest
 
 from aegis.core.frames import Frame, FrameMetadata
 from aegis.core.pipeline_config import PipelineConfig
-from test_tracking_characterization import fake_runtime, make_result
+from aegis.tracking.contracts import TrackedObjectBatch, TrackingFrameOutput
+from test_tracking_characterization import fake_runtime, make_batch
 
 
 def open_source(runtime, fps=25.0, images=()):
@@ -155,18 +156,15 @@ def test_processing_uses_public_source_without_capture(
     source.metadata = SimpleNamespace(width=640, height=480, fps=25.0)
     source.read_frame.side_effect = [*frames, None]
     monkeypatch.setattr(fake_runtime.processing, "VideoFileSource", lambda path: source)
-    result = make_result("tracked")
-    model = fake_runtime.yolo.return_value
-    model.track.return_value = [result]
     writer = fake_runtime.cv2.VideoWriter.return_value
     writer.isOpened.return_value = True
 
     assert fake_runtime.processing.process_video(config) == 0
 
-    assert [entry.kwargs["source"] for entry in model.track.call_args_list] == [
-        frame.image for frame in frames
-    ]
-    assert model.track.call_count == len(frames)
+    assert fake_runtime.session.track.call_args_list == [call(frame) for frame in frames]
+    for entry, frame in zip(fake_runtime.session.track.call_args_list, frames):
+        assert entry.args[0] is frame
+    fake_runtime.session.close.assert_called_once_with()
     with config.observations_path.open(newline="", encoding="utf-8") as output:
         rows = list(csv.DictReader(output))
     assert [row["frame_number"] for row in rows] == [
@@ -232,7 +230,83 @@ def test_processing_failed_open_records_failure_and_releases(
     assert metrics["status"] == "failed"
     assert metrics["error"] == "Invalid video dimensions: 0 x 0"
     assert metrics["results"]["frames_processed"] == 0
-    fake_runtime.yolo.assert_not_called()
+    fake_runtime.session_factory.assert_not_called()
     fake_runtime.cv2.VideoWriter.assert_not_called()
     capture.read.assert_not_called()
     capture.release.assert_called_once_with()
+
+
+@pytest.mark.parametrize("failure", [
+    "eof", "track", "logger_open", "logger_write", "overlay", "write",
+    "interrupt", "source_release", "writer_release", "logger_close",
+])
+def test_processing_closes_session_on_failure(
+    fake_runtime, processing_config, monkeypatch, failure,
+):
+    source, capture = open_source(fake_runtime, images=[object()])
+    monkeypatch.setattr(fake_runtime.processing, "VideoFileSource", lambda path: source)
+    writer = fake_runtime.cv2.VideoWriter.return_value
+    writer.isOpened.return_value = True
+    logger = Mock(spec=["open", "write_batch", "close", "row_count"])
+    logger.row_count = 0
+    monkeypatch.setattr(fake_runtime.processing, "TrackLogger", lambda path: logger)
+    error = RuntimeError("injected failure")
+    if failure == "eof":
+        capture.read.side_effect = [(False, None)]
+    elif failure == "track":
+        fake_runtime.session.track.side_effect = error
+    elif failure == "interrupt":
+        fake_runtime.session.track.side_effect = KeyboardInterrupt()
+    elif failure.startswith("logger_"):
+        getattr(logger, {"logger_open": "open", "logger_write": "write_batch",
+                         "logger_close": "close"}[failure]).side_effect = error
+    elif failure == "overlay":
+        fake_runtime.cv2.putText.side_effect = error
+    elif failure == "write":
+        writer.write.side_effect = error
+    elif failure == "source_release":
+        capture.release.side_effect = error
+    elif failure == "writer_release":
+        writer.release.side_effect = error
+
+    if failure == "interrupt":
+        with pytest.raises(KeyboardInterrupt):
+            fake_runtime.processing.process_video(processing_config)
+    elif failure in ("source_release", "writer_release", "logger_close"):
+        with pytest.raises(RuntimeError, match="injected failure"):
+            fake_runtime.processing.process_video(processing_config)
+    else:
+        assert fake_runtime.processing.process_video(processing_config) == 1
+    fake_runtime.session_factory.assert_called_once()
+    fake_runtime.session.close.assert_called_once_with()
+    assert fake_runtime.session.track.call_count == (0 if failure in ("eof", "logger_open") else 1)
+    capture.release.assert_called_once_with()
+    if failure != "source_release":
+        writer.release.assert_called_once_with()
+        if failure != "writer_release":
+            logger.close.assert_called_once_with()
+
+
+def test_processing_uses_persisted_row_count_and_distinct_ids(
+    fake_runtime, processing_config, monkeypatch,
+):
+    source, _ = open_source(fake_runtime, images=[object()])
+    monkeypatch.setattr(fake_runtime.processing, "VideoFileSource", lambda path: source)
+    fake_runtime.cv2.VideoWriter.return_value.isOpened.return_value = True
+    logger = Mock(spec=["open", "write_batch", "close", "row_count"])
+    logger.row_count = 1
+    monkeypatch.setattr(fake_runtime.processing, "TrackLogger", lambda path: logger)
+
+    def track(frame):
+        obj = make_batch(frame.metadata).objects[0]
+        return TrackingFrameOutput(TrackedObjectBatch(frame.metadata, (obj, obj)), 3, object())
+
+    fake_runtime.session.track.side_effect = track
+    assert fake_runtime.processing.process_video(processing_config) == 0
+    metrics = json.loads(processing_config.processing_metrics_path.read_text())
+    assert metrics["results"]["tracked_observations"] == 1
+    assert metrics["results"]["frame_detections"] == 3
+    assert metrics["results"]["unique_tracks"] == 1
+    assert fake_runtime.cv2.putText.call_args_list[1].args[1] == "Active tracks: 1"
+    logger.write_batch.assert_called_once()
+    fake_runtime.session.close.assert_called_once_with()

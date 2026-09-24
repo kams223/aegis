@@ -2,6 +2,8 @@ import csv
 from pathlib import Path
 from typing import TextIO
 
+from aegis.tracking.contracts import TrackedObjectBatch
+
 
 class TrackLogger:
     """Write confirmed tracking observations to a CSV file."""
@@ -46,52 +48,29 @@ class TrackLogger:
 
         self.writer.writeheader()
 
-    def write_result(
-        self,
-        result,
-        frame_number: int,
-        timestamp_seconds: float,
-    ) -> int:
-        """Write confirmed tracks from one inference result."""
+    def write_batch(self, batch: TrackedObjectBatch) -> int:
+        """Write assigned Aegis tracks in batch order."""
 
         if self.writer is None:
             raise RuntimeError("TrackLogger must be opened before use.")
 
-        boxes = result.boxes
-
-        if boxes is None or boxes.id is None:
-            return 0
-
-        coordinates = boxes.xyxy.cpu().tolist()
-        confidences = boxes.conf.cpu().tolist()
-        class_ids = boxes.cls.cpu().tolist()
-        track_ids = boxes.id.cpu().tolist()
-
         written = 0
-
-        for coordinates_row, confidence, class_id, track_id in zip(
-            coordinates,
-            confidences,
-            class_ids,
-            track_ids,
-        ):
-            x1, y1, x2, y2 = coordinates_row
+        for tracked_object in batch.objects:
+            detection = tracked_object.detection
+            x1, y1, x2, y2 = detection.x1, detection.y1, detection.x2, detection.y2
 
             width = x2 - x1
             height = y2 - y1
             center_x = x1 + width / 2
             center_y = y1 + height / 2
 
-            class_number = int(class_id)
-            label = str(result.names[class_number])
-
             self.writer.writerow(
                 {
-                    "frame_number": frame_number,
-                    "timestamp_seconds": round(timestamp_seconds, 3),
-                    "track_id": int(track_id),
-                    "label": label,
-                    "confidence": round(float(confidence), 4),
+                    "frame_number": batch.frame.frame_number,
+                    "timestamp_seconds": round(batch.frame.timestamp_seconds, 3),
+                    "track_id": tracked_object.track_id,
+                    "label": detection.label,
+                    "confidence": round(float(detection.confidence), 4),
                     "x1": round(float(x1), 2),
                     "y1": round(float(y1), 2),
                     "x2": round(float(x2), 2),

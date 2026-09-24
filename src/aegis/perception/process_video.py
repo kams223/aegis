@@ -4,24 +4,13 @@ import time
 import cv2
 
 from aegis.core.pipeline_config import PipelineConfig
-from aegis.perception.object_detector import ObjectDetector
+from aegis.tracking.contracts import TrackingSession
+from aegis.tracking.ultralytics_session import UltralyticsTrackingSession
 from aegis.perception.processing_metrics import (
     ProcessingMetricsRecorder,
 )
 from aegis.sensors.video_file import VideoFileSource
 from aegis.world_model.track_logger import TrackLogger
-
-
-def extract_track_ids(result) -> set[int]:
-    """Return persistent track IDs present in one result."""
-
-    if result.boxes is None or result.boxes.id is None:
-        return set()
-
-    return {
-        int(track_id)
-        for track_id in result.boxes.id.cpu().tolist()
-    }
 
 
 def process_video(config: PipelineConfig) -> int:
@@ -71,6 +60,7 @@ def process_video(config: PipelineConfig) -> int:
         exist_ok=True,
     )
 
+    session: TrackingSession | None = None
     video = None
     writer = None
     track_logger = None
@@ -104,7 +94,7 @@ def process_video(config: PipelineConfig) -> int:
         print(f"Source FPS: {source_fps:.2f}")
         print()
 
-        detector = ObjectDetector(
+        session = UltralyticsTrackingSession(
             model_path=config.model_path,
             confidence_threshold=(
                 config.confidence_threshold
@@ -146,30 +136,20 @@ def process_video(config: PipelineConfig) -> int:
 
             frame_count += 1
             frame_number = frame.metadata.frame_number
-            timestamp_seconds = frame.metadata.timestamp_seconds
 
-            result = detector.track(frame.image)
+            output = session.track(frame)
 
-            frame_detection_count = (
-                0
-                if result.boxes is None
-                else len(result.boxes)
-            )
+            total_frame_detections += output.returned_box_count
 
-            total_frame_detections += (
-                frame_detection_count
-            )
-
-            frame_track_ids = extract_track_ids(result)
+            frame_track_ids = {
+                tracked_object.track_id
+                for tracked_object in output.tracks.objects
+            }
             observed_track_ids.update(frame_track_ids)
 
-            track_logger.write_result(
-                result=result,
-                frame_number=frame_number,
-                timestamp_seconds=timestamp_seconds,
-            )
+            track_logger.write_batch(output.tracks)
 
-            annotated_frame = result.plot()
+            annotated_frame = output.annotated_image
 
             cv2.putText(
                 annotated_frame,
@@ -304,25 +284,30 @@ def process_video(config: PipelineConfig) -> int:
         return 1
 
     finally:
-        if (
-            not metrics_finished
-            and metrics.started_monotonic is not None
-        ):
-            metrics.finish_failure(
-                monotonic_time=time.perf_counter(),
-                error=(
-                    "Processing ended without a final status."
-                ),
-            )
+        try:
+            if (
+                not metrics_finished
+                and metrics.started_monotonic is not None
+            ):
+                metrics.finish_failure(
+                    monotonic_time=time.perf_counter(),
+                    error=(
+                        "Processing ended without a final status."
+                    ),
+                )
 
-        if video is not None:
-            video.release()
+            if video is not None:
+                video.release()
 
-        if writer is not None:
-            writer.release()
+            if writer is not None:
+                writer.release()
 
-        if track_logger is not None:
-            track_logger.close()
+            if track_logger is not None:
+                track_logger.close()
+        finally:
+            # Preserve existing cleanup behavior while always ending the session.
+            if session is not None:
+                session.close()
 
 
 def main() -> int:

@@ -1,4 +1,4 @@
-"""Freeze current vendor-boundary behavior without inference dependencies."""
+"""Characterize legacy inference and Aegis processing without heavy dependencies."""
 
 import csv
 import importlib.util
@@ -10,6 +10,9 @@ from unittest.mock import Mock, call
 
 import pytest
 
+from aegis.core.frames import Frame, FrameMetadata
+from aegis.perception.contracts import ObjectDetection
+from aegis.tracking.contracts import TrackedObject, TrackedObjectBatch, TrackingFrameOutput
 from aegis.core.pipeline_config import PipelineConfig
 from aegis.world_model.track_logger import TrackLogger
 
@@ -65,6 +68,14 @@ def make_result(kind):
     )
 
 
+def make_batch(metadata, tracked=True):
+    objects = (
+        TrackedObject(9, ObjectDetection(1, "car", 0.876543, 10.126, 20.234, 30.134, 60.242)),
+        TrackedObject(3, ObjectDetection(0, "person", 0.5, 0.0, 2.0, 6.0, 10.0)),
+    ) if tracked else ()
+    return TrackedObjectBatch(metadata, objects)
+
+
 @pytest.fixture
 def fake_runtime(monkeypatch):
     """Load real source against scoped fakes, restoring module entries after use.
@@ -104,7 +115,15 @@ def fake_runtime(monkeypatch):
     load_module("aegis.sensors.video_file")
     detector = load_module("aegis.perception.object_detector")
     processing = load_module("aegis.perception.process_video")
+    session = Mock(spec=["track", "close"])
+    session.track.side_effect = lambda frame: TrackingFrameOutput(
+        make_batch(frame.metadata), 2, object(),
+    )
+    session_factory = Mock(return_value=session)
+    # raising=False lets tests expose the old consumer before migration.
+    monkeypatch.setattr(processing, "UltralyticsTrackingSession", session_factory, raising=False)
     return SimpleNamespace(
+        session=session, session_factory=session_factory,
         cv2=cv2, yolo=ultralytics.YOLO,
         detector=detector, processing=processing,
     )
@@ -145,7 +164,7 @@ def test_logger_preserves_csv_order_geometry_and_rounding(tmp_path):
     logger = TrackLogger(path)
     logger.open()
     try:
-        assert logger.write_result(make_result("tracked"), 7, 1.23456) == 2
+        assert logger.write_batch(make_batch(FrameMetadata("test", 7, 1.23456, 640, 480))) == 2
         assert logger.row_count == 2
     finally:
         logger.close()
@@ -163,13 +182,12 @@ def test_logger_preserves_csv_order_geometry_and_rounding(tmp_path):
     ]
 
 
-@pytest.mark.parametrize("kind", ["untracked", "empty", "no_boxes"])
-def test_logger_writes_no_rows_without_assigned_tracks(tmp_path, kind):
+def test_logger_writes_no_rows_without_assigned_tracks(tmp_path):
     path = tmp_path / "observations.csv"
     logger = TrackLogger(path)
     logger.open()
     try:
-        assert logger.write_result(make_result(kind), 1, 0.0) == 0
+        assert logger.write_batch(make_batch(FrameMetadata("test", 1, 0.0, 640, 480), False)) == 0
         assert logger.row_count == 0
     finally:
         logger.close()
@@ -178,16 +196,19 @@ def test_logger_writes_no_rows_without_assigned_tracks(tmp_path, kind):
         assert list(csv.reader(output)) == [CSV_FIELDS]
 
 
+@pytest.mark.parametrize("model_settings", [
+    dict(model_path="yolo11n.pt", tracker_config="bytetrack.yaml",
+         confidence_threshold=0.35, image_size=640, device="cpu"),
+    dict(model_path="custom.pt", tracker_config="custom.yaml",
+         confidence_threshold=0.62, image_size=320, device="cuda:1"),
+])
 @pytest.mark.parametrize("source_fps", [25.0, 0.0, -1.0])
-def test_processing_counts_returned_boxes_and_plots_every_frame(
-    fake_runtime, tmp_path, source_fps,
+def test_processing_counts_backend_boxes_and_uses_annotated_images(
+    fake_runtime, tmp_path, source_fps, model_settings,
 ):
     config = PipelineConfig.from_dict({
         "input": {"video_path": str(tmp_path / "input.mp4")},
-        "model": {
-            "model_path": "yolo11n.pt", "tracker_config": "bytetrack.yaml",
-            "confidence_threshold": 0.35, "image_size": 640, "device": "cpu",
-        },
+        "model": model_settings,
         "output": {
             "video_path": str(tmp_path / "output.mp4"),
             "observations_path": str(tmp_path / "observations.csv"),
@@ -202,12 +223,21 @@ def test_processing_counts_returned_boxes_and_plots_every_frame(
         },
     })
     config.input_video_path.write_bytes(b"fake capture supplies the frames")
-    kinds = ["tracked", "untracked", "empty", "no_boxes", "tracked"]
-    results = [make_result(kind) for kind in kinds]
-    frames = [object() for _ in results]
-    model = Mock(spec=["track", "predict"])
-    model.track.side_effect = [[result] for result in results]
-    fake_runtime.yolo.return_value = model
+    counts = [2, 1, 0, 0, 2]
+    frames = [object() for _ in counts]
+    outputs = []
+
+    def track(frame):
+        assert isinstance(frame, Frame)
+        index = len(outputs)
+        assert frame.image is frames[index]
+        output = TrackingFrameOutput(
+            make_batch(frame.metadata, index in (0, 4)), counts[index], object(),
+        )
+        outputs.append(output)
+        return output
+
+    fake_runtime.session.track.side_effect = track
 
     capture = Mock(spec=["isOpened", "get", "read", "release"])
     capture.isOpened.return_value = True
@@ -225,11 +255,13 @@ def test_processing_counts_returned_boxes_and_plots_every_frame(
 
     assert fake_runtime.processing.process_video(config) == 0
 
-    assert model.mock_calls == [call.track(
-        source=frame, persist=True, tracker="bytetrack.yaml",
-        conf=0.35, imgsz=640, device="cpu", verbose=False,
-    ) for frame in frames]
-    model.predict.assert_not_called()
+    fake_runtime.session_factory.assert_called_once_with(
+        model_path=config.model_path, confidence_threshold=config.confidence_threshold,
+        image_size=config.image_size, tracker_config=config.tracker_config, device=config.device,
+    )
+    assert fake_runtime.session.track.call_count == len(frames)
+    fake_runtime.session.close.assert_called_once_with()
+    fake_runtime.yolo.assert_not_called()
 
     metrics = json.loads(config.processing_metrics_path.read_text(encoding="utf-8"))
     assert metrics["status"] == "completed"
@@ -252,16 +284,17 @@ def test_processing_counts_returned_boxes_and_plots_every_frame(
         "0.0", "0.0", last_timestamp, last_timestamp,
     ]
 
-    for result in results:
-        result.plot.assert_called_once_with()
     assert writer.write.call_args_list == [
-        call(result.plot.return_value) for result in results
+        call(output.annotated_image) for output in outputs
     ]
-    assert [(args.args[0], args.args[1]) for args in cv2.putText.call_args_list] == [
-        (result.plot.return_value, text)
-        for number, (result, active) in enumerate(zip(results, [2, 0, 0, 0, 2]), 1)
-        for text in (
-            f"Aegis | Frame: {number}", f"Active tracks: {active}", "Unique tracks: 2",
+    assert cv2.putText.call_args_list == [
+        call(output.annotated_image, text, position, cv2.FONT_HERSHEY_SIMPLEX,
+             1.0, color, 2, cv2.LINE_AA)
+        for number, (output, active) in enumerate(zip(outputs, [2, 0, 0, 0, 2]), 1)
+        for text, position, color in (
+            (f"Aegis | Frame: {number}", (20, 40), (0, 255, 0)),
+            (f"Active tracks: {active}", (20, 80), (0, 255, 255)),
+            ("Unique tracks: 2", (20, 120), (255, 200, 0)),
         )
     ]
     cv2.VideoWriter_fourcc.assert_called_once_with(*"mp4v")
@@ -270,3 +303,18 @@ def test_processing_counts_returned_boxes_and_plots_every_frame(
     )
     capture.release.assert_called_once_with()
     writer.release.assert_called_once_with()
+
+
+def test_logger_counts_each_call_and_requires_open(tmp_path):
+    logger = TrackLogger(tmp_path / "rows.csv")
+    batch = make_batch(FrameMetadata("test", 7, 0.24, 640, 480))
+    with pytest.raises(RuntimeError, match="opened"):
+        logger.write_batch(batch)
+    logger.open()
+    try:
+        assert logger.write_batch(batch) == 2
+        assert logger.write_batch(batch) == 2
+        assert logger.write_batch(TrackedObjectBatch(batch.frame, ())) == 0
+        assert logger.row_count == 4
+    finally:
+        logger.close()
