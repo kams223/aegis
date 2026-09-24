@@ -25,6 +25,8 @@ Detection and tracking outputs are uncertain model predictions. They must not be
 - Recorded MP4 ingestion
 - Pretrained YOLO object detection
 - ByteTrack persistent multi-object tracking
+- Backend-independent frame, detection, and tracking contracts
+- Ultralytics tracking isolated behind an Aegis adapter
 - Annotated output video
 - Frame-level observation logging
 - Per-track temporal summaries
@@ -56,39 +58,83 @@ Recorded Video
 VideoFileSource
       |
       v
-YOLO Object Detection
+Frame (image + FrameMetadata)
       |
       v
-ByteTrack Association
+TrackingSession (Aegis-owned interface)
       |
       v
-Frame-Level Track Observations
++-------------------------------------------------------+
+| UltralyticsTrackingSession (vendor implementation)     |
+|                                                       |
+| YOLO + ByteTrack -> convert tracking data + plot image |
++-------------------------------------------------------+
       |
       v
-Per-Track Summaries
+TrackingFrameOutput
       |
-      v
-Track Quality Evaluation
-      |
-      +-------------------------+
-      |                         |
-      v                         v
-Annotated Video          Processing Metrics
-                                |
-                                v
-                         Auditable Run Manifest
-                                |
-                                v
-                         Archived Run History
-                                |
-                 +--------------+--------------+
-                 |                             |
-                 v                             v
-             FastAPI                     Dashboards
-                 |
-                 v
-       Run Performance Comparison
+      +--------------------------+---------------------------+
+      |                          |                           |
+      v                          v                           v
+returned_box_count         annotated_image             TrackedObjectBatch
+      |                          |                           |
+      v                          v                           v
+Processing Metrics        Aegis overlays                 TrackLogger
+                                 |                           |
+                                 v                           v
+                           Annotated MP4          Frame-Level Observation CSV
+                                                             |
+                                                             v
+                                                       TrackSummarizer
+                                                             |
+                                                             v
+                                                     Per-Track Summaries
+                                                             |
+                                                             v
+                                                    TrackQualityEvaluator
+                                                             |
+                                                             v
+                                                      Evaluated Tracks
+                                                             |
+                                                             v
+                                                     SQLite World Model
+                                                             |
+                                                             v
+                                                          FastAPI
+                                                             |
+                                                             v
+                                                         Dashboards
 ```
+
+### Perception and Tracking Boundary
+
+Aegis owns backend-independent data contracts. `VideoFileSource` returns
+`Frame` objects containing an image and `FrameMetadata`. `TrackingSession`
+defines the Aegis tracking interface; `UltralyticsTrackingSession` is its
+current concrete backend, combining YOLO inference and ByteTrack tracking.
+
+Ultralytics-native Results, Boxes, tensors, and plotting stay inside that
+adapter. Downstream processing receives `TrackingFrameOutput`, containing
+`returned_box_count`, `annotated_image`, and a `TrackedObjectBatch` of
+`TrackedObject` values composed with `ObjectDetection`. The backend-box
+count can exceed the number of assigned tracks; an empty tracked batch is
+valid. Processing adds Aegis overlays to the annotated image before writing
+the MP4. Processing metrics also include processed-frame, written-observation,
+unique-track, and timing statistics.
+
+`TrackLogger` consumes Aegis batches. World-model summarization, persistence,
+the API, and dashboards do not depend on Ultralytics result types. Successful
+pipeline runs attempt to persist evaluated tracks to SQLite and record whether
+publication succeeded; dashboards access published tracks through FastAPI. CSV outputs, processing metrics, and run manifests remain
+available alongside SQLite persistence.
+
+The `Detector` protocol remains available for backend-independent
+detection-only operations returning `DetectionBatch` values, but no standalone
+detection backend is currently used by the production pipeline.
+
+**Aegis owns the contracts; inference libraries are replaceable implementation
+details.** A future backend must implement those contracts and preserve their
+expected coordinate, metadata, counting, and tracking-session semantics.
 
 ## Track Quality Levels
 
@@ -136,6 +182,8 @@ aegis/
 │       ├── perception/
 │       ├── pipeline/
 │       ├── sensors/
+│       ├── storage/
+│       ├── tracking/
 │       └── world_model/
 ├── tests/
 ├── pytest.ini

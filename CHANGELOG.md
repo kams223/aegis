@@ -6,6 +6,11 @@ All notable changes to Aegis are documented in this file.
 
 ### Added
 
+- Aegis `Frame` and `FrameMetadata` contracts for source-owned images and frame metadata.
+- Backend-independent `ObjectDetection`, `DetectionBatch`, `Detector`, and `TrackingSession` contracts.
+- `TrackedObject`, `TrackedObjectBatch`, and `TrackingFrameOutput` contracts for tracking data, backend-box counts, and annotated images.
+- `UltralyticsTrackingSession` adapter for combined YOLO inference and ByteTrack tracking.
+
 - Historical world-model dashboard for selecting archived runs.
 - Historical track statistics with stable, tentative, and weak counts.
 - Historical evaluated-track filtering by quality, label, and confidence.
@@ -15,6 +20,11 @@ All notable changes to Aegis are documented in this file.
 - Automated tests for the historical dashboard and its static assets.
 
 ### Changed
+
+- Recorded-video processing now consumes Aegis tracking contracts instead of raw Ultralytics result objects.
+- `TrackLogger` now consumes `TrackedObjectBatch` while preserving the observation CSV schema and formatting.
+- Ultralytics-specific tracking conversion and plotting are isolated inside the tracking adapter.
+- Removed the unused legacy `ObjectDetector`; production tracking uses `UltralyticsTrackingSession`.
 
 - The main dashboard now links directly to historical inspection and run comparison.
 
