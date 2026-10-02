@@ -4,6 +4,7 @@ import csv
 import importlib.util
 import json
 import sys
+from itertools import product
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
 from unittest.mock import Mock, call
@@ -11,6 +12,8 @@ from unittest.mock import Mock, call
 import pytest
 
 from aegis.core.frames import Frame, FrameMetadata
+from aegis.fusion.camera_adapter import ImageTrackMeasurement, tracked_objects_to_observations
+from aegis.fusion.contracts import ObservationBatch
 from aegis.perception.contracts import ObjectDetection
 from aegis.tracking.contracts import TrackedObject, TrackedObjectBatch, TrackingFrameOutput
 from aegis.core.pipeline_config import PipelineConfig
@@ -122,8 +125,10 @@ def test_logger_writes_no_rows_without_assigned_tracks(tmp_path):
 ])
 @pytest.mark.parametrize("source_fps", [25.0, 0.0, -1.0])
 def test_processing_counts_backend_boxes_and_uses_annotated_images(
-    fake_runtime, tmp_path, source_fps, model_settings,
+    fake_runtime, tmp_path, source_fps, model_settings, monkeypatch,
 ):
+    adapter = Mock(side_effect=AssertionError("Disabled delivery must not convert"))
+    monkeypatch.setattr(fake_runtime.processing, "tracked_objects_to_observations", adapter, raising=False)
     config = PipelineConfig.from_dict({
         "input": {"video_path": str(tmp_path / "input.mp4")},
         "model": model_settings,
@@ -172,6 +177,7 @@ def test_processing_counts_backend_boxes_and_uses_annotated_images(
     cv2.VideoWriter.return_value = writer
 
     assert fake_runtime.processing.process_video(config) == 0
+    adapter.assert_not_called()
 
     fake_runtime.session_factory.assert_called_once_with(
         model_path=config.model_path, confidence_threshold=config.confidence_threshold,
@@ -235,3 +241,215 @@ def test_logger_counts_each_call_and_requires_open(tmp_path):
         assert logger.row_count == 4
     finally:
         logger.close()
+
+
+OBSERVATION_CONTEXT = {
+    "sensor_id": "camera-front",
+    "clock_domain": "recording:test-origin",
+    "reference_frame_id": "front:image-plane",
+}
+
+
+@pytest.fixture
+def observation_runtime(fake_runtime, tmp_path, monkeypatch):
+    config = PipelineConfig.from_dict({
+        "input": {"video_path": str(tmp_path / "input.mp4")},
+        "model": {
+            "model_path": "yolo11n.pt", "tracker_config": "bytetrack.yaml",
+            "confidence_threshold": 0.35, "image_size": 640, "device": "cpu",
+        },
+        "output": {
+            "video_path": str(tmp_path / "out.mp4"),
+            "observations_path": str(tmp_path / "observations.csv"),
+            "summaries_path": str(tmp_path / "summaries.csv"),
+            "quality_path": str(tmp_path / "quality.csv"),
+            "processing_metrics_path": str(tmp_path / "metrics.json"),
+        },
+        "quality": {
+            "minimum_stable_observations": 5,
+            "minimum_stable_duration": 0.2,
+            "minimum_stable_confidence": 0.5,
+        },
+    })
+    config.input_video_path.write_bytes(b"fake source")
+    frames = [
+        Frame(object(), FrameMetadata("opening-a", number, timestamp, 640, 480))
+        for number, timestamp in ((7, 0.240123), (8, 0.28), (9, 0.32), (12, 0.440567))
+    ]
+    outputs = [
+        TrackingFrameOutput(make_batch(frame.metadata, index in (0, 3)), count, object())
+        for index, (frame, count) in enumerate(zip(frames, (2, 1, 0, 2)))
+    ]
+    fake_runtime.session.track.side_effect = outputs
+    source = Mock(spec=["metadata", "read_frame", "release"])
+    source.metadata = SimpleNamespace(width=640, height=480, fps=25.0)
+    source.read_frame.side_effect = [*frames, None]
+    source_factory = Mock(return_value=source)
+    monkeypatch.setattr(fake_runtime.processing, "VideoFileSource", source_factory)
+
+    events = []
+    logger = TrackLogger(config.observations_path)
+    original_write = logger.write_batch
+
+    def write_batch(batch):
+        count = original_write(batch)
+        events.append("logged")
+        return count
+
+    logger.write_batch = Mock(side_effect=write_batch)
+    logger.close = Mock(wraps=logger.close)
+    logger_factory = Mock(return_value=logger)
+    monkeypatch.setattr(fake_runtime.processing, "TrackLogger", logger_factory)
+    writer = fake_runtime.cv2.VideoWriter.return_value
+    writer.isOpened.return_value = True
+    writer.write.side_effect = lambda image: events.append("video")
+    fake_runtime.cv2.putText.side_effect = lambda *args: events.append("overlay")
+    return SimpleNamespace(
+        runtime=fake_runtime, config=config, frames=frames, outputs=outputs,
+        source=source, source_factory=source_factory, logger=logger,
+        logger_factory=logger_factory, writer=writer, events=events,
+    )
+
+
+def test_observation_delivery_preserves_context_order_outputs_and_caller_ownership(observation_runtime):
+    env = observation_runtime
+    received = []
+
+    class Consumer:
+        open = Mock()
+        close = Mock()
+
+        def __call__(self, batch):
+            env.events.append("callback")
+            received.append(batch)
+
+    consumer = Consumer()
+    assert env.runtime.processing.process_video(
+        env.config, on_observations=consumer, **OBSERVATION_CONTEXT,
+    ) == 0
+
+    # Real conversion across nonempty, untracked, empty, then gapped source frames.
+    assert received == [
+        tracked_objects_to_observations(output.tracks, **OBSERVATION_CONTEXT)
+        for output in (env.outputs[0], env.outputs[3])
+    ]
+    assert all(isinstance(batch, ObservationBatch) for batch in received)
+    first = received[0].observations[0]
+    assert first.sensor_id == "camera-front"
+    assert first.measurement_time.seconds == 0.240123
+    assert first.measurement_time.clock_domain == "recording:test-origin"
+    assert first.reference_frame.frame_id == "front:image-plane"
+    assert first.measurement == ImageTrackMeasurement(
+        1, "car", 0.876543, 10.126, 20.234, 30.134, 60.242, 640, 480,
+    )
+    assert first.source_local_id == '["opening-a",9]'
+    assert first.observation_id == '["camera-track","camera-front","opening-a",7,9,0]'
+    assert received[1].observations[0].measurement_time.seconds == 0.440567
+    assert env.events == (
+        ["logged", "callback", "overlay", "overlay", "overlay", "video"]
+        + ["logged", "overlay", "overlay", "overlay", "video"] * 2
+        + ["logged", "callback", "overlay", "overlay", "overlay", "video"]
+    )
+    assert env.runtime.session.track.call_args_list == [call(frame) for frame in env.frames]
+    assert env.writer.write.call_args_list == [call(output.annotated_image) for output in env.outputs]
+    env.runtime.cv2.VideoWriter.assert_called_once_with(
+        str(env.config.output_video_path), 123, 25.0, (640, 480),
+    )
+    assert [entry.args[1] for entry in env.runtime.cv2.putText.call_args_list] == [
+        text
+        for number, active in ((7, 2), (8, 0), (9, 0), (12, 2))
+        for text in (f"Aegis | Frame: {number}", f"Active tracks: {active}", "Unique tracks: 2")
+    ]
+    with env.config.observations_path.open(newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    assert [row["frame_number"] for row in rows] == ["7", "7", "12", "12"]
+    assert [row["timestamp_seconds"] for row in rows] == ["0.24", "0.24", "0.441", "0.441"]
+    metrics = json.loads(env.config.processing_metrics_path.read_text())
+    assert metrics["status"] == "completed"
+    assert {key: metrics["results"][key] for key in (
+        "frames_processed", "frame_detections", "tracked_observations", "unique_tracks",
+    )} == dict(frames_processed=4, frame_detections=5, tracked_observations=4, unique_tracks=2)
+    consumer.open.assert_not_called()
+    consumer.close.assert_not_called()
+    env.source.release.assert_called_once_with()
+    env.writer.release.assert_called_once_with()
+    env.logger.close.assert_called_once_with()
+    env.runtime.session.close.assert_called_once_with()
+
+
+INVALID_DELIVERY_OPTIONS = [
+    {**({"on_observations": lambda batch: None} if flags[0] else {}), **{
+        key: OBSERVATION_CONTEXT[key]
+        for key, present in zip(OBSERVATION_CONTEXT, flags[1:]) if present
+    }}
+    for flags in product((False, True), repeat=4)
+    if flags not in ((False,) * 4, (True,) * 4)
+] + [
+    dict(OBSERVATION_CONTEXT, on_observations=lambda batch: None, **{field: blank})
+    for field in OBSERVATION_CONTEXT for blank in ("", " \t")
+] + [dict(OBSERVATION_CONTEXT, on_observations=object())]
+
+
+@pytest.mark.parametrize("options", INVALID_DELIVERY_OPTIONS)
+def test_observation_delivery_rejects_invalid_context_before_resources(observation_runtime, options):
+    env = observation_runtime
+    assert env.runtime.processing.process_video(env.config, **options) == 1
+    env.source_factory.assert_not_called()
+    env.runtime.session_factory.assert_not_called()
+    env.runtime.cv2.VideoWriter.assert_not_called()
+    env.logger_factory.assert_not_called()
+    metrics = json.loads(env.config.processing_metrics_path.read_text())
+    assert metrics["status"] == "failed"
+    assert metrics["error"]
+    assert metrics["results"]["frames_processed"] == 0
+
+
+@pytest.mark.parametrize("failure", [
+    "callback_runtime", "callback_unexpected", "callback_interrupt",
+    "conversion_runtime", "conversion_unexpected",
+])
+def test_observation_delivery_failure_stops_after_logging_and_closes_session(
+    observation_runtime, monkeypatch, failure,
+):
+    env = observation_runtime
+    error = (
+        KeyboardInterrupt() if failure.endswith("interrupt") else
+        LookupError("delivery failed") if failure.endswith("unexpected") else
+        RuntimeError("delivery failed")
+    )
+    callback = Mock()
+    if failure.startswith("conversion"):
+        adapter = Mock(side_effect=error)
+        monkeypatch.setattr(env.runtime.processing, "tracked_objects_to_observations", adapter, raising=False)
+    else:
+        callback.side_effect = error
+
+    if failure.endswith("interrupt"):
+        with pytest.raises(KeyboardInterrupt):
+            env.runtime.processing.process_video(env.config, on_observations=callback, **OBSERVATION_CONTEXT)
+    else:
+        assert env.runtime.processing.process_video(
+            env.config, on_observations=callback, **OBSERVATION_CONTEXT,
+        ) == 1
+
+    if failure.startswith("conversion"):
+        adapter.assert_called_once_with(env.outputs[0].tracks, **OBSERVATION_CONTEXT)
+        callback.assert_not_called()
+    else:
+        callback.assert_called_once()
+    env.runtime.session.track.assert_called_once_with(env.frames[0])
+    env.source.read_frame.assert_called_once_with()
+    assert env.events == ["logged"]
+    env.logger.write_batch.assert_called_once_with(env.outputs[0].tracks)
+    env.runtime.cv2.putText.assert_not_called()
+    env.writer.write.assert_not_called()
+    env.source.release.assert_called_once_with()
+    env.writer.release.assert_called_once_with()
+    env.logger.close.assert_called_once_with()
+    env.runtime.session.close.assert_called_once_with()
+    with env.config.observations_path.open(newline="") as stream:
+        assert len(list(csv.DictReader(stream))) == 2
+    metrics = json.loads(env.config.processing_metrics_path.read_text())
+    assert metrics["status"] == ("interrupted" if failure.endswith("interrupt") else "failed")
+    # Existing failure metrics do not publish partial loop counters.
+    assert metrics["results"]["frames_processed"] == 0

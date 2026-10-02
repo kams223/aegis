@@ -1,9 +1,15 @@
 import sys
 import time
+from collections.abc import Callable
 
 import cv2
 
 from aegis.core.pipeline_config import PipelineConfig
+from aegis.fusion.camera_adapter import (
+    ImageTrackMeasurement,
+    tracked_objects_to_observations,
+)
+from aegis.fusion.contracts import ObservationBatch
 from aegis.tracking.contracts import TrackingSession
 from aegis.tracking.ultralytics_session import UltralyticsTrackingSession
 from aegis.perception.processing_metrics import (
@@ -13,8 +19,22 @@ from aegis.sensors.video_file import VideoFileSource
 from aegis.world_model.track_logger import TrackLogger
 
 
-def process_video(config: PipelineConfig) -> int:
-    """Track objects and save video plus structured observations."""
+def process_video(
+    config: PipelineConfig,
+    *,
+    on_observations: Callable[[ObservationBatch[ImageTrackMeasurement]], None] | None = None,
+    sensor_id: str | None = None,
+    clock_domain: str | None = None,
+    reference_frame_id: str | None = None,
+) -> int:
+    """Track objects and optionally deliver normalized evidence synchronously.
+
+    Delivery requires a callback and all three explicit context identifiers;
+    omit all four to disable it. The caller owns the callback's lifecycle.
+    Nonempty batches are delivered after CSV logging and before video writing.
+    Delivery errors fail processing without retries or rollback; delivery does
+    not imply that the complete run will succeed.
+    """
 
     print("=" * 60)
     print("Aegis Offline Tracking and World Model")
@@ -71,6 +91,21 @@ def process_video(config: PipelineConfig) -> int:
     metrics_finished = False
 
     try:
+        if on_observations is None:
+            if any(value is not None for value in (
+                sensor_id, clock_domain, reference_frame_id,
+            )):
+                raise ValueError("Observation context requires on_observations")
+        else:
+            if not callable(on_observations):
+                raise ValueError("on_observations must be callable")
+            if sensor_id is None or not sensor_id.strip():
+                raise ValueError("Observation delivery requires a nonblank sensor_id")
+            if clock_domain is None or not clock_domain.strip():
+                raise ValueError("Observation delivery requires a nonblank clock_domain")
+            if reference_frame_id is None or not reference_frame_id.strip():
+                raise ValueError("Observation delivery requires a nonblank reference_frame_id")
+
         video = VideoFileSource(
             str(config.input_video_path)
         )
@@ -148,6 +183,16 @@ def process_video(config: PipelineConfig) -> int:
             observed_track_ids.update(frame_track_ids)
 
             track_logger.write_batch(output.tracks)
+
+            if on_observations is not None:
+                normalized_batch = tracked_objects_to_observations(
+                    output.tracks,
+                    sensor_id=sensor_id,
+                    clock_domain=clock_domain,
+                    reference_frame_id=reference_frame_id,
+                )
+                if normalized_batch.observations:
+                    on_observations(normalized_batch)
 
             annotated_frame = output.annotated_image
 
