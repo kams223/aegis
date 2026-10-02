@@ -4,6 +4,7 @@ import csv
 import importlib.util
 import json
 import sys
+from dataclasses import dataclass
 from itertools import product
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
@@ -13,7 +14,7 @@ import pytest
 
 from aegis.core.frames import Frame, FrameMetadata
 from aegis.fusion.camera_adapter import ImageTrackMeasurement, tracked_objects_to_observations
-from aegis.fusion.contracts import ObservationBatch
+from aegis.fusion.contracts import MeasurementTime, ObservationBatch, ReferenceFrame, SensorObservation
 from aegis.perception.contracts import ObjectDetection
 from aegis.tracking.contracts import TrackedObject, TrackedObjectBatch, TrackingFrameOutput
 from aegis.core.pipeline_config import PipelineConfig
@@ -250,6 +251,24 @@ OBSERVATION_CONTEXT = {
 }
 
 
+@dataclass(frozen=True)
+class RangeMeasurement:
+    """Test-only measurement shape, not a production sensor contract."""
+
+    range_m: float
+    bearing_rad: float
+
+
+class RecordingObservationConsumer:
+    """Record the small test fixture's batches without modality-specific logic."""
+
+    def __init__(self):
+        self.batches: list[ObservationBatch[object]] = []
+
+    def accept(self, batch: ObservationBatch[object]) -> None:
+        self.batches.append(batch)
+
+
 @pytest.fixture
 def observation_runtime(fake_runtime, tmp_path, monkeypatch):
     config = PipelineConfig.from_dict({
@@ -375,6 +394,55 @@ def test_observation_delivery_preserves_context_order_outputs_and_caller_ownersh
     env.writer.release.assert_called_once_with()
     env.logger.close.assert_called_once_with()
     env.runtime.session.close.assert_called_once_with()
+
+
+def test_shared_consumer_receives_sequential_heterogeneous_observation_batches(observation_runtime):
+    env = observation_runtime
+    consumer = RecordingObservationConsumer()
+    assert env.runtime.processing.process_video(
+        env.config, on_observations=consumer.accept, **OBSERVATION_CONTEXT,
+    ) == 0
+
+    # Camera evidence goes through real processing and conversion, not a manual handoff.
+    assert len(consumer.batches) == 2
+    camera_batches = tuple(consumer.batches)
+    for batch, timestamp in zip(camera_batches, (0.240123, 0.440567), strict=True):
+        assert isinstance(batch, ObservationBatch)
+        assert len(batch.observations) == 2
+        for observation, track_id in zip(batch.observations, (9, 3), strict=True):
+            assert isinstance(observation.measurement, ImageTrackMeasurement)
+            assert observation.sensor_id == "camera-front"
+            assert observation.measurement_time == MeasurementTime(timestamp, "recording:test-origin")
+            assert observation.reference_frame == ReferenceFrame("front:image-plane")
+            assert observation.source_local_id == f'["opening-a",{track_id}]'
+
+    measurement = RangeMeasurement(range_m=42.5, bearing_rad=0.125)
+    observation = SensorObservation(
+        observation_id="test-range-observation-1",
+        sensor_id="test-range-01",
+        measurement_time=MeasurementTime(123.75, "test-range-clock"),
+        reference_frame=ReferenceFrame("test-range-frame"),
+        source_local_id="test-range-session/local-2",
+        measurement=measurement,
+    )
+    second_batch = ObservationBatch((observation,))
+    consumer.accept(second_batch)
+
+    # One caller-owned consumer retains exact call order across different payload shapes.
+    assert len(consumer.batches) == 3
+    assert consumer.batches[0] is camera_batches[0]
+    assert consumer.batches[1] is camera_batches[1]
+    assert consumer.batches[2] is second_batch
+    received, = consumer.batches[2].observations
+    assert received is observation
+    assert received.observation_id == "test-range-observation-1"
+    assert received.sensor_id == "test-range-01"
+    assert received.measurement_time == MeasurementTime(123.75, "test-range-clock")
+    assert received.reference_frame == ReferenceFrame("test-range-frame")
+    assert received.source_local_id == "test-range-session/local-2"
+    assert received.measurement is measurement
+    assert isinstance(received.measurement, RangeMeasurement)
+    assert received.measurement == RangeMeasurement(42.5, 0.125)
 
 
 INVALID_DELIVERY_OPTIONS = [
