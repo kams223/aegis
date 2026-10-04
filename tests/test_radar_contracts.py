@@ -6,7 +6,7 @@ from math import inf, nan, nextafter, pi
 import pytest
 
 from aegis.fusion.contracts import MeasurementTime
-from aegis.radar.contracts import RadarDetection, RadarPolarDetectionMeasurement
+from aegis.radar.contracts import RadarDetection, RadarPolarDetectionMeasurement, RadarScan
 
 
 def detection():
@@ -121,3 +121,85 @@ def test_detection_and_measurement_are_frozen():
     ):
         with pytest.raises(FrozenInstanceError):
             setattr(value, field, replacement)
+
+
+def test_scan_preserves_fields_order_and_independent_detection_times():
+    time = MeasurementTime(-2.5, "simulation:scan")
+    first = replace(detection(), source_session_id=" session-a ")
+    second = replace(
+        first, evidence_id="event-b",
+        measurement_time=MeasurementTime(-10.0, "recording:other-origin"),
+    )
+    detections = (first, second)
+    scan = RadarScan(" session-a ", " scan/7 ", time, detections)
+    assert scan.source_session_id == " session-a "
+    assert scan.scan_id == " scan/7 "
+    assert scan.scan_time is time
+    assert scan.scan_time.seconds == -2.5
+    assert scan.detections is detections
+    assert isinstance(scan.detections, tuple)
+    for actual, expected in zip(scan.detections, detections, strict=True):
+        assert actual is expected
+        assert actual.measurement_time is expected.measurement_time
+    assert first.measurement_time.clock_domain == "device:boot-a"
+    assert second.measurement_time.clock_domain == "recording:other-origin"
+    assert [item.measurement_time.seconds for item in scan.detections] == [-0.25, -10.0]
+    with pytest.raises(FrozenInstanceError):
+        scan.scan_id = "other"
+    with pytest.raises(FrozenInstanceError):
+        scan.detections = ()
+
+
+def test_empty_scan_preserves_acquisition_context():
+    time = MeasurementTime(-0.5, "simulation:test")
+    scan = RadarScan("session", "empty-scan", time, ())
+    assert scan.source_session_id == "session"
+    assert scan.scan_id == "empty-scan"
+    assert scan.scan_time is time
+    assert scan.detections == ()
+
+
+@pytest.mark.parametrize("field", ["source_session_id", "scan_id"])
+@pytest.mark.parametrize("value", ["", " \t\n"])
+def test_scan_rejects_blank_identifiers(field, value):
+    scan = RadarScan("session", "scan", MeasurementTime(0.0, "simulation:test"), ())
+    with pytest.raises(ValueError, match=field):
+        replace(scan, **{field: value})
+
+
+@pytest.mark.parametrize("value", [inf, -inf, nan])
+def test_scan_rejects_nonfinite_time_even_when_empty(value):
+    with pytest.raises(ValueError, match="scan_time.seconds"):
+        RadarScan("session", "scan", MeasurementTime(value, "simulation:test"), ())
+
+
+def test_scan_rejects_mutable_detection_collection():
+    with pytest.raises(TypeError, match="tuple"):
+        RadarScan("session-a", "scan", MeasurementTime(0.0, "clock"), [detection()])
+
+
+@pytest.mark.parametrize("value", [None, 1.0, {}, RadarPolarDetectionMeasurement(1.0, 0.0)])
+def test_scan_rejects_foreign_detection_elements(value):
+    with pytest.raises(TypeError, match="RadarDetection"):
+        RadarScan("session-a", "scan", MeasurementTime(0.0, "clock"), (value,))
+
+
+def test_scan_rejects_detection_session_mismatch_without_stripping():
+    with pytest.raises(ValueError, match="source_session_id"):
+        RadarScan(" session-a ", "scan", MeasurementTime(0.0, "clock"), (detection(),))
+
+
+@pytest.mark.parametrize("changed_measurement", [False, True])
+def test_scan_rejects_duplicate_evidence_ids_independent_of_values(changed_measurement):
+    first = detection()
+    second = replace(first, measurement=RadarPolarDetectionMeasurement(9.0, 0.5)) if changed_measurement else first
+    with pytest.raises(ValueError, match="Duplicate.*evidence_id"):
+        RadarScan("session-a", "scan", first.measurement_time, (first, second))
+
+
+def test_scan_accepts_identical_measurements_with_distinct_evidence_ids():
+    first = detection()
+    second = replace(first, evidence_id="another-event")
+    scan = RadarScan("session-a", "scan", first.measurement_time, (first, second))
+    assert scan.detections == (first, second)
+    assert scan.detections[0].measurement is scan.detections[1].measurement

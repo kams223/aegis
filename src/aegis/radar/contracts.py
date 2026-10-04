@@ -79,3 +79,41 @@ class RadarDetection:
             _require_identifier(self.local_detection_id, "local_detection_id")
         if not isfinite(self.measurement_time.seconds):
             raise ValueError("measurement_time.seconds must be finite")
+
+
+@dataclass(frozen=True)
+class RadarScan:
+    """One complete producer-reported acquisition result, including empty ones.
+
+    scan_id identifies an acquisition within source_session_id, not a target
+    or normalized observation. This value is not an observation batch, global
+    watermark, world entity, or proof of complete physical coverage.
+
+    scan_time is an explicit acquisition event reference, not synchronized
+    global time. Detection times may differ, including their clock domains;
+    producers document that relationship. Order, identifiers, and time objects
+    are preserved without sorting or rewriting. An empty scan still retains
+    acquisition context and is distinct from source exhaustion.
+    """
+
+    source_session_id: str
+    scan_id: str
+    scan_time: MeasurementTime
+    detections: tuple[RadarDetection, ...]
+
+    def __post_init__(self) -> None:
+        _require_identifier(self.source_session_id, "source_session_id")
+        _require_identifier(self.scan_id, "scan_id")
+        if not isfinite(self.scan_time.seconds):
+            raise ValueError("scan_time.seconds must be finite")
+        if not isinstance(self.detections, tuple):
+            raise TypeError("detections must be a tuple")
+        seen: set[str] = set()
+        for detection in self.detections:
+            if not isinstance(detection, RadarDetection):
+                raise TypeError("detections must contain RadarDetection values")
+            if detection.source_session_id != self.source_session_id:
+                raise ValueError("Detection source_session_id must match scan source_session_id")
+            if detection.evidence_id in seen:
+                raise ValueError("Duplicate detection evidence_id within scan")
+            seen.add(detection.evidence_id)
