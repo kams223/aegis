@@ -1,0 +1,1 @@
+"""Explicit spatial geometry primitives."""
