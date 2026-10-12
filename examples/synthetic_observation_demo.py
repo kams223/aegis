@@ -154,6 +154,8 @@ def main():
     parser.add_argument("--html", action="store_true", help="emit an offline HTML inspection report")
     parser.add_argument("--compare", action="store_true",
                         help="with --html, compare the fixed fixture with an explicit delivery variant")
+    parser.add_argument("--replay", action="store_true",
+                        help="with --html, include local delivery-order replay controls")
     # Preserve the existing runpy launcher, whose two bootstrap paths remain
     # in argv. Ordinary CLI arguments still receive strict argparse validation.
     bootstrap_paths = [str(Path(__file__).resolve().parents[1] / "src"),
@@ -164,6 +166,8 @@ def main():
     args = parser.parse_args(argv)
     if args.compare and not args.html:
         parser.error("--compare requires --html")
+    if args.replay and not args.html:
+        parser.error("--replay requires --html")
     first, first_view = _scenario()
     second, second_view = _scenario()
     assert first == second and first_view == second_view
@@ -194,7 +198,7 @@ def main():
             scenario.history, scenario_label=scenario.label,
             camera_observation_count=scenario.camera_observation_count,
             radar_observation_count=scenario.radar_observation_count,
-            source_batches=scenario.source_batches, comparison=comparison,
+            source_batches=scenario.source_batches, comparison=comparison, replay=args.replay,
         )
         print(document, end="")
         return

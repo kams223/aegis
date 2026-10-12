@@ -19,6 +19,13 @@ except ModuleNotFoundError as error:
         SyntheticScenario, compare_scenarios, diagnose_scenario, modality,
     )
 
+try:
+    from synthetic_observation_replay import ReplayState
+except ModuleNotFoundError as error:
+    if error.name != "synthetic_observation_replay":
+        raise
+    from examples.synthetic_observation_replay import ReplayState
+
 from aegis.fusion.camera_adapter import ImageTrackMeasurement
 from aegis.fusion.observation_history import ObservationHistory
 from aegis.radar.contracts import RadarPolarDetectionMeasurement
@@ -153,6 +160,7 @@ def render_observation_history_html(
     history: ObservationHistory, *, scenario_label: str,
     camera_observation_count: int, radar_observation_count: int,
     source_batches=None, comparison: SyntheticScenario | None = None,
+    replay: bool = False, _replay_scope: str = "left",
 ) -> str:
     """Return a complete HTML string, preserving caller order and occurrences.
 
@@ -161,6 +169,8 @@ def render_observation_history_html(
     count. No uniqueness, acquisition count or missing evidence is inferred.
     Inputs must be existing valid contracts with supported concrete measurements.
     """
+    if type(replay) is not bool:
+        raise TypeError("replay must be a boolean")
     if not isinstance(history, ObservationHistory):
         raise TypeError("history must be ObservationHistory")
     if not isinstance(scenario_label, str):
@@ -225,12 +235,18 @@ def render_observation_history_html(
         "<h2>Ordered history</h2>",
         _timeline_html(scenario) + _diagnostics_html(findings) + "<h2>Ordered history</h2>", 1,
     )
+    if replay:
+        document = document.replace("</style>", _REPLAY_STYLE + "</style>", 1)
+        document = document.replace(
+            "<h2>Observation timeline</h2>",
+            _replay_html(scenario, _replay_scope) + "<h2>Observation timeline</h2>", 1,
+        )
     if comparison is not None:
         other = render_observation_history_html(
             comparison.history, scenario_label=comparison.label,
             camera_observation_count=comparison.camera_observation_count,
             radar_observation_count=comparison.radar_observation_count,
-            source_batches=comparison.source_batches,
+            source_batches=comparison.source_batches, replay=replay, _replay_scope="right",
         )
         before, body = document.split("<body>", 1)
         body, after = body.rsplit("</body>", 1)
@@ -242,7 +258,7 @@ def render_observation_history_html(
     return document
 
 
-def render_synthetic_workspace_html(scenario: SyntheticScenario, comparison=None) -> str:
+def render_synthetic_workspace_html(scenario: SyntheticScenario, comparison=None, *, replay=False) -> str:
     """Inspect explicit scenarios; inputs are values, never loaded Python code."""
     if not isinstance(scenario, SyntheticScenario):
         raise TypeError("scenario must be SyntheticScenario")
@@ -250,7 +266,7 @@ def render_synthetic_workspace_html(scenario: SyntheticScenario, comparison=None
         scenario.history, scenario_label=scenario.label,
         camera_observation_count=scenario.camera_observation_count,
         radar_observation_count=scenario.radar_observation_count,
-        source_batches=scenario.source_batches, comparison=comparison,
+        source_batches=scenario.source_batches, comparison=comparison, replay=replay,
     )
 
 
@@ -347,3 +363,114 @@ def _comparison_html(left, right):
             "All repeated occurrences are retained; absent occurrences are explicitly identified.</p>"
             + ('<ul class="differences">' + items + "</ul>" if items else
                "<p>No differences in inspected history values, counts, labels or repeated-reference pattern.</p>"))
+
+
+_REPLAY_STYLE = """
+.replay-state { border: 2px solid #bccbd5; background: white; padding: 1rem;
+                margin: 1rem 0; scroll-margin-top: 1rem; }
+.replay-state:target { border-color: #123e57; outline: 3px solid #4181a4; }
+.replay-controls { display: flex; gap: 1rem; flex-wrap: wrap; }
+.replay-controls a { padding: .5rem; border: 1px solid #4181a4; }
+.replay-controls a[aria-disabled="true"] { color: #52616b; }
+"""
+
+
+def _replay_id(scope, position):
+    # IDs and links use only a closed namespace and internally validated indices.
+    if scope not in ("left", "right"):
+        raise ValueError("replay scope must be left or right")
+    return "replay-" + scope + "-" + ("initial" if position is None else str(position))
+
+
+def _occurrence_list(history, positions):
+    items = []
+    for position in positions:
+        source = history.records[position].source_observation
+        items.append("<li>" + _fields([
+            ("Position", position), ("Observation ID", source.observation_id),
+            ("Sensor ID", source.sensor_id), ("Modality", modality(source.measurement)),
+            ("Raw timestamp (s)", source.measurement_time.seconds),
+            ("Clock domain", source.measurement_time.clock_domain),
+        ]) + "</li>")
+    return "<ol>" + "".join(items) + "</ol>" if items else "<p>None.</p>"
+
+
+def render_replay_state_html(scenario: SyntheticScenario, state: ReplayState, *, scope="left") -> str:
+    """Return an escaped static state card, requiring the exact scenario history."""
+    if not isinstance(scenario, SyntheticScenario) or not isinstance(state, ReplayState):
+        raise TypeError("scenario and state must be SyntheticScenario and ReplayState")
+    if state.history is not scenario.history:
+        raise ValueError("replay state must reference the scenario history")
+    card_id = _replay_id(scope, state.position)
+    controls = []
+    for label, target in (("Previous", state.step_backward()),
+                          ("Next", state.step_forward()), ("Reset", state.reset())):
+        disabled = ' aria-disabled="true"' if target.position == state.position else ""
+        controls.append(f'<a href="#{_replay_id(scope, target.position)}"{disabled}>{label}</a>')
+    jumps = " ".join(
+        f'<a href="#{_replay_id(scope, position)}">{position}</a>'
+        for position in range(state.total_count)
+    )
+    summary = _fields([
+        ("Position", "Before first occurrence" if state.position is None else state.position),
+        ("Total occurrences", state.total_count), ("Visited prefix count", len(state.visited_prefix)),
+    ])
+    selected = "<p>No selected occurrence.</p>"
+    findings = ()
+    if state.current is not None:
+        evidence = state.current
+        source = evidence.source_observation
+        sensor_modality, measurement_fields = _measurement_fields(source.measurement)
+        mapped = evidence.mapped_time
+        references = None if scenario.source_batches is None else tuple(
+            f"batch {batch_index}, observation {source_index}"
+            for batch_index, batch in enumerate(scenario.source_batches)
+            for source_index, observation in enumerate(batch.observations)
+            if observation is source
+        )
+        selected = _fields([
+            ("Observation ID", source.observation_id), ("Sensor ID", source.sensor_id),
+            ("Modality", sensor_modality), ("Measurement type", type(source.measurement).__name__),
+            ("Source-local ID", source.source_local_id),
+            ("Raw timestamp (s)", source.measurement_time.seconds),
+            ("Clock domain", source.measurement_time.clock_domain),
+            ("Reference frame", source.reference_frame.frame_id),
+            ("Source inventory references by identity", None if references is None else
+             references or "No identical source in supplied inventory"),
+        ] + measurement_fields)
+        selected += "<h4>Projection</h4>" + _geometry(evidence.spatial_projection)
+        selected += "<h4>Transformed geometry</h4>" + _geometry(evidence.transformed_geometry)
+        selected += "<h4>Mapped time</h4>" + _fields([
+            ("Interval (target s)", None if mapped is None else (mapped.lower_seconds, mapped.upper_seconds)),
+            ("Target clock domain", None if mapped is None else mapped.clock_domain),
+        ]) + _details(evidence, sensor_modality, measurement_fields)
+        locations = {f"history {state.position}"}
+        if references:
+            locations.update(references)
+        findings = tuple(f for f in diagnose_scenario(scenario) if f.location in locations)
+    boundary = 0 if state.position is None else state.position
+    future_start = 0 if state.position is None else state.position + 1
+    return (f'<article class="replay-state" id="{card_id}"><h3>Replay state</h3>'
+            + summary + '<nav class="replay-controls" aria-label="Replay controls">'
+            + "".join(controls) + "</nav><p>Jump to occurrence: "
+            + (jumps or "None (empty history)") + "</p><h4>Selected occurrence</h4>"
+            + selected + "<h4>Selected occurrence diagnostics</h4>"
+            + _diagnostics_html(findings)
+            + "<h4>Previously visited occurrences (before selection)</h4>"
+            + _occurrence_list(state.history, range(boundary))
+            + "<h4>Future occurrences</h4>"
+            + _occurrence_list(state.history, range(future_start, state.total_count)) + "</article>")
+
+
+def _replay_html(scenario, scope):
+    initial = ReplayState(scenario.history)
+    states = (initial,) + tuple(initial.jump(i) for i in range(initial.total_count))
+    return ('<section class="replay"><h2>Deterministic replay</h2>'
+            '<p>Local links select pre-rendered cursor states, highlighted when their fragment is selected. '
+            'All states remain readable without JavaScript. The initial state is before the first occurrence. '
+            'Previous at the initial state and Next at the last state are no-ops. '
+            'The visited prefix includes the selection; backward and reset shorten it. '
+            'Jump selects a cursor frontier, not a log of acquisitions or clicks.</p>'
+            f'<p><a href="#{_replay_id(scope, None)}">Start replay</a></p>'
+            + "".join(render_replay_state_html(scenario, state, scope=scope) for state in states)
+            + "</section>")

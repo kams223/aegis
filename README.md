@@ -796,6 +796,45 @@ HTML. Missing measurement timestamps are not supported by existing derived-evide
 contracts; no new missing-time format is introduced. Scenarios are supplied as
 constructed values: there is no input deserializer, code loader, registry or plugin.
 
+### Deterministic replay inspection (Phases 46–48)
+
+Generate a self-contained replay report:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B \
+examples/synthetic_observation_demo.py --html --replay \
+> /tmp/aegis-synthetic-replay.html
+```
+
+Open the saved file in a browser. Previous, Next, Reset and numbered Jump links
+navigate pre-rendered states using local URL fragments; the selected card is
+highlighted. No JavaScript, server, network access or persistent browser state is
+required. All cards, observation details, timelines and diagnostics stay readable.
+Supported modes are the unchanged default JSON/PASS output, `--html`,
+`--html --compare`, `--html --replay`, and `--html --compare --replay`.
+Both optional flags require `--html`; comparison has separate left/right replay
+cards.
+
+The immutable example-local `ReplayState` starts before the first occurrence.
+Forward selects the next record; backward from zero returns to the initial state.
+Previous at initial and Next at the last occurrence do nothing. Empty histories
+remain initial. Jump accepts only existing zero-based integer positions; invalid
+indices raise `IndexError`, and non-integer indices raise `TypeError`. Reset
+returns to initial. The visited prefix includes the selected occurrence, so
+backward/reset shorten it; this represents a cursor frontier, not accumulated
+click history or independent acquisitions.
+
+Selected cards display original metadata, measurements, optional geometry and
+mapped intervals, derivation inputs, and applicable occurrence/source diagnostics.
+Source inventory references use object identity, never matching IDs. Unavailable
+optional values remain explicit. Earlier and future occurrences are separate,
+and repeated evidence retains each delivery position. Raw clock domains remain
+separate; no association, synchronization, tracking or physical accuracy is
+inferred. This is only synthetic software inspection. Pre-rendering all states
+uses quadratic report space, appropriate for small developer fixtures; automatic
+playback, live acquisition and persistence are outside scope.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`
