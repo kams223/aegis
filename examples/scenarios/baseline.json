@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "scenario_id": "JSON baseline camera/radar fixture",
+  "description": "Same delivery, measurement, geometry and mapped-interval semantics as the built-in demonstration; explicit JSON evidence IDs, not adapter-generated IDs. No physical accuracy claim.",
+  "sources": [
+    {
+      "source_id": "camera",
+      "kind": "camera",
+      "sensor_id": "fixture:camera-sensor",
+      "clock_domain": "fixture:camera",
+      "reference_frame": "fixture:camera:image"
+    },
+    {
+      "source_id": "radar",
+      "kind": "radar",
+      "sensor_id": "fixture:radar-sensor",
+      "clock_domain": "fixture:radar",
+      "reference_frame": "fixture:radar:local"
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "camera:0",
+      "source_id": "camera",
+      "measurement_seconds": 2.0,
+      "source_local_id": "fixture:opening/7",
+      "measurement": {
+        "class_id": 0,
+        "label": "fixture",
+        "confidence": 0.75,
+        "x1": 10.0,
+        "y1": 20.0,
+        "x2": 30.0,
+        "y2": 40.0,
+        "image_width": 640,
+        "image_height": 480
+      },
+      "derivation": {
+        "image_point": [
+          320.0,
+          240.0
+        ],
+        "intrinsics": {
+          "fx_px": 100.0,
+          "fy_px": 100.0,
+          "cx_px": 320.0,
+          "cy_px": 240.0,
+          "optical_frame": "fixture:camera:optical",
+          "calibration_id": "fixture:calibration"
+        },
+        "clock_mapping": {
+          "source_clock_domain": "fixture:camera",
+          "target_clock_domain": "fixture:time",
+          "scale": 1.0,
+          "offset_seconds": 100.0,
+          "valid_from_source_seconds": 0.0,
+          "valid_until_source_seconds": 10.0,
+          "error_bound_seconds": 0.25
+        }
+      }
+    },
+    {
+      "observation_id": "radar:0",
+      "source_id": "radar",
+      "measurement_seconds": 5.0,
+      "measurement": {
+        "range_m": 10.0,
+        "azimuth_rad": 0.0,
+        "elevation_rad": 0.0
+      },
+      "derivation": {
+        "project_spatial": true,
+        "transform": {
+          "source_frame": "fixture:radar:local",
+          "target_frame": "fixture:target",
+          "rotation_target_from_source": [
+            [
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "translation_target_from_source_m": [
+            1.0,
+            2.0,
+            3.0
+          ]
+        },
+        "clock_mapping": {
+          "source_clock_domain": "fixture:radar",
+          "target_clock_domain": "fixture:time",
+          "scale": 1.0,
+          "offset_seconds": 200.0,
+          "valid_from_source_seconds": 0.0,
+          "valid_until_source_seconds": 10.0,
+          "error_bound_seconds": 0.25
+        }
+      }
+    }
+  ],
+  "deliveries": [
+    "radar:0",
+    "camera:0"
+  ]
+}

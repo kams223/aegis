@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "scenario_id": "Intentional metadata validation faults",
+  "description": "Explicit fault injection into newly owned software fixtures: absent timestamps/frames and blank clock/frame/local identifiers. Validation reports must fail; inspection rejects these invalid envelopes. No derivations accompany faults.",
+  "sources": [
+    {
+      "source_id": "camera",
+      "kind": "camera",
+      "sensor_id": "fixture:camera-sensor",
+      "clock_domain": "fixture:camera",
+      "reference_frame": "fixture:camera:image"
+    },
+    {
+      "source_id": "radar",
+      "kind": "radar",
+      "sensor_id": "fixture:radar-sensor",
+      "clock_domain": "fixture:radar",
+      "reference_frame": "fixture:radar:local"
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "missing-time",
+      "source_id": "radar",
+      "measurement_seconds": 5.0,
+      "measurement": {
+        "range_m": 0.0,
+        "azimuth_rad": 0.0
+      },
+      "metadata_overrides": {
+        "measurement_time": null,
+        "reference_frame": null
+      }
+    },
+    {
+      "observation_id": "invalid-clock-frame",
+      "source_id": "camera",
+      "measurement_seconds": 2.0,
+      "measurement": {
+        "class_id": 0,
+        "label": "fixture",
+        "confidence": 0.75,
+        "x1": 10.0,
+        "y1": 20.0,
+        "x2": 30.0,
+        "y2": 40.0,
+        "image_width": 640,
+        "image_height": 480
+      },
+      "metadata_overrides": {
+        "clock_domain": "",
+        "frame_id": "",
+        "source_local_id": ""
+      }
+    }
+  ],
+  "deliveries": [
+    "missing-time",
+    "invalid-clock-frame",
+    "missing-time"
+  ]
+}

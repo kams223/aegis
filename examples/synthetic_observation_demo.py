@@ -147,10 +147,41 @@ def build_synthetic_scenario():
     )
 
 
+def _selected_scenario(args, parser):
+    try:
+        from synthetic_observation_scenarios import load_scenario, ScenarioLoadError
+        from synthetic_observation_validation import render_validation_report
+        from synthetic_observation_inspector import render_synthetic_workspace_html
+    except ModuleNotFoundError as error:
+        if error.name not in ("synthetic_observation_scenarios", "synthetic_observation_validation",
+                              "synthetic_observation_inspector"):
+            raise
+        from examples.synthetic_observation_scenarios import load_scenario, ScenarioLoadError
+        from examples.synthetic_observation_validation import render_validation_report
+        from examples.synthetic_observation_inspector import render_synthetic_workspace_html
+
+    try:
+        scenario = load_scenario(args.scenario)
+    except ScenarioLoadError as error:
+        parser.error("scenario: " + str(error))
+    if args.html:
+        try:
+            document = render_synthetic_workspace_html(scenario, replay=args.replay)
+        except (ValueError, TypeError) as error:
+            parser.error(str(error) + "; use --validate-json or --validate-html for invalid metadata")
+        exit_code = 0
+    else:
+        # No built-in profile or independent reconstruction is inferred from a file.
+        document, exit_code = render_validation_report(scenario, html=args.validate_html)
+    print(document, end="")
+    return exit_code if args.strict else 0
+
+
 def main():
     if not __debug__:
         raise RuntimeError("Run without -O: this demonstration requires assertion checks")
     parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
+    parser.add_argument("--scenario", metavar="PATH", help="load a local schema-v1 JSON synthetic scenario")
     parser.add_argument("--html", action="store_true", help="emit an offline HTML inspection report")
     parser.add_argument("--compare", action="store_true",
                         help="with --html, compare the fixed fixture with an explicit delivery variant")
@@ -176,6 +207,10 @@ def main():
         parser.error("--compare requires --html")
     if args.replay and not args.html:
         parser.error("--replay requires --html")
+    if args.scenario is not None:
+        if args.compare:
+            parser.error("--scenario cannot be combined with --compare; comparison is built-in-fixture-only")
+        return _selected_scenario(args, parser)
     first, first_view = _scenario()
     second, second_view = _scenario()
     assert first == second and first_view == second_view

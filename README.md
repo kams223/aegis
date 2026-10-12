@@ -920,6 +920,89 @@ inside a shared document wrapper. CLI output bytes and validation schema/exit
 semantics remain unchanged. Pre-rendered replay still uses quadratic report space
 for earlier/future occurrence lists and is intended for small synthetic fixtures.
 
+
+### Local JSON synthetic scenarios (Phase 55)
+
+Select a deterministic local fixture without changing any no-scenario CLI mode:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B \
+examples/synthetic_observation_demo.py --scenario examples/scenarios/baseline.json --html --replay \
+> /tmp/aegis-json-scenario.html
+
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B \
+examples/synthetic_observation_demo.py --scenario examples/scenarios/metadata_edge_cases.json --validate-json --strict \
+> /tmp/aegis-metadata-validation.json
+```
+
+Open saved HTML with the browser's Open File action. `--scenario PATH` alone emits
+schema-v1 validation JSON without a PASS marker. `--html` optionally accepts
+`--replay`; validation modes and `--strict` retain their existing rules.
+`--scenario --compare` is rejected before reading the file: the current comparison
+variant is defined only for the built-in fixture. Files are read/parsed once;
+no second construction or fixed-fixture validation profile is inferred. Thus valid
+loaded fixtures report `not_evaluated` and strict exit 2; diagnosed invalid metadata
+reports `failed` and strict exit 1. The unchanged built-in strict pass exits 0.
+Non-strict reports exit 0; file/schema failures exit 2 with empty stdout.
+
+The closed JSON schema requires these top-level fields (unknown fields fail):
+
+- `schema_version`: integer 1; `scenario_id`: nonblank label; `description`: explanatory text.
+- `sources`: ordered objects with unique `source_id` and `sensor_id`, `kind` (`camera` or
+  `radar`), explicit `clock_domain` and `reference_frame` strings. Every source becomes
+  one batch, including sources with no observations.
+- `observations`: ordered objects with unique `observation_id`, resolved `source_id`,
+  finite `measurement_seconds`, `measurement`, and optional nonblank `source_local_id`
+  (or null). Per-source batch order follows this array.
+- `deliveries`: ordered observation-ID strings; repeats reuse the exact same evidence
+  and source objects. IDs are evidence references, never physical associations.
+
+Radar measurements require `range_m` and `azimuth_rad`; `elevation_rad` and
+`radial_velocity_mps` may be omitted or null. Camera measurements require `class_id`,
+`label`, `confidence`, `x1`, `y1`, `x2`, `y2`, `image_width`, `image_height`, using the
+existing `ImageTrackMeasurement` contract and pixel units. Numbers exclude booleans
+and non-finite values; dimensions are positive integers. Raw negative timestamps
+remain legal. Existing public constructor checks remain authoritative.
+
+Optional `derivation` explicitly requests existing public geometry/time helpers.
+Radar `project_spatial` defaults to false. Camera `image_point` ([u,v] pixels) and
+`intrinsics` appear together; intrinsics specify `fx_px`, `fy_px`, `cx_px`, `cy_px`,
+`optical_frame`, `calibration_id`, using the source's explicit frame and dimensions.
+Optional `transform` specifies `source_frame`, `target_frame`, a 3×3
+`rotation_target_from_source`, and `translation_target_from_source_m`.
+Optional `clock_mapping` uses the seven `BoundedClockMapping` field names:
+`source_clock_domain`, `target_clock_domain`, `scale`, `offset_seconds`,
+`valid_from_source_seconds`, `valid_until_source_seconds`, `error_bound_seconds`.
+No geometry or mapping is inferred when omitted.
+
+For intentional negative fixtures only, `metadata_overrides` accepts null for
+`measurement_time`/`reference_frame`, or blank strings for `clock_domain`, `frame_id`,
+`sensor_id`, `source_local_id`. Base metadata must still be explicit and valid.
+The loader first constructs normal public objects, then applies these closed faults
+only to its newly owned fixture objects; the resulting envelopes are deliberately
+invalid diagnostic inputs. Overrides cannot accompany derivations or conflicting
+missing-wrapper/inner-field overrides. They do not change IDs or measurements.
+Use validation reports for these fixtures; ordinary inspection rejects them.
+
+`examples/scenarios/baseline.json` reproduces built-in measurement, geometry,
+mapping and radar-before-camera semantics with explicit JSON IDs.
+`repeated_delivery.json` adds six ordered deliveries, repeats, multiple clocks,
+a decreasing radar timestamp and an explicitly empty batch.
+`metadata_edge_cases.json` exercises absent and blank metadata, including repeats.
+Descriptions remain in the fixture files; reports use `scenario_id` as their label.
+
+The example-local `load_scenario(path)` returns a `SyntheticScenario`;
+`scenario_from_document(document)` constructs one from an already parsed JSON tree
+without I/O or input mutation. `ScenarioLoadError` identifies loading failures,
+distinct from Invalid diagnostic findings. Duplicate JSON members, unresolved
+references, unsupported versions/kinds, unknown fields and invalid UTF-8 fail.
+Input is limited to 1 MiB and 256 entries per source/observation/delivery array.
+No executable configuration, dynamic imports, network access or automatic file
+writes are supported. This remains synthetic software inspection, not a physics
+simulator or physical-system readiness assessment.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`
