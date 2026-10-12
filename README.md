@@ -665,6 +665,35 @@ clock mappings are supplied explicitly, camera depth is not inferred, and no
 automatic cross-sensor association occurs. Passing tests do not demonstrate
 operational tracking or deployment readiness.
 
+For inspection in your own Python session, the following assumes `history`
+already contains a validated `ObservationHistory`. The pytest command above
+runs tests; it does not create a reusable `history` variable in your shell.
+
+```python
+print({"record_count": len(history.records)})
+for position, evidence in enumerate(history.records):
+    source = evidence.source_observation
+    print({
+        "position": position,
+        "sensor_id": source.sensor_id,
+        "observation_id": source.observation_id,
+        "source_local_id": source.source_local_id,
+        "measurement_seconds": source.measurement_time.seconds,
+        "clock_domain": source.measurement_time.clock_domain,
+        "reference_frame_id": source.reference_frame.frame_id,
+        "measurement_type": type(source.measurement).__name__,
+        "has_projection": evidence.spatial_projection is not None,
+        "has_transformation": evidence.spatial_transform is not None,
+        "has_mapped_time": evidence.mapped_time is not None,
+    })
+```
+
+Rows follow caller-controlled history order, and repeated records remain repeated
+occurrences. Equal observation IDs do not establish identical sources, and absent
+optional fields do not automatically indicate failure. This read-only inspection
+view is not a lossless provenance serialization; it performs no sensor fusion,
+object association, clock synchronization, or physical localization.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`
