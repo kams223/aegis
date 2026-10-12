@@ -215,6 +215,81 @@ def test_temporal_classifications_do_not_assert_physical_correspondence():
         assert not hasattr(run["camera"].spatial_projection, "depth")
 
 
+def test_camera_same_key_changed_payload_remains_inspectable():
+    # Matching producer keys do not establish matching physical objects.
+    inputs = _inputs()
+    original = inputs["camera_batch"]
+    tracked, = original.objects
+    changed = TrackedObjectBatch(original.frame, (TrackedObject(
+        tracked.track_id, replace(tracked.detection, x1=50., y1=60., x2=70., y2=80.),
+    ),))
+    before = repr((original, changed, inputs))
+    context = dict(sensor_id="fixture:camera-sensor", clock_domain="fixture:camera",
+                   reference_frame_id="fixture:camera:image")
+    first, = tracked_objects_to_observations(original, **context).observations
+    second, = tracked_objects_to_observations(changed, **context).observations
+    assert first.observation_id == second.observation_id
+    assert first.source_local_id == second.source_local_id
+    assert first is not second
+    assert first.measurement is not second.measurement
+    assert first.measurement != second.measurement
+    for observation, source in ((first, original), (second, changed)):
+        detection = source.objects[0].detection
+        assert observation.measurement is not detection
+        assert (observation.measurement.x1, observation.measurement.y1,
+                observation.measurement.x2, observation.measurement.y2) == (
+                    detection.x1, detection.y1, detection.x2, detection.y2)
+        assert observation.measurement_time == MeasurementTime(2., "fixture:camera")
+        assert observation.reference_frame == inputs["point"].image_frame
+    evidence = tuple(derive_camera_evidence(
+        observation, image_point=inputs["point"], intrinsics=inputs["intrinsics"],
+    ) for observation in (second, first))
+    history = ObservationHistory(evidence)
+    assert history.records is evidence and len(history.records) == 2
+    for record, observation in zip(history.records, (second, first), strict=True):
+        assert record.source_observation is observation
+        assert record.spatial_projection.source_image_point is inputs["point"]
+        assert record.camera_intrinsics is inputs["intrinsics"]
+        assert not hasattr(record.spatial_projection, "depth")
+    assert history.records[0] is evidence[0] and history.records[1] is evidence[1]
+    assert history.records[0].source_observation.measurement != history.records[1].source_observation.measurement
+    assert repr((original, changed, inputs)) == before
+
+
+def test_radar_cross_call_same_key_changed_payload_preserved():
+    # Characterize conflicting key reuse, without endorsing a producer policy.
+    inputs = _inputs()
+    scan, = iter_scripted_radar_scans(inputs["script"], source_session_id="fixture:session")
+    original, = scan.detections
+    changed_measurement = RadarPolarDetectionMeasurement(20., 0., 0.)
+    changed = replace(original, measurement=changed_measurement)
+    before = repr((original, changed, inputs))
+    context = dict(sensor_id="fixture:radar-sensor", reference_frame_id="fixture:radar:local")
+    # Separate calls respect the adapter's within-call duplicate-key restriction.
+    first, = radar_detections_to_observations((original,), **context).observations
+    second, = radar_detections_to_observations((changed,), **context).observations
+    assert first.observation_id == second.observation_id
+    assert first is not second
+    assert first.measurement is original.measurement
+    assert second.measurement is changed_measurement
+    assert first.measurement != second.measurement
+    assert first.measurement_time is second.measurement_time is inputs["radar_time"]
+    assert first.reference_frame == second.reference_frame == ReferenceFrame("fixture:radar:local")
+    evidence = tuple(derive_radar_evidence(observation) for observation in (second, first))
+    history = ObservationHistory(evidence)
+    assert history.records is evidence and len(history.records) == 2
+    coordinates = []
+    for record, observation in zip(history.records, (second, first), strict=True):
+        assert record.source_observation is observation
+        point = record.spatial_projection
+        assert point.source_measurement is observation.measurement
+        assert point.reference_frame is observation.reference_frame
+        coordinates.append((point.x_m, point.y_m, point.z_m))
+    assert coordinates == [(20., 0., 0.), (10., 0., 0.)]
+    assert history.records[0] is evidence[0] and history.records[1] is evidence[1]
+    assert repr((original, changed, inputs)) == before
+
+
 def test_isolated_replay_without_external_dependencies_clocks_randomness_or_io():
     source = Path(__file__).resolve().parents[1] / "src"
     script = '''
