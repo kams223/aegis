@@ -694,6 +694,20 @@ optional fields do not automatically indicate failure. This read-only inspection
 view is not a lossless provenance serialization; it performs no sensor fusion,
 object association, clock synchronization, or physical localization.
 
+Run the fixed standalone demonstration from the repository root:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B examples/synthetic_observation_demo.py
+```
+
+It constructs the scenario twice using existing observation and evidence
+contracts, checks deterministic values and source references, and prints source
+metadata, derived values, and `DETERMINISTIC SYNTHETIC DEMO: PASS`. No physical
+camera or radar devices are required. This software demonstration is not a
+physics simulator; it performs no sensor association, automatic synchronization,
+physical localization, or operational tracking.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`
