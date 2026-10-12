@@ -190,6 +190,87 @@ def test_consumer_failure_stops_delivery_without_retry():
     assert all(actual is expected for actual, expected in zip(accepted, run["schedule"][:2], strict=True))
 
 
+def test_consumer_side_effect_survives_failure_and_explicit_replay():
+    run = _replay(_inputs())
+    schedule = run["schedule"]
+    effects = []
+    failure = RuntimeError("side effect before failure")
+
+    def consumer(record):
+        effects.append(record)
+        if len(effects) == 2:
+            raise failure
+
+    try:
+        _deliver(schedule, consumer)
+    except RuntimeError as caught:
+        assert caught is failure
+    else:
+        raise AssertionError("consumer failure must propagate")
+    assert len(effects) == 2
+    assert effects[0] is schedule[0] and effects[1] is schedule[1]
+    before_replay = tuple(effects)
+
+    # The caller explicitly starts a new attempt; no delivery layer retries it.
+    _deliver(schedule, consumer)
+    expected = before_replay + schedule
+    assert len(effects) == 7
+    assert all(actual is original for actual, original in zip(effects, expected, strict=True))
+    assert effects[0] is effects[2] is effects[5] is schedule[0]
+    assert effects[1] is effects[3] is schedule[1]
+    assert run["schedule"] is schedule
+
+
+def test_partial_batch_consumer_state_is_not_rolled_back():
+    stamp = MeasurementTime(3., "delivery:radar")
+    measurements = (RadarPolarDetectionMeasurement(10., 0., 0.),
+                    RadarPolarDetectionMeasurement(20., 0., 0.))
+    scan, = iter_scripted_radar_scans(
+        ((stamp, measurements),), source_session_id="delivery:partial-batch",
+    )
+    assert scan.detections[0].evidence_id != scan.detections[1].evidence_id
+    batch = radar_detections_to_observations(
+        scan.detections, sensor_id="delivery:radar-sensor",
+        reference_frame_id="delivery:radar:local",
+    )
+    first, second = batch.observations
+    original_rows = batch.observations
+    identifiers = tuple(row.observation_id for row in original_rows)
+    before = repr(batch)
+    effects, attempted = [], []
+    failure = RuntimeError("second observation failed")
+
+    def consumer(delivered_batch):
+        attempted.append(delivered_batch)
+        for observation in delivered_batch.observations:
+            if observation is second:
+                raise failure
+            effects.append(observation)
+
+    for attempt in range(2):
+        # Both attempts are explicit caller invocations, not an automatic retry.
+        try:
+            consumer(batch)
+        except RuntimeError as caught:
+            assert caught is failure
+        else:
+            raise AssertionError("partial batch failure must propagate")
+        assert len(effects) == attempt + 1
+        assert all(effect is first for effect in effects)
+        assert len(attempted) == attempt + 1
+        assert all(delivered is batch for delivered in attempted)
+        assert batch.observations is original_rows
+        assert batch.observations[0] is first and batch.observations[1] is second
+        assert tuple(row.observation_id for row in batch.observations) == identifiers
+        for row, detection, measurement in zip(
+            batch.observations, scan.detections, measurements, strict=True,
+        ):
+            assert row.measurement_time is detection.measurement_time is stamp
+            assert row.measurement is detection.measurement is measurement
+            assert row.measurement_time.clock_domain == "delivery:radar"
+        assert repr(batch) == before
+
+
 def test_explicit_temporal_relationships_do_not_imply_correspondence():
     inputs = _inputs()
     run = _replay(inputs)
