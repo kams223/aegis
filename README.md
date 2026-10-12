@@ -708,6 +708,40 @@ camera or radar devices are required. This software demonstration is not a
 physics simulator; it performs no sensor association, automatic synchronization,
 physical localization, or operational tracking.
 
+### Synthetic Observation Inspector
+
+Generate an offline HTML report from the fixed software-only demonstration:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B \
+examples/synthetic_observation_demo.py --html \
+> /tmp/aegis-synthetic-observations.html
+```
+
+Open the saved HTML file in a browser using its **Open File** action. No server,
+JavaScript, network connection or additional packages are required. The default
+invocation still prints the existing JSON and PASS line; `--html` prints only HTML.
+
+The report shows source observation counts, evidence/history occurrence counts,
+sensor and observation IDs, optional source-local IDs, raw timestamps and clock
+domains, reference frames, measurement values with units, stored geometry and its
+frames, and explicitly mapped intervals with their target clock domains. Expand
+an entry's details to inspect selected image points, calibration, transform and
+clock-mapping inputs. Provenance begins at the normalized observation.
+
+Rows retain caller-selected history order, including repeated evidence references
+as separate occurrences. Counts of occurrences do not imply independent
+acquisitions. Explicit source counts describe input collections, not unique IDs
+or inferred missing observations. Optional values show `Unavailable (not supplied)`;
+modality-specific inapplicable fields show `Not applicable`. Zero remains a value.
+
+Raw times from different clocks are not automatically aligned. Displayed mapped
+intervals are conditional on supplied mappings. This is synthetic software data,
+not a physical sensor simulation or accuracy claim; the report performs no object
+association, clock synchronization, physical localization or geometry derivation.
+Rendering reads existing objects without mutation and escapes dynamic HTML text.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`

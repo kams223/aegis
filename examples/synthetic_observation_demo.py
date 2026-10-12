@@ -1,6 +1,9 @@
 """Fixed software-only demonstration; no physical simulation or association."""
 
+import argparse
 import json
+from pathlib import Path
+import sys
 
 from aegis.core.frames import FrameMetadata
 from aegis.fusion.camera_adapter import tracked_objects_to_observations
@@ -125,6 +128,16 @@ def _scenario():
 def main():
     if not __debug__:
         raise RuntimeError("Run without -O: this demonstration requires assertion checks")
+    parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
+    parser.add_argument("--html", action="store_true", help="emit an offline HTML inspection report")
+    # Preserve the existing runpy launcher, whose two bootstrap paths remain
+    # in argv. Ordinary CLI arguments still receive strict argparse validation.
+    bootstrap_paths = [str(Path(__file__).resolve().parents[1] / "src"),
+                       str(Path(__file__).resolve())]
+    argv = sys.argv[1:]
+    if "-c" in sys.orig_argv and argv == bootstrap_paths:
+        argv = []
+    args = parser.parse_args(argv)
     first, first_view = _scenario()
     second, second_view = _scenario()
     assert first == second and first_view == second_view
@@ -134,6 +147,16 @@ def main():
         assert left.source_observation is not right.source_observation
         assert left.source_observation.measurement is not right.source_observation.measurement
         assert left.source_observation.measurement_time is not right.source_observation.measurement_time
+    if args.html:
+        from synthetic_observation_inspector import render_observation_history_html
+
+        document = render_observation_history_html(
+            first, scenario_label="Fixed camera/radar software fixture",
+            camera_observation_count=first_view["camera_observation_count"],
+            radar_observation_count=first_view["radar_observation_count"],
+        )
+        print(document, end="")
+        return
     print(json.dumps(first_view, indent=2, sort_keys=True, allow_nan=False))
     print("DETERMINISTIC SYNTHETIC DEMO: PASS")
 
