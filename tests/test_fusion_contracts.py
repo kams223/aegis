@@ -106,6 +106,19 @@ def test_envelope_metadata_payload_and_batch_are_frozen_values():
     assert isinstance(batch.observations, tuple)
 
 
+def test_batch_retains_unvalidated_entries_order_and_tuple_identity():
+    observation = image_observation()
+    entries = (observation, None, observation)
+    # Container acceptance does not make None a valid sensor observation.
+    batch = ObservationBatch(entries)  # type: ignore[arg-type]
+    assert batch.observations is entries
+    assert len(batch.observations) == 3
+    assert batch.observations[0] is observation
+    assert batch.observations[1] is None
+    assert batch.observations[2] is observation
+    assert batch.observations[0] is batch.observations[2]
+
+
 def test_empty_batch_is_valid_and_mutable_collection_is_rejected():
     assert ObservationBatch[ImagePoint](()).observations == ()
     with pytest.raises(TypeError, match="tuple"):

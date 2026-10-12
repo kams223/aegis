@@ -9,6 +9,7 @@ import sys
 import pytest
 
 from aegis.fusion.contracts import MeasurementTime, ObservationBatch, ReferenceFrame
+from aegis.fusion.derived_evidence import DerivedSensorEvidence, derive_radar_evidence
 from aegis.radar.adapter import radar_detections_to_observations
 from aegis.radar.contracts import RadarDetection, RadarPolarDetectionMeasurement
 
@@ -41,6 +42,43 @@ def test_single_detection_preserves_exact_evidence_context_and_ids():
         '["radar-detection",1,"radar-front","session-a","scan-7/return-2"]'
     )
     assert observation.source_local_id == '["session-a","scan-7/2"]'
+
+
+def test_radar_normalization_preserves_unsupported_payload_for_derivation_rejection():
+    valid = detection()
+    unsupported = RadarDetection(
+        valid.source_session_id, "unsupported-event", MeasurementTime(0.5, "device:boot-a"),
+        None, "scan-7/unsupported",  # type: ignore[arg-type]
+    )
+    source_before = repr((valid, unsupported))
+    for sources in ((valid, unsupported), (unsupported, valid)):
+        batch = radar_detections_to_observations(sources, **CONTEXT)
+        assert isinstance(batch, ObservationBatch)
+        assert len(batch.observations) == 2
+        before = repr(batch)
+        for source, observation in zip(sources, batch.observations, strict=True):
+            assert json.loads(observation.observation_id) == [
+                "radar-detection", 1, CONTEXT["sensor_id"],
+                source.source_session_id, source.evidence_id,
+            ]
+            assert observation.measurement is source.measurement
+            assert observation.measurement_time is source.measurement_time
+            assert observation.reference_frame == ReferenceFrame(CONTEXT["reference_frame_id"])
+            if source is valid:
+                evidence = derive_radar_evidence(observation)
+                assert evidence.source_observation is observation
+                assert evidence.spatial_projection.source_measurement is valid.measurement
+            else:
+                assert source is unsupported and observation.measurement is None
+                # Normalization success does not certify a supported evidence payload.
+                with pytest.raises(TypeError, match="^unsupported observation measurement type$"):
+                    DerivedSensorEvidence(observation)
+                with pytest.raises(TypeError, match="^unsupported observation measurement type$"):
+                    derive_radar_evidence(observation)
+                assert observation.measurement is None
+                assert observation.measurement_time is unsupported.measurement_time
+            assert repr(batch) == before
+            assert repr((valid, unsupported)) == source_before
 
 
 def test_absent_local_detection_id_remains_none():
