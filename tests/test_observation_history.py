@@ -111,6 +111,48 @@ def test_overlapping_and_disjoint_mapped_intervals_retained(times):
     assert (intervals[1].lower_seconds, intervals[1].upper_seconds) == (times[1] - .25, times[1] + .25)
 
 
+def test_equal_observation_ids_preserve_distinct_source_metadata():
+    # An opaque shared identifier does not establish physical correspondence.
+    measurements = (RadarPolarDetectionMeasurement(10., 0., 0.),
+                    RadarPolarDetectionMeasurement(20., 0., 0.))
+    times = (MeasurementTime(1., "radar-a:clock"), MeasurementTime(5., "radar-b:clock"))
+    frames = (ReferenceFrame("radar-a:local"), ReferenceFrame("radar-b:local"))
+    observations = (
+        SensorObservation("shared-event", "radar-a", times[0], frames[0], measurements[0]),
+        SensorObservation("shared-event", "radar-b", times[1], frames[1], measurements[1]),
+    )
+    before = repr(observations)
+    first = derive_radar_evidence(observations[0])
+    second = derive_radar_evidence(observations[1])
+    records = (second, first)
+    history = ObservationHistory(records)
+
+    assert history.records is records
+    assert len(history.records) == 2
+    assert history.records[0] is second
+    assert history.records[1] is first
+    assert measurements[0] is not measurements[1]
+    assert times[0] is not times[1]
+    assert frames[0] is not frames[1]
+    for record, index in zip(history.records, (1, 0), strict=True):
+        source = record.source_observation
+        assert source is observations[index]
+        assert source.observation_id == "shared-event"
+        assert source.sensor_id == ("radar-a", "radar-b")[index]
+        assert source.measurement is measurements[index]
+        assert source.measurement_time is times[index]
+        assert source.measurement_time.seconds == (1., 5.)[index]
+        assert source.measurement_time.clock_domain == ("radar-a:clock", "radar-b:clock")[index]
+        assert source.reference_frame is frames[index]
+        assert source.reference_frame.frame_id == ("radar-a:local", "radar-b:local")[index]
+        assert record.spatial_projection.source_measurement is measurements[index]
+        assert record.spatial_projection.reference_frame is frames[index]
+        assert record.mapped_time is None
+        assert record.spatial_transform is record.transformed_geometry is None
+    assert tuple(r.source_observation.measurement_time.seconds for r in history.records) == (5., 1.)
+    assert repr(observations) == before
+
+
 def test_duplicates_equal_distinct_and_different_derivations_preserved():
     observation = radar()
     first = DerivedSensorEvidence(observation)
