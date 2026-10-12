@@ -632,6 +632,39 @@ GitHub Actions executes the lightweight test suite on pushes to `main` and on pu
 
 Full model inference is excluded from CI because it requires model weights, larger dependencies, input video, and substantially more processing time.
 
+### Deterministic synthetic observation tests
+
+The existing tests exercise public camera and radar observation contracts with
+explicit synthetic inputs and no physical devices. Run this focused command from
+the repository root using the existing development environment:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B -m pytest -p no:cacheprovider -q \
+tests/test_synthetic_observation_replay.py \
+tests/test_observation_delivery_replay.py \
+tests/test_observation_history.py \
+tests/test_derived_evidence.py
+```
+
+In the representative replay fixture, camera tracking input at timestamp `2`
+uses an explicitly selected image point `(320, 240)` in a 640×480 image to derive
+direction `(0, 0, 1)`. A scripted radar observation at timestamp `5`, with range
+`10` metres and zero azimuth and elevation, yields point `(10, 0, 0)`. An explicit
+identity rotation and translation `(1, 2, 3)` metres yield `(11, 2, 3)`. Supplied
+clock mappings produce camera interval `[101.75, 102.25]` and radar interval
+`[204.75, 205.25]`. Caller-controlled history order is radar first, camera second;
+raw timestamp order remains `(5, 2)`.
+
+Inspect `_inputs`, `_replay`, and the assertions in
+`tests/test_synthetic_observation_replay.py` for these values. The other listed
+files cover delivery order and failures, history retention, and derivation
+consistency. These are deterministic software-processing tests: they establish
+no physical sensor accuracy or physical synchronization. Spatial transforms and
+clock mappings are supplied explicitly, camera depth is not inferred, and no
+automatic cross-sensor association occurs. Passing tests do not demonstrate
+operational tracking or deployment readiness.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`
