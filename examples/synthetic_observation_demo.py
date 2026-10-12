@@ -20,7 +20,7 @@ from aegis.spatial.transforms import RigidTransform
 from aegis.tracking.contracts import TrackedObject, TrackedObjectBatch
 
 
-def _scenario():
+def _scenario_data():
     image_frame = ReferenceFrame("fixture:camera:image")
     tracking = TrackedObjectBatch(
         FrameMetadata("fixture:opening", 51, 2., 640, 480),
@@ -122,7 +122,29 @@ def _scenario():
         "camera_mapped_interval_seconds": camera_interval,
         "radar_mapped_interval_seconds": radar_interval,
     }
+    return history, inspection, (camera_batch, radar_batch)
+
+
+def _scenario():
+    """Keep the original two-value example helper compatible."""
+    history, inspection, _ = _scenario_data()
     return history, inspection
+
+
+def build_synthetic_scenario():
+    """Return the fixed example with its actual source batches for inspection."""
+    try:
+        from synthetic_observation_analysis import SyntheticScenario
+    except ModuleNotFoundError as error:
+        if error.name != "synthetic_observation_analysis":
+            raise
+        from examples.synthetic_observation_analysis import SyntheticScenario
+
+    history, inspection, batches = _scenario_data()
+    return SyntheticScenario(
+        "Fixed camera/radar software fixture", history,
+        inspection["camera_observation_count"], inspection["radar_observation_count"], batches,
+    )
 
 
 def main():
@@ -130,6 +152,8 @@ def main():
         raise RuntimeError("Run without -O: this demonstration requires assertion checks")
     parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
     parser.add_argument("--html", action="store_true", help="emit an offline HTML inspection report")
+    parser.add_argument("--compare", action="store_true",
+                        help="with --html, compare the fixed fixture with an explicit delivery variant")
     # Preserve the existing runpy launcher, whose two bootstrap paths remain
     # in argv. Ordinary CLI arguments still receive strict argparse validation.
     bootstrap_paths = [str(Path(__file__).resolve().parents[1] / "src"),
@@ -138,6 +162,8 @@ def main():
     if "-c" in sys.orig_argv and argv == bootstrap_paths:
         argv = []
     args = parser.parse_args(argv)
+    if args.compare and not args.html:
+        parser.error("--compare requires --html")
     first, first_view = _scenario()
     second, second_view = _scenario()
     assert first == second and first_view == second_view
@@ -150,10 +176,25 @@ def main():
     if args.html:
         from synthetic_observation_inspector import render_observation_history_html
 
+        from synthetic_observation_analysis import SyntheticScenario
+        from aegis.fusion.derived_evidence import DerivedSensorEvidence
+
+        scenario = build_synthetic_scenario()
+        assert scenario.history == first
+        comparison = None
+        if args.compare:
+            radar, camera = scenario.history.records
+            comparison = SyntheticScenario(
+                "Explicit reordered/repeated partial-evidence fixture",
+                ObservationHistory((DerivedSensorEvidence(camera.source_observation), radar, radar)),
+                scenario.camera_observation_count, scenario.radar_observation_count,
+                scenario.source_batches,
+            )
         document = render_observation_history_html(
-            first, scenario_label="Fixed camera/radar software fixture",
-            camera_observation_count=first_view["camera_observation_count"],
-            radar_observation_count=first_view["radar_observation_count"],
+            scenario.history, scenario_label=scenario.label,
+            camera_observation_count=scenario.camera_observation_count,
+            radar_observation_count=scenario.radar_observation_count,
+            source_batches=scenario.source_batches, comparison=comparison,
         )
         print(document, end="")
         return

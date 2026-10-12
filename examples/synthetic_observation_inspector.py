@@ -5,6 +5,19 @@ in history. Repeated occurrences are never collapsed. No derivation is run.
 """
 
 from html import escape
+from fractions import Fraction
+
+try:
+    from synthetic_observation_analysis import (
+        SyntheticScenario, compare_scenarios, diagnose_scenario, modality,
+    )
+except ModuleNotFoundError as error:
+    if error.name != "synthetic_observation_analysis":
+        raise
+    # runpy consumers rooted at the repository can use its examples namespace.
+    from examples.synthetic_observation_analysis import (
+        SyntheticScenario, compare_scenarios, diagnose_scenario, modality,
+    )
 
 from aegis.fusion.camera_adapter import ImageTrackMeasurement
 from aegis.fusion.observation_history import ObservationHistory
@@ -26,6 +39,13 @@ th, td { padding: .65rem; border: 1px solid #bccbd5; text-align: left;
 th { background: #e1edf4; }
 tbody tr:nth-child(even) { background: #f0f5f8; }
 details { min-width: 22rem; }
+.comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.comparison > section { min-width: 0; border: 1px solid #bccbd5; padding: 1rem; }
+.delivery, .clock-lane { padding-left: 2rem; border-left: 3px solid #4181a4; }
+.delivery li, .clock-lane li { padding: .5rem; margin: .5rem 0; background: white; }
+.clock-lane svg { display: block; width: 320px; max-width: 100%; height: 20px; }
+.findings li, .differences li { margin: .75rem 0; overflow-wrap: anywhere; }
+@media (max-width: 900px) { .comparison { grid-template-columns: 1fr; } }
 summary { cursor: pointer; font-weight: bold; }
 dl { margin: .5rem 0; }
 dt { font-weight: bold; margin-top: .5rem; }
@@ -132,6 +152,7 @@ def _details(evidence, modality, measurement_fields):
 def render_observation_history_html(
     history: ObservationHistory, *, scenario_label: str,
     camera_observation_count: int, radar_observation_count: int,
+    source_batches=None, comparison: SyntheticScenario | None = None,
 ) -> str:
     """Return a complete HTML string, preserving caller order and occurrences.
 
@@ -152,6 +173,13 @@ def render_observation_history_html(
             raise TypeError(f"{name}_observation_count must be an integer")
         if count < 0:
             raise ValueError(f"{name}_observation_count must be nonnegative")
+    scenario = SyntheticScenario(scenario_label, history, camera_observation_count,
+                                 radar_observation_count, source_batches)
+    findings = diagnose_scenario(scenario)
+    if any(f.severity == "Invalid" for f in findings):
+        raise ValueError("history violates a checked public contract; inspect diagnose_scenario findings")
+    if comparison is not None and not isinstance(comparison, SyntheticScenario):
+        raise TypeError("comparison must be SyntheticScenario or None")
     rows = []
     for position, evidence in enumerate(history.records):
         source = evidence.source_observation
@@ -180,7 +208,7 @@ def render_observation_history_html(
         ("Total source observations", camera_observation_count + radar_observation_count),
         ("Evidence occurrences", len(history.records)), ("History occurrences", len(history.records)),
     ])
-    return ("<!DOCTYPE html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
+    document = ("<!DOCTYPE html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
             "<title>Synthetic Software Observation Inspector</title><style>" + _STYLE
             + "</style></head><body><h1>Synthetic Software Observation Inspector</h1>"
@@ -193,3 +221,129 @@ def render_observation_history_html(
             "<caption>One row per history occurrence (zero-based position)</caption><thead><tr>"
             + "".join(f"<th scope=\"col\">{_text(heading)}</th>" for heading in headings)
             + "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div></body></html>\n")
+    document = document.replace(
+        "<h2>Ordered history</h2>",
+        _timeline_html(scenario) + _diagnostics_html(findings) + "<h2>Ordered history</h2>", 1,
+    )
+    if comparison is not None:
+        other = render_observation_history_html(
+            comparison.history, scenario_label=comparison.label,
+            camera_observation_count=comparison.camera_observation_count,
+            radar_observation_count=comparison.radar_observation_count,
+            source_batches=comparison.source_batches,
+        )
+        before, body = document.split("<body>", 1)
+        body, after = body.rsplit("</body>", 1)
+        other_body = other.split("<body>", 1)[1].rsplit("</body>", 1)[0]
+        document = (before + "<body>" + _comparison_html(scenario, comparison)
+                    + '<div class="comparison"><section><h2>Left scenario</h2>'
+                    + body + "</section><section><h2>Right scenario</h2>"
+                    + other_body + "</section></div></body>" + after)
+    return document
+
+
+def render_synthetic_workspace_html(scenario: SyntheticScenario, comparison=None) -> str:
+    """Inspect explicit scenarios; inputs are values, never loaded Python code."""
+    if not isinstance(scenario, SyntheticScenario):
+        raise TypeError("scenario must be SyntheticScenario")
+    return render_observation_history_html(
+        scenario.history, scenario_label=scenario.label,
+        camera_observation_count=scenario.camera_observation_count,
+        radar_observation_count=scenario.radar_observation_count,
+        source_batches=scenario.source_batches, comparison=comparison,
+    )
+
+
+def _diagnostics_html(findings):
+    items = "".join(
+        "<li>" + _fields([
+            ("Severity", finding.severity), ("Finding", finding.code),
+            ("Location", finding.location), ("Observation ID", finding.observation_id),
+            ("Explanation", finding.message),
+        ]) + "</li>" for finding in findings
+    )
+    return ("<h2>Sensor-data quality diagnostics</h2>"
+            "<p>Warnings request review, not reliability scoring. Missing optional values and "
+            "repeated delivery are not contract violations. Checks are not a complete contract validator.</p>"
+            + ('<ul class="findings">' + items + "</ul>" if items else "<p>No findings.</p>"))
+
+
+def _coordinate(value, minimum, maximum):
+    # Scale only the visual mark, retaining exact supplied numeric text separately.
+    # Fraction avoids overflow for finite timestamps spanning the float range.
+    if minimum == maximum:
+        return "160.000"
+    ratio = (Fraction(value) - Fraction(minimum)) / (Fraction(maximum) - Fraction(minimum))
+    return _text(f"{float(10 + 300 * ratio):.3f}")
+
+
+def _clock_lanes(groups, kind):
+    sections = []
+    for domain, entries in groups.items():
+        minimum = min(entry[1] for entry in entries)
+        maximum = max(entry[2] for entry in entries)
+        items = []
+        for position, lower, upper, source in entries:
+            x1, x2 = _coordinate(lower, minimum, maximum), _coordinate(upper, minimum, maximum)
+            graphic = ('<svg viewBox="0 0 320 20" role="img"><title>'
+                       + _text(f"{kind}: {lower} to {upper} seconds in {domain}")
+                       + '</title><line x1="10" y1="10" x2="310" y2="10" stroke="#bccbd5"/>'
+                       + f'<line x1="{x1}" y1="10" x2="{x2}" y2="10" stroke="#123e57" stroke-width="4"/>'
+                       + f'<circle cx="{x1}" cy="10" r="3" fill="#123e57"/>'
+                       + f'<circle cx="{x2}" cy="10" r="3" fill="#123e57"/></svg>')
+            fields = [("History position", position), ("Modality", modality(source.measurement)),
+                      ("Observation ID", source.observation_id)]
+            if kind == "Raw timestamp":
+                fields += [("Raw timestamp (s)", lower), ("Clock domain", domain)]
+            else:
+                fields += [("Mapped interval (target s)", (lower, upper)), ("Target clock domain", domain)]
+            items.append("<li>" + graphic + _fields(fields) + "</li>")
+        sections.append("<section><h3>" + _text(kind + " clock: " + domain) + "</h3>"
+                        + _fields([("Axis minimum (s)", minimum), ("Axis maximum (s)", maximum)])
+                        + '<ol class="clock-lane">' + "".join(items) + "</ol></section>")
+    return "".join(sections)
+
+
+def _timeline_html(scenario):
+    delivery, raw, mapped = [], {}, {}
+    for position, evidence in enumerate(scenario.history.records):
+        source = evidence.source_observation
+        time = source.measurement_time
+        interval = evidence.mapped_time
+        delivery.append("<li>" + _fields([
+            ("History position", position), ("Modality", modality(source.measurement)),
+            ("Observation ID", source.observation_id), ("Raw timestamp (s)", time.seconds),
+            ("Clock domain", time.clock_domain),
+            ("Mapped interval (target s)", None if interval is None else
+             (interval.lower_seconds, interval.upper_seconds)),
+            ("Target clock domain", None if interval is None else interval.clock_domain),
+        ]) + "</li>")
+        raw.setdefault(time.clock_domain, []).append((position, time.seconds, time.seconds, source))
+        if interval is not None:
+            mapped.setdefault(interval.clock_domain, []).append(
+                (position, interval.lower_seconds, interval.upper_seconds, source))
+    return ("<h2>Observation timeline</h2><h3>Delivery order</h3>"
+            '<ol class="delivery">' + "".join(delivery) + "</ol>"
+            + ("<p>No delivery occurrences.</p>" if not delivery else "")
+            + "<h3>Raw measurement clocks</h3><p>Each domain has its own numerical axis. "
+            "Lanes and entries retain first appearance and delivery order, not timestamp order. "
+            "Coincident marks do not imply association. Timestamp metadata is required by evidence contracts.</p>"
+            + _clock_lanes(raw, "Raw timestamp")
+            + "<h3>Explicitly mapped intervals</h3><p>Separate target-domain axes display supplied "
+            "interval bounds, conditional on caller mappings; no synchronization is inferred.</p>"
+            + (_clock_lanes(mapped, "Mapped interval") if mapped else
+               "<p>Unavailable (not supplied)</p>"))
+
+
+def _comparison_html(left, right):
+    differences = compare_scenarios(left, right)
+    items = "".join("<li>" + _fields([
+        ("Location", difference.location), ("Field", difference.field),
+        ("Left value", difference.left), ("Right value", difference.right),
+    ]) + "</li>" for difference in differences)
+    return ("<h1>Synthetic scenario comparison</h1>"
+            + _fields([("Left scenario", left.label), ("Right scenario", right.label)])
+            + "<p>Comparison is positional in delivery order. Matching IDs do not associate objects. "
+            "All repeated occurrences are retained; absent occurrences are explicitly identified.</p>"
+            + ('<ul class="differences">' + items + "</ul>" if items else
+               "<p>No differences in inspected history values, counts, labels or repeated-reference pattern.</p>"))

@@ -742,6 +742,60 @@ not a physical sensor simulation or accuracy claim; the report performs no objec
 association, clock synchronization, physical localization or geometry derivation.
 Rendering reads existing objects without mutation and escapes dynamic HTML text.
 
+### Synthetic scenario analysis workspace
+
+The HTML inspector also includes a delivery-order timeline, separate visual axes
+for each raw clock domain, separate conditional mapped-interval axes, and
+informational/warning diagnostics. Entries in every lane retain delivery order;
+no timestamp sorting, deduplication or clock alignment occurs. Single-value axes
+show a centered mark, and the original numeric values remain visible.
+
+Compare the fixed demonstration with an explicitly constructed reordered,
+repeated, partial-evidence variant:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B \
+examples/synthetic_observation_demo.py --html --compare \
+> /tmp/aegis-synthetic-comparison.html
+```
+
+Open the saved file in a browser. Both scenarios appear side by side, with
+positional differences in IDs, metadata, measurement values, order, geometry,
+clock mappings and repeated-reference patterns. Equal IDs never imply shared
+physical objects. `--compare` requires `--html`; the original default JSON output
+is unchanged. All visuals are static HTML/CSS/SVG, without scripts or network assets.
+
+For explicit scenarios built using public contracts, use the example-local API
+from the repository root (`PYTHONPATH=src`):
+
+```python
+from examples.synthetic_observation_analysis import SyntheticScenario, diagnose_scenario
+from examples.synthetic_observation_inspector import render_synthetic_workspace_html
+
+# history and batches are caller-constructed ObservationHistory/ObservationBatch values.
+scenario = SyntheticScenario("Explicit synthetic input", history, 1, 1, batches)
+findings = diagnose_scenario(scenario)
+document = render_synthetic_workspace_html(scenario, comparison=another_scenario)
+```
+
+The two integers are explicit camera/radar source counts, validated against batch
+contents when batches are supplied. `source_batches=None` means unavailable;
+`source_batches=()` supplies an empty collection and requires zero source counts.
+An empty batch finding identifies its batch position; no scan cadence or missing
+observations are inferred. Source inventories and delivery occurrences are separate.
+
+Diagnostics identify source batch/observation positions or history occurrences.
+They report repeated IDs as warnings, repeated evidence references as informational
+(not independent acquisitions), optional metadata/geometry/mappings as informational,
+and decreasing raw times within one clock domain as warnings rather than invalidity.
+Different clock domains require explicit interpretation. `Invalid` is reserved for
+checked existing public-contract violations; this is not a complete revalidator
+or a reliability score. Rendering rejects checked invalid histories before returning
+HTML. Missing measurement timestamps are not supported by existing derived-evidence
+contracts; no new missing-time format is introduced. Scenarios are supplied as
+constructed values: there is no input deserializer, code loader, registry or plugin.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`
