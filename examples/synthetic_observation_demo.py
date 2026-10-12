@@ -159,6 +159,7 @@ def main():
     validation_modes = parser.add_mutually_exclusive_group()
     validation_modes.add_argument("--validate-json", action="store_true", help="emit deterministic software validation JSON")
     validation_modes.add_argument("--validate-html", action="store_true", help="emit an offline validation dashboard")
+    parser.add_argument("--strict", action="store_true", help="with validation: exit 0 passed, 1 failed, 2 not evaluated")
     # Preserve the existing runpy launcher, whose two bootstrap paths remain
     # in argv. Ordinary CLI arguments still receive strict argparse validation.
     bootstrap_paths = [str(Path(__file__).resolve().parents[1] / "src"),
@@ -169,6 +170,8 @@ def main():
     args = parser.parse_args(argv)
     if (args.validate_json or args.validate_html) and (args.html or args.compare or args.replay):
         parser.error("validation modes cannot be combined with --html, --compare or --replay")
+    if args.strict and not (args.validate_json or args.validate_html):
+        parser.error("--strict requires --validate-json or --validate-html")
     if args.compare and not args.html:
         parser.error("--compare requires --html")
     if args.replay and not args.html:
@@ -183,13 +186,13 @@ def main():
         assert left.source_observation.measurement is not right.source_observation.measurement
         assert left.source_observation.measurement_time is not right.source_observation.measurement_time
     if args.validate_json or args.validate_html:
-        from synthetic_observation_validation import render_validation_json, render_validation_html
+        from synthetic_observation_validation import render_validation_report
 
         scenario, reference = build_synthetic_scenario(), build_synthetic_scenario()
-        render = render_validation_json if args.validate_json else render_validation_html
-        document = render(scenario, reference=reference, builtin_expectations=True)
+        document, exit_code = render_validation_report(
+            scenario, html=args.validate_html, reference=reference, builtin_expectations=True)
         print(document, end="")
-        return
+        return exit_code if args.strict else 0
     if args.html:
         from synthetic_observation_inspector import render_observation_history_html
 
@@ -220,4 +223,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

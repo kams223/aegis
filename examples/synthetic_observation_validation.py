@@ -8,6 +8,8 @@ from dataclasses import asdict
 import json
 from math import isfinite
 
+from aegis.fusion.contracts import MeasurementTime, ReferenceFrame
+
 try:
     from synthetic_observation_analysis import SyntheticScenario, compare_scenarios, diagnose_scenario, modality
     from synthetic_observation_inspector import _fields, _text, render_synthetic_workspace_html
@@ -29,8 +31,29 @@ _UNEVALUATED = (
 )
 
 
+class ValidationInputError(ValueError):
+    """Input contains opaque metadata that cannot be reported as JSON scalars.
+
+    Missing time/frame wrappers and malformed scalar metadata are reportable;
+    arbitrary objects and mutable containers are intentionally unsupported.
+    """
+
+
+def _scalar(value, field):
+    if value is None or type(value) in (str, bool, int):
+        return value
+    if type(value) is float and isfinite(value):
+        return value
+    raise ValidationInputError(f"{field}: expected a JSON scalar, not opaque metadata")
+
+
 def _observation(source):
-    seconds = source.measurement_time.seconds
+    time, frame = source.measurement_time, source.reference_frame
+    if not isinstance(time, MeasurementTime):
+        _scalar(time, "measurement_time")
+    if not isinstance(frame, ReferenceFrame):
+        _scalar(frame, "reference_frame")
+    seconds = time.seconds if isinstance(time, MeasurementTime) else None
     finite = False
     if type(seconds) in (int, float):
         try:
@@ -38,15 +61,16 @@ def _observation(source):
         except OverflowError:
             pass
     return {
-        "observation_id": source.observation_id,
-        "sensor_id": source.sensor_id,
+        "observation_id": _scalar(source.observation_id, "observation_id"),
+        "sensor_id": _scalar(source.sensor_id, "sensor_id"),
         "modality": modality(source.measurement),
         "measurement_type": type(source.measurement).__name__,
-        "source_local_id": source.source_local_id,
+        "source_local_id": _scalar(source.source_local_id, "source_local_id"),
         "measurement_seconds": seconds if finite else None,
-        "measurement_seconds_status": "available" if finite else "not_representable_as_finite_json_number",
-        "clock_domain": source.measurement_time.clock_domain,
-        "reference_frame_id": source.reference_frame.frame_id,
+        "measurement_seconds_status": ("invalid_measurement_time" if not isinstance(time, MeasurementTime)
+                                       else "available" if finite else "not_representable_as_finite_json_number"),
+        "clock_domain": _scalar(time.clock_domain, "clock_domain") if isinstance(time, MeasurementTime) else None,
+        "reference_frame_id": _scalar(frame.frame_id, "reference_frame_id") if isinstance(frame, ReferenceFrame) else None,
     }
 
 
@@ -68,8 +92,8 @@ def _builtin_checks(scenario, enabled):
     delivery = (scenario.camera_observation_count == scenario.radar_observation_count == 1
                 and len(records) == 2
                 and [modality(e.source_observation.measurement) for e in records] == ["radar", "camera"]
-                and [e.source_observation.measurement_time.seconds for e in records] == [5., 2.]
-                and [e.source_observation.measurement_time.clock_domain for e in records] ==
+                and [_observation(e.source_observation)["measurement_seconds"] for e in records] == [5., 2.]
+                and [_observation(e.source_observation)["clock_domain"] for e in records] ==
                     ["fixture:radar", "fixture:camera"])
     geometry = intervals = False
     if len(records) == 2:
@@ -102,6 +126,15 @@ def build_validation_manifest(scenario: SyntheticScenario, *, reference=None, bu
         raise TypeError("reference must be SyntheticScenario or None")
     if type(builtin_expectations) is not bool:
         raise TypeError("builtin_expectations must be a boolean")
+    # Preflight the reporting envelope before diagnostics use IDs as dict keys.
+    for candidate in (scenario, reference):
+        if candidate is None:
+            continue
+        for evidence in candidate.history.records:
+            _observation(evidence.source_observation)
+        for batch in candidate.source_batches or ():
+            for source in batch.observations:
+                _observation(source)
     findings = diagnose_scenario(scenario)
     severity_counts = {severity: sum(f.severity == severity for f in findings) for severity in _SEVERITIES}
     batches = scenario.source_batches
@@ -127,13 +160,17 @@ def build_validation_manifest(scenario: SyntheticScenario, *, reference=None, bu
                             "same_evidence_as_position": previous,
                             "source_inventory_references": None if batches is None else
                                 source_positions.get(id(source), [])})
-        raw_domains.setdefault(source.measurement_time.clock_domain,
-                               {"source_inventory_positions": [], "history_positions": []})["history_positions"].append(position)
+        domain = occurrences[-1]["clock_domain"]
+        if isinstance(domain, str) and domain.strip():
+            raw_domains.setdefault(domain,
+                                   {"source_inventory_positions": [], "history_positions": []})["history_positions"].append(position)
         if evidence.mapped_time is not None:
             mapped_domains.setdefault(evidence.mapped_time.clock_domain, []).append(position)
     if inventory is not None:
         for batch in inventory:
             for source in batch["observations"]:
+                if not isinstance(source["clock_domain"], str) or not source["clock_domain"].strip():
+                    continue
                 raw_domains.setdefault(source["clock_domain"],
                     {"source_inventory_positions": [], "history_positions": []})["source_inventory_positions"].append(
                         {"batch_position": batch["batch_position"], "observation_position": source["observation_position"]})
@@ -199,6 +236,10 @@ def render_validation_json(scenario, *, reference=None, builtin_expectations=Fal
 def render_validation_html(scenario, *, reference=None, builtin_expectations=False) -> str:
     """Combine the manifest dashboard with the existing offline replay inspector."""
     manifest = build_validation_manifest(scenario, reference=reference, builtin_expectations=builtin_expectations)
+    return _render_html(scenario, manifest)
+
+
+def _render_html(scenario, manifest):
     checks = "".join("<li>" + _fields([(name, check[name]) for name in ("id", "status", "description", "details")])
                      + "</li>" for check in manifest["invariants"])
     summary = ("<h1>Synthetic Software Validation Dashboard</h1>" + _fields([
@@ -215,6 +256,8 @@ def render_validation_html(scenario, *, reference=None, builtin_expectations=Fal
         + "</ul><p>Deterministic software checks do not validate a physical system or demonstrate operational readiness. "
           "No accuracy or latency metrics are calculated, and no pytest suite is executed by this report generator.</p>")
     try:
+        if manifest["diagnostics"]["severity_counts"]["Invalid"]:
+            raise ValueError("Invalid metadata; see validation findings and source inventory")
         document = render_synthetic_workspace_html(scenario, replay=True)
     except (ValueError, TypeError) as error:
         # A failed manifest remains readable even when the inspector refuses invalid input.
@@ -224,3 +267,11 @@ def render_validation_html(scenario, *, reference=None, builtin_expectations=Fal
     document = document.replace("<title>Synthetic Software Observation Inspector</title>",
                                 "<title>Synthetic Software Validation Dashboard</title>", 1)
     return document.replace("<body>", "<body>" + summary, 1)
+
+
+def render_validation_report(scenario, *, html=False, reference=None, builtin_expectations=False):
+    """Return a complete document and its scoped exit code from one manifest."""
+    manifest = build_validation_manifest(scenario, reference=reference, builtin_expectations=builtin_expectations)
+    document = (_render_html(scenario, manifest) if html else
+                json.dumps(manifest, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
+    return document, {"passed": 0, "failed": 1, "not_evaluated": 2}[manifest["overall_validation"]["status"]]

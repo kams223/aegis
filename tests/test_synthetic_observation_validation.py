@@ -302,3 +302,115 @@ for name in ('render_validation_json', 'render_validation_html'):
         cwd=tmp_path, env={}, capture_output=True, timeout=20)
     assert result.returncode == 0, result.stderr.decode()
     assert result.stdout == b""
+
+
+@pytest.mark.parametrize("fields", [
+    {"measurement_time": None}, {"reference_frame": None},
+    {"measurement_time": None, "reference_frame": None},
+    {"measurement_time": "bad", "reference_frame": 0},
+])
+def test_phase53_malformed_metadata_reports_without_mutation(fields):
+    scenario = build_synthetic_scenario()
+    source = scenario.history.records[0].source_observation
+    for name, value in fields.items():
+        object.__setattr__(source, name, value)
+    before = asdict(scenario)
+    manifest = build_validation_manifest(scenario, builtin_expectations=True)
+    assert manifest["overall_validation"]["status"] == "failed"
+    assert checks(manifest)["checked_metadata_contracts"] == "failed"
+    codes = {f["code"] for f in manifest["diagnostics"]["findings"] if f["severity"] == "Invalid"}
+    assert codes == ({"invalid_time"} if list(fields) == ["measurement_time"] else
+                     {"invalid_frame"} if list(fields) == ["reference_frame"] else {"invalid_time", "invalid_frame"})
+    row = manifest["history_occurrences"][0]
+    if "measurement_time" in fields:
+        assert row["measurement_seconds"] is None and row["clock_domain"] is None
+        assert row["measurement_seconds_status"] == "invalid_measurement_time"
+        assert [d["clock_domain"] for d in manifest["clock_domains"]["raw"]] == ["fixture:camera"]
+    if "reference_frame" in fields:
+        assert row["reference_frame_id"] is None
+    for renderer in (render_validation_json, render_validation_html):
+        assert renderer(scenario) == renderer(scenario)
+    assert "Inspection unavailable:" in render_validation_html(scenario)
+    assert asdict(scenario) == before
+    assert scenario.history.records[0].source_observation is source
+
+
+def test_phase53_opaque_metadata_has_intentional_exception():
+    from examples.synthetic_observation_validation import ValidationInputError
+    scenario = explicit()
+    object.__setattr__(scenario.history.records[0].source_observation, "measurement_time", [])
+    with pytest.raises(ValidationInputError, match="measurement_time"):
+        build_validation_manifest(scenario)
+
+
+@pytest.mark.parametrize("seconds", [0., -1., 1e100])
+def test_phase53_legal_raw_timestamp_edges(seconds):
+    source = SensorObservation("raw", "radar", MeasurementTime(seconds, "raw-clock"),
+        ReferenceFrame("local"), RadarPolarDetectionMeasurement(0., 0.))
+    scenario = SyntheticScenario("Raw", ObservationHistory(()), 0, 1, (ObservationBatch((source,)),))
+    manifest = build_validation_manifest(scenario)
+    row = manifest["source_inventory"]["batches"][0]["observations"][0]
+    assert row["measurement_seconds"] == seconds and row["measurement_seconds_status"] == "available"
+    assert manifest["diagnostics"]["severity_counts"]["Invalid"] == 0
+
+
+@pytest.mark.parametrize("mode", ["--validate-json", "--validate-html"])
+@pytest.mark.parametrize("status,code", [("passed", 0), ("failed", 1), ("not_evaluated", 2)])
+def test_phase53_strict_complete_report_and_exit(tmp_path, mode, status, code):
+    # Patch only the constructed example envelope, not report/exit logic.
+    bootstrap = """
+import sys
+sys.path[:0] = sys.argv[1:3]
+import synthetic_observation_demo as demo
+from dataclasses import replace
+original = demo.build_synthetic_scenario
+status = sys.argv[3]
+def construct():
+    scenario = original()
+    if status == 'failed':
+        object.__setattr__(scenario.history.records[0].source_observation, 'measurement_time', None)
+    elif status == 'not_evaluated':
+        scenario = replace(scenario, source_batches=None)
+    return scenario
+demo.build_synthetic_scenario = construct
+sys.argv = ['demo'] + sys.argv[4:]
+sys.exit(demo.main())
+"""
+    def run(strict):
+        return subprocess.run([sys.executable, "-I", "-S", "-B", "-c", bootstrap,
+            str(ROOT / "src"), str(ROOT / "examples"), status, mode] + (["--strict"] if strict else []),
+            cwd=tmp_path, env={}, capture_output=True, timeout=20)
+    strict, normal = run(True), run(False)
+    assert strict.returncode == code and normal.returncode == 0
+    assert strict.stderr == normal.stderr == b""
+    assert strict.stdout == normal.stdout and b"PASS" not in strict.stdout
+    if mode == "--validate-json":
+        assert json.loads(strict.stdout)["overall_validation"]["status"] == status
+    else:
+        text = strict.stdout.decode()
+        assert text.startswith("<!DOCTYPE html>") and text.endswith("</html>\n")
+        assert f"<dt>Validation status</dt><dd>{status}</dd>" in text
+
+
+@pytest.mark.parametrize("args", [("--strict",), ("--html", "--strict"),
+    ("--validate-json", "--html", "--strict"), ("--validate-html", "--validate-json", "--strict")])
+def test_phase53_invalid_strict_combinations(tmp_path, args):
+    result = run_cli(tmp_path, *args)
+    assert result.returncode == 2 and result.stdout == b""
+
+
+@pytest.mark.parametrize("mode", ["--validate-json", "--validate-html"])
+def test_phase53_strict_optimized_rejection(tmp_path, mode):
+    result = run_cli(tmp_path, mode, "--strict", optimized=True)
+    assert result.returncode != 0 and result.stdout == b"" and b"Run without -O" in result.stderr
+
+
+@pytest.mark.parametrize("mode,digest", [
+    ("--validate-json", "bdae4c6acfb3e21f92d73977060fe0210e1cbe9bfbd87bc156a57397ce546bab"),
+    ("--validate-html", "f5ca61bee7881b750522fa51d559d46d629a37a58ba75b457fbdff27f99331b7")])
+def test_phase53_validation_golden_bytes(tmp_path, mode, digest):
+    normal, strict = run_cli(tmp_path, mode), run_cli(tmp_path, mode, "--strict")
+    assert normal.returncode == strict.returncode == 0
+    assert normal.stderr == strict.stderr == b""
+    assert normal.stdout == strict.stdout
+    assert hashlib.sha256(normal.stdout).hexdigest() == digest

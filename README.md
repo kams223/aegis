@@ -885,6 +885,31 @@ neither run pytest nor embed test totals, and deterministic software validation
 must not be interpreted as physical-system validation. HTML escapes dynamic text
 and retains a failed manifest even if the existing inspector rejects its input.
 
+
+### Strict validation runs (Phase 53)
+
+Add `--strict` to either validation command above, for example
+`examples/synthetic_observation_demo.py --validate-json --strict` or
+`examples/synthetic_observation_demo.py --validate-html --strict`, using the same
+Python environment and redirection. The complete report is emitted before exit:
+0 means the listed checks passed, 1 means at least one failed, and 2 means checks
+remain unevaluated. Invalid CLI usage also exits 2 and emits no report.
+`--strict` requires a validation mode. Non-strict modes retain their original exit
+behavior and report bytes; these codes do not establish physical-system readiness.
+
+Missing or malformed scalar timestamp/frame metadata produces a failed manifest
+with existing Invalid diagnostics. Missing timestamps use `null` and
+`invalid_measurement_time`; no timestamp or clock domain is fabricated. Invalid
+clock identifiers are excluded from the clock summary but retained in observation
+metadata. The example-local `ValidationInputError` intentionally rejects opaque
+objects and mutable containers in metadata identifiers or time/frame wrappers,
+because they cannot be represented meaningfully as scalar report metadata.
+This is not a complete validator for deliberately corrupted production objects.
+
+Python bytecode is ignored and untracked. CI sets `PYTHONDONTWRITEBYTECODE=1`,
+runs tests with `-B`, and checks the Git index for tracked `.pyc` or `__pycache__`
+paths without modifying files.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`

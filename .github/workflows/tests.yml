@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
 
     timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
 
     steps:
       - name: Check out repository
@@ -33,8 +35,19 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements-dev.txt
 
+      - name: Reject tracked Python bytecode
+        run: |
+          python -B - <<'PY'
+          import subprocess, sys
+          paths = subprocess.check_output(["git", "ls-files", "-z"]).decode().split("\0")
+          bad = [p for p in paths if "__pycache__" in p.split("/") or p.endswith(".pyc")]
+          if bad:
+              print("Tracked Python bytecode:", *bad, sep="\n")
+          sys.exit(bool(bad))
+          PY
+
       - name: Run test suite
         env:
           PYTHONPATH: ${{ github.workspace }}/src
         run: |
-          python -m pytest -v
+          python -B -m pytest -v
