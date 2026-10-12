@@ -383,6 +383,117 @@ def test_finite_backend_confidence_is_preserved_without_probability_inference():
     assert repr(inputs) == original_before
 
 
+def test_sequential_derivation_failure_preserves_retained_evidence():
+    inputs = _inputs()
+    original = inputs["camera_batch"]
+    tracked, = original.objects
+    rows = (tracked, TrackedObject(8, replace(tracked.detection, x1=math.inf)),
+            TrackedObject(9, replace(tracked.detection, x1=15.)))
+    source = TrackedObjectBatch(original.frame, rows)
+    batch = tracked_objects_to_observations(
+        source, sensor_id="fixture:camera-sensor", clock_domain="fixture:camera",
+        reference_frame_id="fixture:camera:image",
+    )
+    first, invalid, third = batch.observations
+    assert tuple(json.loads(row.observation_id)[-2:] for row in batch.observations) == ([7, 0], [8, 1], [9, 2])
+    assert (first.measurement.x1, invalid.measurement.x1, third.measurement.x1) == (10., math.inf, 15.)
+    before = repr((inputs, source, batch))
+    retained, attempted = [], []
+    try:
+        for observation in batch.observations:
+            attempted.append(observation)
+            retained.append(derive_camera_evidence(observation))
+    except ValueError as error:
+        assert str(error) == "x1 must be finite"
+    else:
+        raise AssertionError("second derivation must fail")
+    assert len(attempted) == 2 and attempted[0] is first and attempted[1] is invalid
+    assert all(observation is not third for observation in attempted)
+    assert len(retained) == 1
+    evidence = retained[0]
+    assert evidence.source_observation is first
+    assert evidence.source_observation.measurement is first.measurement
+    assert evidence.source_observation.measurement_time is first.measurement_time
+    assert evidence.source_observation.reference_frame is first.reference_frame
+    assert batch.observations[1] is invalid and invalid.measurement.x1 == math.inf
+    assert source.objects[1] is rows[1] and rows[1].detection.x1 == math.inf
+    assert repr((inputs, source, batch)) == before
+    # The caller retained this prefix; no derivation API returned a partial batch.
+    records = tuple(retained)
+    history = ObservationHistory(records)
+    assert history.records is records and len(history.records) == 1
+    assert history.records[0] is evidence is retained[0]
+    assert history.records[0].source_observation is first
+
+
+def test_explicit_recovery_after_derivation_failure_preserves_provenance():
+    inputs = _inputs()
+    original = inputs["camera_batch"]
+    tracked, = original.objects
+    rows = (tracked, TrackedObject(8, replace(tracked.detection, x1=math.inf)),
+            TrackedObject(9, replace(tracked.detection, x1=15.)))
+    source = TrackedObjectBatch(original.frame, rows)
+    context = dict(sensor_id="fixture:camera-sensor", clock_domain="fixture:camera",
+                   reference_frame_id="fixture:camera:image")
+    batch = tracked_objects_to_observations(source, **context)
+    first, invalid, third = batch.observations
+    before = repr((inputs, source, batch))
+    first_evidence = derive_camera_evidence(first)
+    retained = [first_evidence]
+    evidence_before = repr(first_evidence)
+    attempted = [first]
+    # Both failed attempts are explicit caller invocations of the same record.
+    for _ in range(2):
+        attempted.append(invalid)
+        try:
+            retained.append(derive_camera_evidence(invalid))
+        except ValueError as error:
+            assert str(error) == "x1 must be finite"
+        else:
+            raise AssertionError("unchanged invalid observation must fail again")
+        assert len(retained) == 1 and retained[0] is first_evidence
+        assert all(observation is not third for observation in attempted)
+        assert batch.observations[1] is invalid
+        assert invalid.measurement.x1 == math.inf
+        assert repr((inputs, source, batch)) == before
+        assert repr(first_evidence) == evidence_before
+    third_evidence = derive_camera_evidence(third)
+    retained.append(third_evidence)
+    assert third_evidence.source_observation is third
+    corrected_detection = replace(rows[1].detection, x1=12.)
+    corrected_row = replace(rows[1], detection=corrected_detection)
+    corrected_source = TrackedObjectBatch(source.frame, (rows[0], corrected_row, rows[2]))
+    corrected_batch = tracked_objects_to_observations(corrected_source, **context)
+    corrected = corrected_batch.observations[1]  # Preserve the ID's row ordinal.
+    assert corrected_source.frame is source.frame
+    assert corrected_row.track_id == rows[1].track_id
+    assert corrected_detection is not rows[1].detection
+    assert corrected is not invalid and corrected.measurement is not invalid.measurement
+    assert corrected.measurement.x1 == 12. and math.isfinite(corrected.measurement.x1)
+    # Scoped key reuse across calls is not global identity or correspondence.
+    assert corrected.observation_id == invalid.observation_id
+    assert corrected.source_local_id == invalid.source_local_id
+    assert corrected.measurement_time == invalid.measurement_time
+    assert corrected.reference_frame == invalid.reference_frame
+    corrected_evidence = derive_camera_evidence(corrected)
+    retained.append(corrected_evidence)
+    records = tuple(retained)
+    history = ObservationHistory(records)
+    assert history.records is records and len(records) == 3
+    for actual, expected, observation in zip(
+        records, (first_evidence, third_evidence, corrected_evidence),
+        (first, third, corrected), strict=True,
+    ):
+        assert actual is expected and actual.source_observation is observation
+        assert actual.source_observation.measurement is observation.measurement
+        assert actual.source_observation.measurement_time is observation.measurement_time
+        assert actual.source_observation.reference_frame is observation.reference_frame
+    assert all(record.source_observation is not invalid for record in records)
+    assert batch.observations[1] is invalid and rows[1].detection.x1 == math.inf
+    assert repr((inputs, source, batch)) == before
+    assert repr(first_evidence) == evidence_before
+
+
 def test_isolated_replay_without_external_dependencies_clocks_randomness_or_io():
     source = Path(__file__).resolve().parents[1] / "src"
     script = '''
