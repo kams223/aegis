@@ -21,7 +21,8 @@ def test_standalone_synthetic_demo_is_deterministic(tmp_path):
     assert runs[0].stdout == runs[1].stdout
     assert runs[0].stderr == runs[1].stderr == b""
     output = runs[0].stdout.decode("utf-8")
-    payload, message = output.rsplit("\n", 2)[:2]
+    payload, message, trailing = output.rsplit("\n", 2)
+    assert trailing == ""
     assert message == "DETERMINISTIC SYNTHETIC DEMO: PASS"
     radar_key = '["scripted-radar-detection",1,"0",0]'
     assert json.loads(payload) == {
