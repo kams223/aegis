@@ -25,7 +25,7 @@ from aegis.fusion.derived_evidence import (
 from aegis.fusion.observation_history import ObservationHistory
 from aegis.perception.contracts import ObjectDetection
 from aegis.radar.adapter import radar_detections_to_observations
-from aegis.radar.contracts import RadarPolarDetectionMeasurement
+from aegis.radar.contracts import RadarDetection, RadarPolarDetectionMeasurement, RadarScan
 from aegis.radar.scripted_source import iter_scripted_radar_scans
 from aegis.spatial.camera import ImagePoint, PinholeCameraIntrinsics
 from aegis.spatial.transforms import RigidTransform
@@ -492,6 +492,112 @@ def test_explicit_recovery_after_derivation_failure_preserves_provenance():
     assert batch.observations[1] is invalid and rows[1].detection.x1 == math.inf
     assert repr((inputs, source, batch)) == before
     assert repr(first_evidence) == evidence_before
+
+
+def test_camera_repeated_normalization_preserves_values_with_new_objects():
+    inputs = _inputs()
+    original = inputs["camera_batch"]
+    tracked, = original.objects
+    source = TrackedObjectBatch(original.frame, (tracked, TrackedObject(
+        8, replace(tracked.detection, x1=15.),
+    )))
+    equivalent = TrackedObjectBatch(
+        replace(source.frame), tuple(TrackedObject(row.track_id, replace(row.detection))
+                                     for row in source.objects),
+    )
+    assert equivalent == source and equivalent is not source
+    assert equivalent.frame is not source.frame
+    for left, right in zip(source.objects, equivalent.objects, strict=True):
+        assert left == right and left is not right
+        assert left.detection == right.detection and left.detection is not right.detection
+    before = repr((inputs, source, equivalent))
+    batches = tuple(tracked_objects_to_observations(
+        batch, sensor_id="fixture:camera-sensor", clock_domain="fixture:camera",
+        reference_frame_id="fixture:camera:image",
+    ) for batch in (source, source, equivalent))
+    assert batches[0] == batches[1] == batches[2]
+    for ordinal, observations in enumerate(zip(*(batch.observations for batch in batches), strict=True)):
+        assert len(observations) == 3
+        for left, right in ((observations[0], observations[1]),
+                            (observations[0], observations[2]), (observations[1], observations[2])):
+            assert left == right and left is not right
+            assert left.observation_id == right.observation_id
+            assert left.source_local_id == right.source_local_id
+            assert left.measurement == right.measurement and left.measurement is not right.measurement
+            assert left.measurement_time == right.measurement_time
+            assert left.measurement_time is not right.measurement_time
+            assert left.reference_frame == right.reference_frame
+            assert left.reference_frame is not right.reference_frame
+        assert all(json.loads(row.observation_id)[-1] == ordinal for row in observations)
+    for batch in batches:
+        assert len(batch.observations) == 2
+        first, second = batch.observations
+        assert first.measurement_time is second.measurement_time
+        assert first.reference_frame is second.reference_frame
+    evidence = tuple(derive_camera_evidence(batch.observations[0]) for batch in batches)
+    assert evidence[0] == evidence[1] == evidence[2]
+    assert len({id(record) for record in evidence}) == 3
+    for record, batch in zip(evidence, batches, strict=True):
+        assert record.source_observation is batch.observations[0]
+    assert repr((inputs, source, equivalent)) == before
+
+
+def test_radar_equivalent_inputs_preserve_per_input_provenance():
+    stamp = MeasurementTime(5., "fixture:radar")
+    measurement = RadarPolarDetectionMeasurement(10., 0., 0.)
+    detection = RadarDetection("fixture:session", "return-1", stamp, measurement, "scan-1/1")
+    detections = (detection,)
+    scan = RadarScan("fixture:session", "scan-1", stamp, detections)
+    equivalent_stamp, equivalent_measurement = replace(stamp), replace(measurement)
+    equivalent_detection = RadarDetection(
+        detection.source_session_id, detection.evidence_id, equivalent_stamp,
+        equivalent_measurement, detection.local_detection_id,
+    )
+    equivalent_scan = RadarScan(scan.source_session_id, scan.scan_id,
+                                equivalent_stamp, (equivalent_detection,))
+    assert scan.detections is detections
+    assert equivalent_scan == scan and equivalent_scan is not scan
+    assert equivalent_detection == detection and equivalent_detection is not detection
+    assert equivalent_stamp == stamp and equivalent_stamp is not stamp
+    assert equivalent_measurement == measurement and equivalent_measurement is not measurement
+    before = repr((scan, equivalent_scan))
+    scans = (scan, scan, equivalent_scan)
+    batches = tuple(radar_detections_to_observations(
+        item.detections, sensor_id="fixture:radar-sensor", reference_frame_id="fixture:radar:local",
+    ) for item in scans)
+    assert batches[0] == batches[1] == batches[2]
+    observations = tuple(batch.observations[0] for batch in batches)
+    assert all(len(batch.observations) == 1 for batch in batches)
+    assert len({id(row) for row in observations}) == 3
+    assert len({id(row.reference_frame) for row in observations}) == 3
+    for observation, item in zip(observations, scans, strict=True):
+        assert observation.observation_id == observations[0].observation_id
+        assert observation.source_local_id == observations[0].source_local_id
+        assert observation.reference_frame == observations[0].reference_frame
+        assert observation.measurement is item.detections[0].measurement
+        assert observation.measurement_time is item.detections[0].measurement_time
+    assert observations[0].measurement is observations[1].measurement is measurement
+    assert observations[0].measurement_time is observations[1].measurement_time is stamp
+    assert observations[2].measurement is equivalent_measurement
+    assert observations[2].measurement_time is equivalent_stamp
+    evidence = tuple(derive_radar_evidence(row) for row in observations)
+    assert evidence[0] == evidence[1] == evidence[2]
+    assert len({id(record) for record in evidence}) == 3
+    for record, observation in zip(evidence, observations, strict=True):
+        assert record.source_observation is observation
+        assert record.spatial_projection.source_measurement is observation.measurement
+        assert record.source_observation.measurement_time is observation.measurement_time
+    # Cross-call reuse leaves the adapter's within-call duplicate rejection intact.
+    try:
+        radar_detections_to_observations(
+            (detection, equivalent_detection), sensor_id="fixture:radar-sensor",
+            reference_frame_id="fixture:radar:local",
+        )
+    except ValueError as error:
+        assert str(error) == "Duplicate radar evidence key (source_session_id, evidence_id)"
+    else:
+        raise AssertionError("within-call duplicate keys must be rejected")
+    assert repr((scan, equivalent_scan)) == before
 
 
 def test_isolated_replay_without_external_dependencies_clocks_randomness_or_io():
