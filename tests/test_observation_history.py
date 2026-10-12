@@ -153,6 +153,56 @@ def test_equal_observation_ids_preserve_distinct_source_metadata():
     assert repr(observations) == before
 
 
+def test_history_equality_preserves_record_order_and_per_run_provenance():
+    observation_a, observation_b = radar(1.), radar(5.)
+    observations = (observation_a, observation_b)
+    source_references = tuple((o.measurement, o.measurement_time, o.reference_frame)
+                              for o in observations)
+    before = repr(observations)
+    evidence_a1 = derive_radar_evidence(observation_a)
+    evidence_b1 = derive_radar_evidence(observation_b)
+    evidence_a2 = derive_radar_evidence(observation_a)
+    evidence_b2 = derive_radar_evidence(observation_b)
+    assert evidence_a1 == evidence_a2 and evidence_a1 is not evidence_a2
+    assert evidence_b1 == evidence_b2 and evidence_b1 is not evidence_b2
+    assert evidence_a1 != evidence_b1
+
+    records1 = (evidence_a1, evidence_b1)
+    records2 = (evidence_a2, evidence_b2)
+    first, second = ObservationHistory(records1), ObservationHistory(records2)
+    assert first == second and first is not second
+    assert records1 is not records2
+    assert first.records is records1 and second.records is records2
+    evidence_before = repr((records1, records2))
+    reversed_records = (evidence_b1, evidence_a1)
+    reversed_history = ObservationHistory(reversed_records)
+    assert reversed_history != first and reversed_history != second
+    assert reversed_history.records is reversed_records
+    assert reversed_history.records[0] is evidence_b1
+    assert reversed_history.records[1] is evidence_a1
+
+    for history, records, sources in (
+        (first, records1, observations),
+        (second, records2, observations),
+        (reversed_history, reversed_records, observations[::-1]),
+    ):
+        assert history.records is records
+        for actual, expected, source in zip(history.records, records, sources, strict=True):
+            assert actual is expected
+            assert actual.source_observation is source
+            assert actual.spatial_projection.source_measurement is source.measurement
+            assert actual.spatial_projection.reference_frame is source.reference_frame
+    for observation, (measurement, timestamp, frame) in zip(
+        observations, source_references, strict=True,
+    ):
+        assert observation.measurement is measurement
+        assert observation.measurement_time is timestamp
+        assert observation.reference_frame is frame
+    assert first == second
+    assert repr(observations) == before
+    assert repr((records1, records2)) == evidence_before
+
+
 def test_duplicates_equal_distinct_and_different_derivations_preserved():
     observation = radar()
     first = DerivedSensorEvidence(observation)
