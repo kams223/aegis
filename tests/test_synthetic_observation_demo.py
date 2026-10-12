@@ -45,3 +45,20 @@ def test_standalone_synthetic_demo_is_deterministic(tmp_path):
         "camera_mapped_interval_seconds": [101.75, 102.25],
         "radar_mapped_interval_seconds": [204.75, 205.25],
     }
+
+
+def test_standalone_synthetic_demo_rejects_optimized_python(tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    bootstrap = (
+        "import runpy, sys; sys.path.insert(0, sys.argv[1]); "
+        "runpy.run_path(sys.argv[2], run_name='__main__')"
+    )
+    command = [sys.executable, "-I", "-S", "-B", "-O", "-c", bootstrap,
+               str(root / "src"), str(root / "examples/synthetic_observation_demo.py")]
+    result = subprocess.run(command, cwd=tmp_path, env={}, capture_output=True,
+                            timeout=30)
+    assert result.returncode != 0
+    assert result.stdout == b""
+    assert b"DETERMINISTIC SYNTHETIC DEMO: PASS" not in result.stdout
+    assert b"DETERMINISTIC SYNTHETIC DEMO: PASS" not in result.stderr
+    assert b"Run without -O: this demonstration requires assertion checks" in result.stderr
