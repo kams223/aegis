@@ -6,6 +6,7 @@ and clock bounds are fixture assertions, not target identity or synchronization.
 
 from dataclasses import fields, replace
 import json
+import math
 from pathlib import Path
 import subprocess
 import sys
@@ -18,7 +19,9 @@ from aegis.fusion.comparability import (
     assess_evidence_comparability,
 )
 from aegis.fusion.contracts import MeasurementTime, ReferenceFrame
-from aegis.fusion.derived_evidence import derive_camera_evidence, derive_radar_evidence
+from aegis.fusion.derived_evidence import (
+    DerivedSensorEvidence, derive_camera_evidence, derive_radar_evidence,
+)
 from aegis.fusion.observation_history import ObservationHistory
 from aegis.perception.contracts import ObjectDetection
 from aegis.radar.adapter import radar_detections_to_observations
@@ -288,6 +291,96 @@ def test_radar_cross_call_same_key_changed_payload_preserved():
     assert coordinates == [(20., 0., 0.), (10., 0., 0.)]
     assert history.records[0] is evidence[0] and history.records[1] is evidence[1]
     assert repr((original, changed, inputs)) == before
+
+
+def test_camera_normalization_preserves_nonfinite_values_rejected_by_evidence():
+    inputs = _inputs()
+    original = inputs["camera_batch"]
+    tracked, = original.objects
+    context = dict(sensor_id="fixture:camera-sensor", clock_domain="fixture:camera",
+                   reference_frame_id="fixture:camera:image")
+    baseline, = tracked_objects_to_observations(original, **context).observations
+    original_before = repr(inputs)
+    for field in ("x1", "confidence"):
+        for value in (math.nan, math.inf, -math.inf):
+            detection = replace(tracked.detection, **{field: value})
+            source = TrackedObjectBatch(original.frame, (TrackedObject(tracked.track_id, detection),))
+            source_before = repr(source)
+            observation, = tracked_objects_to_observations(source, **context).observations
+            measurement = observation.measurement
+            stamp, frame = observation.measurement_time, observation.reference_frame
+            normalized_before = repr(observation)
+            for candidate in (getattr(detection, field), getattr(measurement, field)):
+                if math.isnan(value):
+                    assert math.isnan(candidate)
+                else:
+                    assert candidate == value
+            for name in ("observation_id", "sensor_id", "source_local_id",
+                         "measurement_time", "reference_frame"):
+                assert getattr(observation, name) == getattr(baseline, name)
+            for name in ("class_id", "label", "confidence", "x1", "y1", "x2", "y2"):
+                if name != field:
+                    assert getattr(measurement, name) == getattr(tracked.detection, name)
+            for construct in (
+                lambda: DerivedSensorEvidence(observation),
+                lambda: derive_camera_evidence(
+                    observation, image_point=inputs["point"], intrinsics=inputs["intrinsics"],
+                ),
+            ):
+                try:
+                    construct()
+                except ValueError as error:
+                    assert str(error) == f"{field} must be finite"
+                else:
+                    raise AssertionError(f"nonfinite {field} must be rejected")
+                assert observation.measurement is measurement
+                assert observation.measurement_time is stamp
+                assert observation.reference_frame is frame
+                assert repr(observation) == normalized_before
+                assert source.objects[0].detection is detection
+                assert source.frame is original.frame
+                assert repr(source) == source_before
+                assert repr(inputs) == original_before
+
+
+def test_finite_backend_confidence_is_preserved_without_probability_inference():
+    # Preserving a backend score does not establish a calibrated probability.
+    inputs = _inputs()
+    original = inputs["camera_batch"]
+    tracked, = original.objects
+    context = dict(sensor_id="fixture:camera-sensor", clock_domain="fixture:camera",
+                   reference_frame_id="fixture:camera:image")
+    baseline, = tracked_objects_to_observations(original, **context).observations
+    original_before = repr(inputs)
+    observations, records = [], []
+    for confidence in (-0.25, 1.25):
+        detection = replace(tracked.detection, confidence=confidence)
+        source = TrackedObjectBatch(original.frame, (TrackedObject(tracked.track_id, detection),))
+        source_before = repr(source)
+        observation, = tracked_objects_to_observations(source, **context).observations
+        assert observation.measurement.confidence == confidence
+        for name in ("observation_id", "sensor_id", "source_local_id",
+                     "measurement_time", "reference_frame"):
+            assert getattr(observation, name) == getattr(baseline, name)
+        evidence = derive_camera_evidence(observation)
+        assert evidence.source_observation is observation
+        assert evidence.source_observation.measurement is observation.measurement
+        assert evidence.source_observation.measurement_time is observation.measurement_time
+        assert evidence.source_observation.measurement.confidence == confidence
+        assert evidence.spatial_projection is evidence.camera_intrinsics is evidence.mapped_time is None
+        observations.append(observation)
+        records.append(evidence)
+        assert source.objects[0].detection is detection
+        assert repr(source) == source_before
+        assert repr(inputs) == original_before
+    ordered = (records[1], records[0])
+    history = ObservationHistory(ordered)
+    assert history.records is ordered
+    assert history.records[0] is records[1] and history.records[1] is records[0]
+    assert history.records[0].source_observation is observations[1]
+    assert history.records[1].source_observation is observations[0]
+    assert tuple(record.source_observation.measurement.confidence for record in history.records) == (1.25, -0.25)
+    assert repr(inputs) == original_before
 
 
 def test_isolated_replay_without_external_dependencies_clocks_randomness_or_io():
