@@ -835,6 +835,56 @@ inferred. This is only synthetic software inspection. Pre-rendering all states
 uses quadratic report space, appropriate for small developer fixtures; automatic
 playback, live acquisition and persistence are outside scope.
 
+### Reproducible synthetic validation (Phases 49–51)
+
+Generate either opt-in report from the fixed synthetic demonstration:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B \
+examples/synthetic_observation_demo.py --validate-json \
+> /tmp/aegis-synthetic-validation.json
+
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B \
+examples/synthetic_observation_demo.py --validate-html \
+> /tmp/aegis-synthetic-validation.html
+```
+
+Open the HTML file with the browser's Open File action. The dashboard shows the
+schema-v1 manifest, source inventory, separate raw/mapped clock domains, counts,
+checks and diagnostic severity summary, followed by the existing timeline,
+provenance details and replay controls. Everything works offline without
+JavaScript. The two validation modes are mutually exclusive and cannot be combined
+with `--html`, `--compare` or `--replay`. All five existing output modes are unchanged.
+
+Reports check source counts and source-reference retention, the metadata invariants
+covered by existing diagnostics, equality against a second constructed scenario,
+and the fixed fixture's explicit delivery, stored geometry and mapped-interval
+expectations. Informational diagnostics and warnings do not cause failure.
+Every check says `passed`, `failed` or `not_evaluated`; any failure makes the scoped
+overall result `failed`, otherwise any unevaluated check makes it `not_evaluated`.
+Only all evaluated checks passing yields `passed`. Empty history has no source
+lineage to evaluate. Missing inventory/reference is never reported as a pass.
+
+The example-local `build_validation_manifest(scenario, reference=second_scenario,
+builtin_expectations=True)` accepts constructed values only. Omit the fixed profile
+for other scenarios; its checks then remain explicitly unevaluated. Source batch
+and observation order, history occurrences and repeated-reference positions are
+retained. `null` represents absent metadata; non-finite source timestamps use
+`null` with an explicit representation status. No clocks are aligned or sources
+associated by matching IDs. JSON uses fixed field insertion order, UTF-8 text,
+strict finite JSON numbers and no current timestamps, paths or environment data.
+The CLI emits only the requested document after scenario assertions, with no PASS
+marker; failed software checks are recorded in the report rather than hidden.
+
+Physical accuracy, detection precision/recall, false-positive rates, latency,
+real-world performance and operational readiness remain explicitly unevaluated.
+The diagnostic check is not complete production-contract revalidation. Reports
+neither run pytest nor embed test totals, and deterministic software validation
+must not be interpreted as physical-system validation. HTML escapes dynamic text
+and retains a failed manifest even if the existing inspector rejects its input.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`

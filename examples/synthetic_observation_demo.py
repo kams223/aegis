@@ -156,6 +156,9 @@ def main():
                         help="with --html, compare the fixed fixture with an explicit delivery variant")
     parser.add_argument("--replay", action="store_true",
                         help="with --html, include local delivery-order replay controls")
+    validation_modes = parser.add_mutually_exclusive_group()
+    validation_modes.add_argument("--validate-json", action="store_true", help="emit deterministic software validation JSON")
+    validation_modes.add_argument("--validate-html", action="store_true", help="emit an offline validation dashboard")
     # Preserve the existing runpy launcher, whose two bootstrap paths remain
     # in argv. Ordinary CLI arguments still receive strict argparse validation.
     bootstrap_paths = [str(Path(__file__).resolve().parents[1] / "src"),
@@ -164,6 +167,8 @@ def main():
     if "-c" in sys.orig_argv and argv == bootstrap_paths:
         argv = []
     args = parser.parse_args(argv)
+    if (args.validate_json or args.validate_html) and (args.html or args.compare or args.replay):
+        parser.error("validation modes cannot be combined with --html, --compare or --replay")
     if args.compare and not args.html:
         parser.error("--compare requires --html")
     if args.replay and not args.html:
@@ -177,6 +182,14 @@ def main():
         assert left.source_observation is not right.source_observation
         assert left.source_observation.measurement is not right.source_observation.measurement
         assert left.source_observation.measurement_time is not right.source_observation.measurement_time
+    if args.validate_json or args.validate_html:
+        from synthetic_observation_validation import render_validation_json, render_validation_html
+
+        scenario, reference = build_synthetic_scenario(), build_synthetic_scenario()
+        render = render_validation_json if args.validate_json else render_validation_html
+        document = render(scenario, reference=reference, builtin_expectations=True)
+        print(document, end="")
+        return
     if args.html:
         from synthetic_observation_inspector import render_observation_history_html
 
