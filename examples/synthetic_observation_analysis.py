@@ -148,7 +148,8 @@ def diagnose_scenario(scenario: SyntheticScenario) -> tuple[Finding, ...]:
     for position, evidence in enumerate(scenario.history.records):
         source = evidence.source_observation
         location = f"history {position}"
-        result.extend(_metadata_findings(source, location, derived=True))
+        metadata_findings = _metadata_findings(source, location, derived=True)
+        result.extend(metadata_findings)
         if source.observation_id in ids:
             result.append(Finding("Warning", "repeated_history_id", location, source.observation_id,
                                   f"Observation ID also occurs at history {ids[source.observation_id]}; IDs do not associate objects."))
@@ -159,7 +160,7 @@ def diagnose_scenario(scenario: SyntheticScenario) -> tuple[Finding, ...]:
                                   f"Same evidence reference as history {identities[id(evidence)]}; not an independent acquisition."))
         else:
             identities[id(evidence)] = position
-        invalid_time = any(f.code == "invalid_time" and f.location == location for f in result)
+        invalid_time = any(f.code == "invalid_time" for f in metadata_findings)
         if not invalid_time:
             time = source.measurement_time
             domain = time.clock_domain

@@ -12,12 +12,12 @@ from aegis.fusion.contracts import MeasurementTime, ReferenceFrame
 
 try:
     from synthetic_observation_analysis import SyntheticScenario, compare_scenarios, diagnose_scenario, modality
-    from synthetic_observation_inspector import _fields, _text, render_synthetic_workspace_html
+    from synthetic_observation_inspector import _fields, _text, _workspace_body, _document
 except ModuleNotFoundError as error:
     if error.name not in ("synthetic_observation_analysis", "synthetic_observation_inspector"):
         raise
     from examples.synthetic_observation_analysis import SyntheticScenario, compare_scenarios, diagnose_scenario, modality
-    from examples.synthetic_observation_inspector import _fields, _text, render_synthetic_workspace_html
+    from examples.synthetic_observation_inspector import _fields, _text, _workspace_body, _document
 
 
 SCHEMA_VERSION = 1
@@ -120,6 +120,12 @@ def build_validation_manifest(scenario: SyntheticScenario, *, reference=None, bu
     reference is a caller-supplied second construction, not a claimed pytest run.
     Missing inventory/reference/profile produces not_evaluated, never success.
     """
+    manifest, _ = _validation_data(scenario, reference=reference, builtin_expectations=builtin_expectations)
+    return manifest
+
+
+def _validation_data(scenario, *, reference=None, builtin_expectations=False):
+    """Keep the diagnostic tuple alongside its detached manifest for composition."""
     if not isinstance(scenario, SyntheticScenario):
         raise TypeError("scenario must be SyntheticScenario")
     if reference is not None and not isinstance(reference, SyntheticScenario):
@@ -205,7 +211,7 @@ def build_validation_manifest(scenario: SyntheticScenario, *, reference=None, bu
     status_counts = {status: sum(check["status"] == status for check in checks)
                      for status in ("passed", "failed", "not_evaluated")}
     overall = "failed" if status_counts["failed"] else "not_evaluated" if status_counts["not_evaluated"] else "passed"
-    return {
+    manifest = {
         "schema_version": SCHEMA_VERSION,
         "scenario_label": scenario.label,
         "scope": "Deterministic synthetic software checks only",
@@ -226,6 +232,8 @@ def build_validation_manifest(scenario: SyntheticScenario, *, reference=None, bu
         "unevaluated_capabilities": [{"capability": name, "status": "not_evaluated"} for name in _UNEVALUATED],
     }
 
+    return manifest, findings
+
 
 def render_validation_json(scenario, *, reference=None, builtin_expectations=False) -> str:
     """Stable insertion-ordered UTF-8-compatible JSON; no environment metadata."""
@@ -235,11 +243,11 @@ def render_validation_json(scenario, *, reference=None, builtin_expectations=Fal
 
 def render_validation_html(scenario, *, reference=None, builtin_expectations=False) -> str:
     """Combine the manifest dashboard with the existing offline replay inspector."""
-    manifest = build_validation_manifest(scenario, reference=reference, builtin_expectations=builtin_expectations)
-    return _render_html(scenario, manifest)
+    manifest, findings = _validation_data(scenario, reference=reference, builtin_expectations=builtin_expectations)
+    return _render_html(scenario, manifest, findings)
 
 
-def _render_html(scenario, manifest):
+def _render_html(scenario, manifest, findings):
     checks = "".join("<li>" + _fields([(name, check[name]) for name in ("id", "status", "description", "details")])
                      + "</li>" for check in manifest["invariants"])
     summary = ("<h1>Synthetic Software Validation Dashboard</h1>" + _fields([
@@ -258,20 +266,17 @@ def _render_html(scenario, manifest):
     try:
         if manifest["diagnostics"]["severity_counts"]["Invalid"]:
             raise ValueError("Invalid metadata; see validation findings and source inventory")
-        document = render_synthetic_workspace_html(scenario, replay=True)
+        body = _workspace_body(scenario, replay=True, findings=findings)
     except (ValueError, TypeError) as error:
         # A failed manifest remains readable even when the inspector refuses invalid input.
-        document = ('<!DOCTYPE html>\n<html lang="en"><head><meta charset="utf-8">'
-                    '<title>Synthetic Software Validation Dashboard</title></head><body>'
-                    '<p>Inspection unavailable: ' + _text(error) + '</p></body></html>\n')
-    document = document.replace("<title>Synthetic Software Observation Inspector</title>",
-                                "<title>Synthetic Software Validation Dashboard</title>", 1)
-    return document.replace("<body>", "<body>" + summary, 1)
+        return _document(summary + '<p>Inspection unavailable: ' + _text(error) + '</p>',
+                         title="Synthetic Software Validation Dashboard", minimal=True)
+    return _document(summary + body, title="Synthetic Software Validation Dashboard", replay=True)
 
 
 def render_validation_report(scenario, *, html=False, reference=None, builtin_expectations=False):
     """Return a complete document and its scoped exit code from one manifest."""
-    manifest = build_validation_manifest(scenario, reference=reference, builtin_expectations=builtin_expectations)
-    document = (_render_html(scenario, manifest) if html else
+    manifest, findings = _validation_data(scenario, reference=reference, builtin_expectations=builtin_expectations)
+    document = (_render_html(scenario, manifest, findings) if html else
                 json.dumps(manifest, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
     return document, {"passed": 0, "failed": 1, "not_evaluated": 2}[manifest["overall_validation"]["status"]]

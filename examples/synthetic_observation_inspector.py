@@ -6,6 +6,8 @@ in history. Repeated occurrences are never collapsed. No derivation is run.
 
 from html import escape
 from fractions import Fraction
+from dataclasses import dataclass
+from types import MappingProxyType
 
 try:
     from synthetic_observation_analysis import (
@@ -185,11 +187,72 @@ def render_observation_history_html(
             raise ValueError(f"{name}_observation_count must be nonnegative")
     scenario = SyntheticScenario(scenario_label, history, camera_observation_count,
                                  radar_observation_count, source_batches)
-    findings = diagnose_scenario(scenario)
-    if any(f.severity == "Invalid" for f in findings):
+    return _document(_workspace_body(scenario, comparison, replay=replay, scope=_replay_scope), replay=replay)
+
+
+def _document(body, *, title="Synthetic Software Observation Inspector", replay=False, minimal=False):
+    """Wrap trusted, already-escaped fragments with the original document bytes."""
+    head = '<!DOCTYPE html>\n<html lang="en"><head><meta charset="utf-8">'
+    if not minimal:
+        head += '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    head += "<title>" + _text(title) + "</title>"
+    if not minimal:
+        head += "<style>" + _STYLE + (_REPLAY_STYLE if replay else "") + "</style>"
+    return head + "</head><body>" + body + "</body></html>\n"
+
+
+@dataclass(frozen=True)
+class _PreparedScenario:
+    """Report-local immutable indexes; no cache survives the rendering call."""
+    findings: tuple
+    findings_by_location: object
+    source_references: object
+
+
+def _prepare_scenario(scenario, findings=None):
+    findings = diagnose_scenario(scenario) if findings is None else findings
+    locations, references = {}, {}
+    for index, finding in enumerate(findings):
+        locations.setdefault(finding.location, []).append((index, finding))
+    if scenario.source_batches is not None:
+        for batch_index, batch in enumerate(scenario.source_batches):
+            for source_index, source in enumerate(batch.observations):
+                references.setdefault(id(source), []).append(f"batch {batch_index}, observation {source_index}")
+    return _PreparedScenario(
+        findings, MappingProxyType({key: tuple(value) for key, value in locations.items()}),
+        None if scenario.source_batches is None else
+        MappingProxyType({key: tuple(value) for key, value in references.items()}),
+    )
+
+
+def _workspace_body(scenario, comparison=None, *, replay=False, scope="left", findings=None):
+    if type(replay) is not bool:
+        raise TypeError("replay must be a boolean")
+    # Preserve the existing renderer's envelope checks, including forged counts.
+    SyntheticScenario(scenario.label, scenario.history, scenario.camera_observation_count,
+                      scenario.radar_observation_count, scenario.source_batches)
+    prepared = _prepare_scenario(scenario, findings)
+    if any(f.severity == "Invalid" for f in prepared.findings):
         raise ValueError("history violates a checked public contract; inspect diagnose_scenario findings")
     if comparison is not None and not isinstance(comparison, SyntheticScenario):
         raise TypeError("comparison must be SyntheticScenario or None")
+    body = _scenario_body(scenario, prepared, replay=replay, scope=scope)
+    if comparison is not None:
+        other = (_scenario_body(comparison, prepared, replay=replay, scope="right")
+                 if comparison is scenario else
+                 _workspace_body(comparison, replay=replay, scope="right"))
+        body = (_comparison_html(scenario, comparison)
+                + '<div class="comparison"><section><h2>Left scenario</h2>'
+                + body + "</section><section><h2>Right scenario</h2>"
+                + other + "</section></div>")
+    return body
+
+
+def _scenario_body(scenario, prepared, *, replay, scope):
+    history, scenario_label = scenario.history, scenario.label
+    camera_observation_count = scenario.camera_observation_count
+    radar_observation_count = scenario.radar_observation_count
+    counts = {"camera": camera_observation_count, "radar": radar_observation_count}
     rows = []
     for position, evidence in enumerate(history.records):
         source = evidence.source_observation
@@ -218,56 +281,26 @@ def render_observation_history_html(
         ("Total source observations", camera_observation_count + radar_observation_count),
         ("Evidence occurrences", len(history.records)), ("History occurrences", len(history.records)),
     ])
-    document = ("<!DOCTYPE html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
-            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-            "<title>Synthetic Software Observation Inspector</title><style>" + _STYLE
-            + "</style></head><body><h1>Synthetic Software Observation Inspector</h1>"
+    body = ("<h1>Synthetic Software Observation Inspector</h1>"
             + summary + "<p>Caller-selected history order; repeated occurrences remain separate. "
             "Occurrence counts do not establish independent acquisitions. IDs do not associate physical objects.</p>"
             "<p>Raw clock domains are preserved. Mapped intervals are conditional on supplied mappings; "
             "no automatic synchronization occurs. Geometry is displayed as supplied; camera direction has no depth. "
             "This software fixture makes no physical accuracy claim and is not a physical sensor simulation.</p>"
-            "<h2>Ordered history</h2><div class=\"table-view\"><table>"
+            + (_replay_html(scenario, scope, prepared) if replay else "")
+            + _timeline_html(scenario) + _diagnostics_html(prepared.findings)
+            + "<h2>Ordered history</h2><div class=\"table-view\"><table>"
             "<caption>One row per history occurrence (zero-based position)</caption><thead><tr>"
             + "".join(f"<th scope=\"col\">{_text(heading)}</th>" for heading in headings)
-            + "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div></body></html>\n")
-    document = document.replace(
-        "<h2>Ordered history</h2>",
-        _timeline_html(scenario) + _diagnostics_html(findings) + "<h2>Ordered history</h2>", 1,
-    )
-    if replay:
-        document = document.replace("</style>", _REPLAY_STYLE + "</style>", 1)
-        document = document.replace(
-            "<h2>Observation timeline</h2>",
-            _replay_html(scenario, _replay_scope) + "<h2>Observation timeline</h2>", 1,
-        )
-    if comparison is not None:
-        other = render_observation_history_html(
-            comparison.history, scenario_label=comparison.label,
-            camera_observation_count=comparison.camera_observation_count,
-            radar_observation_count=comparison.radar_observation_count,
-            source_batches=comparison.source_batches, replay=replay, _replay_scope="right",
-        )
-        before, body = document.split("<body>", 1)
-        body, after = body.rsplit("</body>", 1)
-        other_body = other.split("<body>", 1)[1].rsplit("</body>", 1)[0]
-        document = (before + "<body>" + _comparison_html(scenario, comparison)
-                    + '<div class="comparison"><section><h2>Left scenario</h2>'
-                    + body + "</section><section><h2>Right scenario</h2>"
-                    + other_body + "</section></div></body>" + after)
-    return document
+            + "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div>")
+    return body
 
 
 def render_synthetic_workspace_html(scenario: SyntheticScenario, comparison=None, *, replay=False) -> str:
     """Inspect explicit scenarios; inputs are values, never loaded Python code."""
     if not isinstance(scenario, SyntheticScenario):
         raise TypeError("scenario must be SyntheticScenario")
-    return render_observation_history_html(
-        scenario.history, scenario_label=scenario.label,
-        camera_observation_count=scenario.camera_observation_count,
-        radar_observation_count=scenario.radar_observation_count,
-        source_batches=scenario.source_batches, comparison=comparison, replay=replay,
-    )
+    return _document(_workspace_body(scenario, comparison, replay=replay), replay=replay)
 
 
 def _diagnostics_html(findings):
@@ -401,6 +434,10 @@ def render_replay_state_html(scenario: SyntheticScenario, state: ReplayState, *,
         raise TypeError("scenario and state must be SyntheticScenario and ReplayState")
     if state.history is not scenario.history:
         raise ValueError("replay state must reference the scenario history")
+    return _replay_state_html(scenario, state, scope, _prepare_scenario(scenario))
+
+
+def _replay_state_html(scenario, state, scope, prepared):
     card_id = _replay_id(scope, state.position)
     controls = []
     for label, target in (("Previous", state.step_backward()),
@@ -422,12 +459,8 @@ def render_replay_state_html(scenario: SyntheticScenario, state: ReplayState, *,
         source = evidence.source_observation
         sensor_modality, measurement_fields = _measurement_fields(source.measurement)
         mapped = evidence.mapped_time
-        references = None if scenario.source_batches is None else tuple(
-            f"batch {batch_index}, observation {source_index}"
-            for batch_index, batch in enumerate(scenario.source_batches)
-            for source_index, observation in enumerate(batch.observations)
-            if observation is source
-        )
+        references = (None if prepared.source_references is None else
+                      prepared.source_references.get(id(source), ()))
         selected = _fields([
             ("Observation ID", source.observation_id), ("Sensor ID", source.sensor_id),
             ("Modality", sensor_modality), ("Measurement type", type(source.measurement).__name__),
@@ -447,7 +480,10 @@ def render_replay_state_html(scenario: SyntheticScenario, state: ReplayState, *,
         locations = {f"history {state.position}"}
         if references:
             locations.update(references)
-        findings = tuple(f for f in diagnose_scenario(scenario) if f.location in locations)
+        # Merge relevant location buckets by original finding index, not location order.
+        relevant = [entry for location in locations
+                    for entry in prepared.findings_by_location.get(location, ())]
+        findings = tuple(finding for _, finding in sorted(relevant, key=lambda entry: entry[0]))
     boundary = 0 if state.position is None else state.position
     future_start = 0 if state.position is None else state.position + 1
     return (f'<article class="replay-state" id="{card_id}"><h3>Replay state</h3>'
@@ -462,7 +498,7 @@ def render_replay_state_html(scenario: SyntheticScenario, state: ReplayState, *,
             + _occurrence_list(state.history, range(future_start, state.total_count)) + "</article>")
 
 
-def _replay_html(scenario, scope):
+def _replay_html(scenario, scope, prepared):
     initial = ReplayState(scenario.history)
     states = (initial,) + tuple(initial.jump(i) for i in range(initial.total_count))
     return ('<section class="replay"><h2>Deterministic replay</h2>'
@@ -472,5 +508,5 @@ def _replay_html(scenario, scope):
             'The visited prefix includes the selection; backward and reset shorten it. '
             'Jump selects a cursor frontier, not a log of acquisitions or clicks.</p>'
             f'<p><a href="#{_replay_id(scope, None)}">Start replay</a></p>'
-            + "".join(render_replay_state_html(scenario, state, scope=scope) for state in states)
+            + "".join(_replay_state_html(scenario, state, scope, prepared) for state in states)
             + "</section>")

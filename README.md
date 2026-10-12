@@ -910,6 +910,16 @@ Python bytecode is ignored and untracked. CI sets `PYTHONDONTWRITEBYTECODE=1`,
 runs tests with `-B`, and checks the Git index for tracked `.pyc` or `__pycache__`
 paths without modifying files.
 
+### Report preparation (Phase 54)
+
+Each scenario's diagnostics are computed once per report and shared by its
+summary and replay cards. Report-local indexes preserve finding order and source
+references by identity; no mutable global cache is used. Comparison sides retain
+separate replay controls. HTML sections are composed as escaped body fragments
+inside a shared document wrapper. CLI output bytes and validation schema/exit
+semantics remain unchanged. Pre-rendered replay still uses quadratic report space
+for earlier/future occurrence lists and is intended for small synthetic fixtures.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`
