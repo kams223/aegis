@@ -159,3 +159,77 @@ input[type="range"] { accent-color: var(--green); width: 100%; min-width: 0; mar
 .camera-viewport.playable::before { display: none; }
 .camera-viewport.playable:fullscreen video { max-height: 100vh; height: 100%; object-fit: contain; }
 .media-state { position: absolute; background: #071310e8; padding: 12px; border: 1px solid var(--amber); }
+
+/* Phase 66: reference inspection and decorative radar, no spatial detections. */
+.visual-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.radar-frame { min-width: 0; }
+.radar-controls { display: flex; align-items: end; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.radar-controls button { font-size: .6rem; padding: 7px; }
+.radar-controls label { flex: 1; min-width: 130px; }
+.radar-scope svg { max-width: 420px; }
+.radar-sweep { animation-duration: 9s; }
+.scan-history { fill: #00ff8809; }
+.scan-history path:last-child { fill: #00ff8804; }
+.scan-paused .radar-sweep { animation-play-state: paused; }
+.spatial-boundary { color: #b4f4ce; font: .6rem ui-monospace, monospace; }
+.radar-frame:fullscreen { overflow: auto; padding: 20px; background: var(--background); width: 100%; height: 100%; }
+.radar-frame:fullscreen .radar-scope svg { max-width: min(68vh, 720px); }
+.radar-frame:fullscreen .radar-controls { justify-content: center; }
+.radar-frame:fullscreen .radar-controls label { flex: none; }
+.radar-frame:fullscreen .hud-observations { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 6px; }
+.camera-viewport { aspect-ratio: 4 / 3; min-height: 0; }
+.demo-playback { background: var(--elevated); margin-top: 12px; padding: 10px 12px; border: 1px solid var(--border); }
+.demo-playback .viewport-toolbar { margin-top: 0; }
+.inspection-banner { padding: 16px; border-left: 2px solid var(--cyan); background: var(--panel); margin-bottom: 18px; }
+.inspection-banner strong { font: .68rem ui-monospace, monospace; color: #98d5ec; }
+.inspection-banner p { font-size: .74rem; margin-bottom: 0; }
+.fusion-inspection-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.sensor-diagnostics { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 245px), 1fr)); gap: 14px; }
+.sensor-diagnostics article { background: var(--elevated); padding: 14px; border: 1px solid var(--border); min-width: 0; }
+.sensor-diagnostics strong { font: .7rem ui-monospace, monospace; overflow-wrap: anywhere; }
+.sensor-diagnostics [data-declared-status="offline"] .badge { color: #94d7ed; border-color: #327688; background: #102c32; }
+.sensor-diagnostics [data-declared-status="unknown"] .badge { border-style: dashed; color: #b6c8c0; }
+.inspection-json { padding: 14px; background: #050B0A; border: 1px solid var(--border); font: .64rem ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 420px; overflow-y: auto; }
+.reference-diagram { overflow: auto; max-width: 100%; max-height: 530px; border: 1px solid var(--border); background: #071310; }
+.reference-diagram svg { display: block; }
+.diagram-labels { fill: var(--muted); font: 11px ui-monospace, monospace; text-transform: uppercase; }
+.reference-lines { fill: none; stroke: #397357; stroke-width: 1; }
+.graph-node { cursor: pointer; }
+.graph-node rect { fill: var(--panel); stroke: #37694f; }
+.graph-node.selected rect, .graph-node:focus-visible rect { stroke: var(--radar); stroke-width: 2; }
+.graph-node text { fill: var(--text); font: 11px ui-monospace, monospace; }
+.graph-node .node-kind { fill: var(--muted); font-size: 9px; text-transform: uppercase; }
+.fusion-unavailable { display: block; font: .7rem ui-monospace, monospace; color: #c4d8ca; padding: 18px; border: 1px dashed #426553; }
+@media (max-width: 1150px) { .visual-grid, .fusion-inspection-grid { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .radar-frame:fullscreen { padding: 12px; } .radar-controls button { flex: 1; } .camera-viewport { aspect-ratio: 4 / 3; } }
+@media (prefers-reduced-motion: reduce) { .scan-history { display: none; } }
+
+/* Phase 66.1: readable declarations and a fullscreen radar toolbar. */
+.device-status table { min-width: 640px; table-layout: auto; }
+.device-status th, .device-status td { overflow-wrap: normal; word-break: normal; }
+.device-status td { min-width: 90px; max-width: none; font-size: .68rem; }
+.device-status td:first-child { min-width: 140px; }
+.device-status td:nth-child(5) { min-width: 170px; }
+.device-status code, .device-status small { overflow-wrap: normal; word-break: normal; }
+.device-status td:first-child code, .device-status .compact-list li { white-space: nowrap; }
+.device-status .compact-list { padding-left: 12px; }
+.device-status td:last-child { min-width: 120px; }
+.radar-frame:fullscreen .radar-controls { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: minmax(180px, 240px) repeat(3, max-content); align-items: end; justify-content: center; padding: 12px; background: var(--background); border: 1px solid var(--border); }
+.radar-frame:fullscreen .radar-controls label { min-width: 0; }
+.radar-frame:fullscreen .radar-controls button { min-height: 38px; }
+.radar-frame:fullscreen .radar-scope svg { max-width: min(72vh, 820px); }
+@media (min-width: 1151px) and (max-width: 1599px) { .dashboard-bottom { grid-template-columns: repeat(2, minmax(0, 1fr)); } .device-status { grid-column: 1 / -1; } }
+@media (min-width: 1600px) { .dashboard-bottom { grid-template-columns: minmax(640px, 1.8fr) minmax(0, 1fr) minmax(0, .9fr); } }
+@media (max-width: 760px) { .radar-frame:fullscreen .radar-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); justify-content: stretch; } .radar-frame:fullscreen .radar-controls label { grid-column: 1 / -1; } .radar-frame:fullscreen .radar-controls button { white-space: normal; } }
+
+/* Phase 66.2: opt-in fictional marker layer; independent of decorative sweep. */
+.demo-marker-toggle { width: 100%; margin-bottom: 8px; font: .62rem ui-monospace, monospace; }
+.demo-marker-warning { color: #ffb6b6; font-size: .65rem; line-height: 1.6; border-left: 2px solid var(--red); padding-left: 10px; }
+.demo-marker { cursor: pointer; }
+.demo-marker-dot { fill: var(--red); stroke: #ffd2d2; stroke-width: 1; }
+.demo-marker-halo { fill: transparent; stroke: transparent; stroke-width: 1.5; }
+.demo-marker.selected .demo-marker-halo, .demo-marker:focus-visible .demo-marker-halo { fill: #ef444425; stroke: #ffd2d2; }
+.demo-marker:focus-visible { outline: none; }
+.demo-observation-details { border: 1px solid #884545; background: var(--elevated); padding: 14px; margin: 12px 0; }
+.demo-detail-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.demo-detail-controls button { font-size: .65rem; flex: 1 1 130px; }

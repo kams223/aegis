@@ -1,31 +1,21 @@
 import { useState } from 'react';
+import { RadarDisplay } from './radar/RadarDisplay';
+export { RadarDisplay as RadarGraphic } from './radar/RadarDisplay';
 import { RecordedPlayer } from './camera/RecordedPlayer';
 import { APPROVED_RECORDINGS } from './camera/catalog';
 export { SimulationViewer as SimulationPanel } from './simulation/SimulationViewer';
 import type { Session, Snapshot } from './models';
 import { Badge, Card, Empty, Time, label } from './components';
 
-export function RadarGraphic() {
-  return <div className="radar-scope"><svg width="320" height="320" viewBox="0 0 320 320" aria-hidden="true">
-    <g className="radar-grid">{[40, 80, 120, 144].map(r => <circle key={r} cx="160" cy="160" r={r} />)}
-      <path d="M16 160h288M160 16v288M58 58l204 204M58 262 262 58" />
-      {Array.from({ length: 36 }, (_, i) => <path key={i} transform={`rotate(${i * 10} 160 160)`} d={i % 3 === 0 ? 'M160 9v10' : 'M160 9v5'} />)}
-    </g><g className="radar-sweep"><path d="M160 160V20A140 140 0 0 1 281 90Z" /><path className="sweep-edge" d="M160 160V20" /></g>
-    <path className="radar-crosshair" d="M151 160h18M160 151v18" />
-    <g className="radar-labels"><text x="160" y="35">000°</text><text x="280" y="155">090°</text><text x="160" y="293">180°</text><text x="40" y="155">270°</text></g>
-  </svg><span className="scope-caption">DECORATIVE SCAN · NO POSITION DATA</span></div>;
-}
-
 export function RadarPanel({ snapshot }: { snapshot: Snapshot }) {
   const [selectedId, setSelectedId] = useState(snapshot.observations[0]?.observation_id ?? '');
   const selected = snapshot.observations.find(o => o.observation_id === selectedId);
-  return <Card title="Tactical radar" className="visual-panel"><p className="boundary-label">SYNTHETIC DISPLAY — NON-GEOGRAPHIC</p><RadarGraphic />
-    <div className="scope-legend"><span>Rings / azimuth: decorative</span><span>No observation markers</span></div>
+  return <Card title="Tactical radar" className="visual-panel"><RadarDisplay>
     <h3>Non-spatial observations · {snapshot.observations.length}</h3>
     {snapshot.observations.length ? <ul className="hud-observations">{snapshot.observations.map(o => <li key={o.observation_id}><button aria-pressed={selectedId === o.observation_id} onClick={() => setSelectedId(o.observation_id)}><code>{o.observation_id}</code><Badge value={o.quality} /></button></li>)}</ul> : <Empty>No observations are supplied.</Empty>}
     {selected && <details key={selected.observation_id} open><summary>Selected observation metadata</summary><p>{selected.annotation}</p><dl><dt>Source</dt><dd>{selected.source_id}</dd><dt>Time</dt><dd><Time value={selected.timestamp} /></dd><dt>Uncertainty</dt><dd>{selected.uncertainty_note ?? 'No uncertainty note supplied'}</dd><dt>Review</dt><dd>{selected.review_status}</dd><dt>Evidence</dt><dd><code>{selected.evidence_id}</code></dd></dl></details>}
     <details><summary>Supplied sensor availability</summary>{snapshot.sentinels.length ? snapshot.sentinels.map(s => <ul key={s.device_id} className="compact-list">{s.sensors.map(sensor => <li key={sensor.source_id}>{sensor.source_id}: {sensor.status}</li>)}</ul>) : <p>Unknown — no Sentinel monitors supplied.</p>}</details>
-  </Card>;
+  </RadarDisplay></Card>;
 }
 
 export function CameraPanel({ snapshot }: { snapshot: Snapshot }) {

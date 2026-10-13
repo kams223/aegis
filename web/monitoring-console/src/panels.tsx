@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Session, Snapshot } from './models';
 import { Badge, Card, Empty, Metric, Time, label } from './components';
+import { SensorDiagnostics } from './fusion/SensorFusionPanel';
 import { RadarGraphic, RadarPanel, CameraPanel, SimulationPanel, DeviceStatus, RecentEvents, AlertSummary } from './hud';
 
 export function Overview({ session, onEventSelect }: { session: Session; onEventSelect: (index: number) => void }) {
@@ -17,6 +18,7 @@ export function Overview({ session, onEventSelect }: { session: Session; onEvent
     <div className="session-strip"><span>{session.summary.event_count} supplied events processed in their declared order.</span><span>Intermediate snapshots are not supplied. All device and observation panels show the final state.</span></div>
     <div className="visual-grid"><RadarPanel snapshot={snapshot} /><CameraPanel snapshot={snapshot} /><SimulationPanel /></div>
     <div className="dashboard-bottom"><DeviceStatus snapshot={snapshot} /><RecentEvents session={session} onSelect={onEventSelect} /><AlertSummary snapshot={snapshot} /></div>
+    <SensorDiagnostics snapshot={snapshot} />
     <p className="note data-boundary">{snapshot.description}</p>
   </>;
 }
@@ -37,7 +39,7 @@ export function Observations({ snapshot }: { snapshot: Snapshot }) {
   const [selectedId, setSelectedId] = useState(snapshot.observations[0]?.observation_id ?? '');
   const selected = snapshot.observations.find(o => o.observation_id === selectedId);
   const evidence = snapshot.evidence.find(e => e.evidence_id === selected?.evidence_id);
-  return <div className="observation-grid"><Card title="Synthetic observation display" className="observation-display"><p className="boundary-label">SYNTHETIC DISPLAY — NON-GEOGRAPHIC</p><RadarGraphic /><p className="note">Non-geographic list. Decorative rings contain no plotted positions.</p>
+  return <div className="observation-grid"><Card title="Synthetic observation display" className="observation-display"><RadarGraphic /><p className="note">Non-geographic list. Decorative rings contain no plotted positions.</p>
     {snapshot.observations.length ? <ul className="observation-list">{snapshot.observations.map(o => <li key={o.observation_id}><button aria-pressed={o.observation_id === selectedId} onClick={() => setSelectedId(o.observation_id)}><div><strong>{o.observation_id}</strong><small>{o.source_id} · {o.category}</small></div><Badge value={o.quality} /></button></li>)}</ul> : <Empty>No observations are supplied.</Empty>}
   </Card><Card title="Observation metadata">{selected ? <><Badge value={selected.review_status} /><h3>{selected.observation_id}</h3><p>{selected.annotation}</p><dl><dt>Source</dt><dd><code>{selected.source_id}</code></dd><dt>Explicit timestamp</dt><dd><Time value={selected.timestamp} /></dd><dt>Quality</dt><dd>{selected.quality}</dd><dt>Uncertainty</dt><dd>{selected.uncertainty_note ?? 'No uncertainty note supplied'}</dd><dt>Evidence reference</dt><dd><code>{selected.evidence_id}</code></dd><dt>Recording-reference metadata</dt><dd><code>{evidence?.local_path ?? 'Unavailable'}</code></dd></dl><p className="note">A reference does not establish verified media, physical location, or threat identity.</p></> : <Empty>Select an observation to inspect its supplied metadata.</Empty>}</Card></div>;
 }

@@ -4,10 +4,11 @@ import { loadSession } from './validate';
 import { Overview, Devices, Observations, Evidence, Alerts, EventReplay, Reviews } from './panels';
 import { CameraPanel, SimulationPanel } from './hud';
 import { Badge } from './components';
+import { SensorFusionPanel } from './fusion/SensorFusionPanel';
 
 const panels = [
   ['Overview', 'Overview'], ['Devices', 'Devices'], ['Observations', 'Radar / Observations'],
-  ['Evidence', 'Camera / Evidence'], ['Simulation', 'Simulation'], ['Alerts & Copilot', 'Alerts & Copilot'],
+  ['Sensor Fusion', 'SENSOR FUSION'], ['Evidence', 'Camera / Evidence'], ['Simulation', 'Simulation'], ['Alerts & Copilot', 'Alerts & Copilot'],
   ['Event replay', 'Event Replay'], ['Review & audit', 'Review & Audit'],
 ] as const;
 type Panel = typeof panels[number][0];
@@ -26,6 +27,7 @@ export default function App({ text = fixtureText }: { text?: string }) {
   const content = panel === 'Overview' ? <Overview session={session} onEventSelect={openEvent} />
     : panel === 'Devices' ? <Devices snapshot={snapshot} />
     : panel === 'Observations' ? <Observations snapshot={snapshot} />
+    : panel === 'Sensor Fusion' ? <SensorFusionPanel snapshot={snapshot} />
     : panel === 'Evidence' ? <><CameraPanel snapshot={snapshot} /><Evidence snapshot={snapshot} /></>
     : panel === 'Simulation' ? <SimulationPanel />
     : panel === 'Alerts & Copilot' ? <Alerts snapshot={snapshot} />

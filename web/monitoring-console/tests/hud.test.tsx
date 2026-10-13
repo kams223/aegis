@@ -25,10 +25,10 @@ it('renders six grounded metrics and the three dashboard viewports', () => {
   expect(screen.getByText('SESSION REF')).toHaveTextContent('synthetic-platform-v1');
 });
 
-it('provides eight accessible navigation destinations with the expanded visible labels', () => {
+it('provides nine accessible navigation destinations with the expanded visible labels', () => {
   render(<App />);
   const nav = screen.getByRole('navigation');
-  expect(within(nav).getAllByRole('button')).toHaveLength(8);
+  expect(within(nav).getAllByRole('button')).toHaveLength(9);
   expect(within(nav).getByText('Radar / Observations')).toBeVisible();
   expect(within(nav).getByText('Camera / Evidence')).toBeVisible();
   fireEvent.click(within(nav).getByRole('button', { name: 'Simulation' }));
@@ -140,11 +140,11 @@ it('does not invent operational telemetry or expose command controls', () => {
   expect(container.querySelector('video, audio, iframe, form, textarea')).toBeNull();
 });
 
-it('supports keyboard navigation to all eight destinations', async () => {
+it('supports keyboard navigation to all nine destinations', async () => {
   const user = userEvent.setup();
   render(<App />);
   await user.tab(); expect(screen.getByRole('link')).toHaveFocus();
-  for (const name of ['Overview', 'Devices', 'Observations', 'Evidence', 'Simulation', 'Alerts & Copilot', 'Event replay', 'Review & audit']) {
+  for (const name of ['Overview', 'Devices', 'Observations', 'Sensor Fusion', 'Evidence', 'Simulation', 'Alerts & Copilot', 'Event replay', 'Review & audit']) {
     await user.tab(); expect(screen.getByRole('button', { name })).toHaveFocus();
   }
   await user.keyboard('{Enter}');
