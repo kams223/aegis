@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "dataset_id": "synthetic-recorded-failures",
+  "description": "Synthetic duplicate sequence, timestamp regression and incomplete declaration; no sensor content.",
+  "sources": [
+    {
+      "source_id": "metadata-fixture",
+      "source_kind": "metadata",
+      "clock_domain": "recording:metadata-fixture",
+      "recording_reference": "placeholder.txt"
+    }
+  ],
+  "records": [
+    {
+      "record_id": "record-a",
+      "source_id": "metadata-fixture",
+      "sequence_index": 0,
+      "timestamp": {
+        "value": 2,
+        "unit": "s"
+      },
+      "metadata": {
+        "complete": true,
+        "note": "Synthetic metadata only"
+      }
+    },
+    {
+      "record_id": "record-b",
+      "source_id": "metadata-fixture",
+      "sequence_index": 0,
+      "timestamp": {
+        "value": 1,
+        "unit": "s"
+      },
+      "metadata": {
+        "complete": false,
+        "note": "Synthetic metadata only"
+      }
+    },
+    {
+      "record_id": "record-c",
+      "source_id": "metadata-fixture",
+      "sequence_index": 2,
+      "timestamp": {
+        "value": 1,
+        "unit": "s"
+      },
+      "metadata": {
+        "complete": true,
+        "note": "Synthetic metadata only"
+      }
+    }
+  ]
+}

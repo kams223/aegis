@@ -1174,6 +1174,104 @@ The example-local APIs are `semantic_report`, `canonical_report`, `report_digest
 synthetic software reproducibility, not complete production-contract validation,
 physical sensor-performance assessment or operational readiness.
 
+### Recorded sensor metadata datasets (Phase 58)
+
+Validate explicit local JSON metadata without opening or decoding recordings:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B -m examples.recorded_sensor_metadata \
+--dataset examples/recorded_datasets/valid.json --format json --strict
+
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B -m examples.recorded_sensor_metadata \
+--dataset examples/recorded_datasets/quality_failures.json --format html --strict
+```
+
+Reports go to stdout, with no automatic writes, network access, external processes,
+live acquisition, video decoding or pixel inspection. JSON and static escaped HTML
+contain no generated timestamps, absolute paths, random IDs or external assets.
+The existing video processing, synthetic scenario, batch and regression commands
+are unchanged. This example introduces no production sensor/fusion contracts.
+
+Dataset schema v1 is closed: `schema_version` (integer 1, excluding bool),
+`dataset_id`, `description`, `sources`, and `records`. Each source has exactly
+`source_id`, `source_kind` (`camera`, `radar`, or `metadata`), `clock_domain`, and
+`recording_reference`. Each record has exactly `record_id`, `source_id`,
+`sequence_index`, `timestamp`, and `metadata`. Source and record IDs are unique
+within the dataset; every record refers to a declared source. Array order is the
+supplied delivery order and is preserved without sorting, repair or deduplication.
+
+`timestamp` has exactly `value` (finite signed int/float, excluding bool) and `unit`
+(`s`, `ms`, `us`, or `ns`). Values are numeric offsets within the source's explicit
+timebase; calendar strings and implicit units are unsupported. Absolute numeric
+value is limited to 10^18 in the declared unit. Comparison uses exact rational
+conversion of the parsed number's decimal string, without float unit-rounding or
+clock alignment. Original numeric values and units remain unchanged in loaded data.
+Negative offsets are valid. Comparisons are within each source in delivery order,
+even when several sources declare the same domain; cross-source arrival ordering
+is not a temporal association. Supported clock labels are `recording:<timebase-id>`
+with a nonblank suffix. `unknown` explicitly makes required timestamp checks
+unavailable; other labels produce an unsupported-domain failure. These names are
+declarations, not evidence of synchronized clocks or known physical accuracy.
+
+Metadata supports only four optional keys: `complete` (bool), `byte_count`
+(nonnegative integer up to 2^63-1), `content_digest` (64 lowercase SHA-256 hex
+characters), and `note` (nonblank UTF-8 text). These are declarations only: content
+digests and byte counts are not verified against recording bytes. Missing `complete`
+leaves the required completeness check unevaluated; false explicitly fails it.
+Malformed optional fields are structural loading errors. Coordinates, object
+classes, confidence, tracks, trajectories and assessment fields are unsupported.
+
+Limits: JSON input 1 MiB; at most 16 sources and 4096 records. IDs and clock-domain
+strings allow at most 128 Unicode characters, descriptions 1024, recording
+references 256, and notes 256. Sequence indices are zero-based nonnegative integers
+up to 2^31-1. Duplicate JSON keys, unknown fields, unsupported versions, invalid
+UTF-8, non-finite numbers, wrong types, duplicate IDs and unresolved sources fail
+loading. Empty arrays are structurally valid but cannot establish a validation pass.
+
+References resolve relative to the resolved dataset JSON directory, which is the
+authorized dataset directory for that invocation. They must identify existing
+regular local files inside that directory. Absolute paths, URLs, drive paths,
+backslashes, null bytes, dot/parent traversal, repeated slashes and symlink escapes
+are rejected. Internal symlinks are allowed. Only path resolution and file-type
+checks occur: referenced contents are never opened. Dataset inputs and directories
+must remain trusted and stable while loading; concurrent replacement is outside
+this example's guarantees. The explicit JSON path itself selects the dataset root.
+
+Quality diagnostics use deterministic order: source-clock checks in source array
+order, record checks in global delivery order, then source summaries/gaps in source
+order and ascending sequence ranges. Each has `code`, `severity`, `source_id`,
+`record_id`, `record_index`, and `explanation`; IDs/index are null for checks without
+a specific record. Duplicate sequence indices are Invalid. Decreasing sequence
+indices, missing zero-based sequence ranges and repeated source timestamps are
+Warnings. Timestamp regressions and incomplete declarations are Invalid. Missing
+completeness, unknown clocks and fewer than two records for a source leave required
+checks unavailable. Gap detection reports bounded ranges rather than enumerating
+potentially billions of missing indices; no trailing gap after the maximum declared
+index can be inferred. Mixed units are compared exactly within each source only.
+
+Report schema v1 contains `schema_version`, `dataset_id`, `source_inventory`,
+`record_count`, `per_source_counts`, `timestamp_domains`, `diagnostics`, `status`,
+and `unevaluated_checks`. Domain inventory follows first source occurrence and
+explicitly states per-source comparison scope. Status precedence is `failed`,
+then `not_evaluated`, then `passed`; warnings alone do not fail evaluated checks.
+Required unavailable checks prevent passing. Recording-content verification and
+physical accuracy are listed separately as unevaluated and outside the required
+metadata-only scope. Strict exits are 0 passed, 1 failed, 2 not evaluated. Non-strict
+successfully rendered reports exit 0. Structural/input/CLI errors exit 2 with clear
+stderr and empty stdout, including when a later record or reference is invalid.
+
+The three small fixtures in `examples/recorded_datasets/` are entirely synthetic,
+metadata-only and contain no personal, target or operational recording data.
+`valid.json` passes; `quality_warnings.json` passes with declared ordering/time
+warnings; `quality_failures.json` fails declared quality checks. `placeholder.txt`
+is harmless explanatory text shared only for reference-existence checks.
+The example-local APIs are `load_dataset`, `dataset_from_document`,
+`validate_dataset`, `render_json`, and `render_html`. Loaded dataclasses and their
+tuples contain immutable scalars and never retain caller-owned mutable structures.
+Metadata consistency does not establish physical measurement accuracy or readiness.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`

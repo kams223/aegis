@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "dataset_id": "synthetic-recorded-warnings",
+  "description": "Synthetic repeated timestamp, out-of-order sequence and missing sequence; no physical or personal data.",
+  "sources": [
+    {
+      "source_id": "metadata-fixture",
+      "source_kind": "metadata",
+      "clock_domain": "recording:metadata-fixture",
+      "recording_reference": "placeholder.txt"
+    }
+  ],
+  "records": [
+    {
+      "record_id": "record-0",
+      "source_id": "metadata-fixture",
+      "sequence_index": 0,
+      "timestamp": {
+        "value": 0,
+        "unit": "s"
+      },
+      "metadata": {
+        "complete": true,
+        "note": "Synthetic metadata only"
+      }
+    },
+    {
+      "record_id": "record-3",
+      "source_id": "metadata-fixture",
+      "sequence_index": 3,
+      "timestamp": {
+        "value": 0,
+        "unit": "s"
+      },
+      "metadata": {
+        "complete": true,
+        "note": "Synthetic metadata only"
+      }
+    },
+    {
+      "record_id": "record-2",
+      "source_id": "metadata-fixture",
+      "sequence_index": 2,
+      "timestamp": {
+        "value": 1,
+        "unit": "s"
+      },
+      "metadata": {
+        "complete": true,
+        "note": "Synthetic metadata only"
+      }
+    }
+  ]
+}

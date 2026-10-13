@@ -1,0 +1,2 @@
+Synthetic harmless placeholder for local recording-reference existence checks.
+This is not a sensor recording, contains no personal or target data, and must not be decoded.

@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "dataset_id": "synthetic-recorded-valid",
+  "description": "Synthetic metadata-only declarations. The placeholder is not a sensor recording.",
+  "sources": [
+    {
+      "source_id": "camera-fixture",
+      "source_kind": "camera",
+      "clock_domain": "recording:camera-fixture",
+      "recording_reference": "placeholder.txt"
+    },
+    {
+      "source_id": "radar-fixture",
+      "source_kind": "radar",
+      "clock_domain": "recording:radar-fixture",
+      "recording_reference": "placeholder.txt"
+    }
+  ],
+  "records": [
+    {
+      "record_id": "camera-0",
+      "source_id": "camera-fixture",
+      "sequence_index": 0,
+      "timestamp": {
+        "value": 0,
+        "unit": "s"
+      },
+      "metadata": {
+        "complete": true,
+        "note": "Synthetic metadata only"
+      }
+    },
+    {
+      "record_id": "radar-0",
+      "source_id": "radar-fixture",
+      "sequence_index": 0,
+      "timestamp": {
+        "value": 1000,
+        "unit": "ms"
+      },
+      "metadata": {
+        "complete": true,
+        "note": "Synthetic metadata only"
+      }
+    },
+    {
+      "record_id": "camera-1",
+      "source_id": "camera-fixture",
+      "sequence_index": 1,
+      "timestamp": {
+        "value": 1,
+        "unit": "s"
+      },
+      "metadata": {
+        "complete": true,
+        "note": "Synthetic metadata only"
+      }
+    },
+    {
+      "record_id": "radar-1",
+      "source_id": "radar-fixture",
+      "sequence_index": 1,
+      "timestamp": {
+        "value": 1001,
+        "unit": "ms"
+      },
+      "metadata": {
+        "complete": true,
+        "note": "Synthetic metadata only"
+      }
+    }
+  ]
+}
