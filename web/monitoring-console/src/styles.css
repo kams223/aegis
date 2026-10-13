@@ -144,3 +144,18 @@ summary { cursor: pointer; margin-top: 12px; color: #b4f4ce; font-size: .65rem; 
 @media (max-width: 760px) { .console { flex-direction: column; } .sidebar { width: 100%; padding: 17px; gap: 15px; border-right: 0; border-bottom: 1px solid var(--border); } .nav-caption, .sidebar-footer { display: none; } nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; } nav button { font-size: .7rem; padding: 10px; } .topbar { padding: 12px 16px; gap: 10px; } .system-telemetry { order: 3; width: 100%; gap: 9px; } .page-heading { flex-direction: column; align-items: start; gap: 16px; } .snapshot-label { max-width: 100%; } main { padding: 22px 14px; } .dashboard-bottom { grid-template-columns: 1fr; } .session-strip { flex-direction: column; gap: 6px; } .metrics { gap: 8px; } .metric { padding: 12px; } .metric > strong { font-size: 1.6rem; } .card { padding: 15px; } .replay-controls button { flex: 1; } .replay-controls label { flex-basis: 100%; } }
 @media (max-width: 420px) { .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .metric > span { font-size: .56rem; } dl { grid-template-columns: 1fr; gap: 6px; } dd { margin-bottom: 7px; } .hud-observations button { flex-wrap: wrap; } .event-timeline button { grid-template-columns: 18px minmax(0, 1fr); } .event-timeline .badge { grid-column: 2; justify-self: start; } }
 @media (prefers-reduced-motion: reduce) { .radar-sweep { animation: none; } * { scroll-behavior: auto; } }
+
+/* Phase 65: bounded local media and WebGL viewports. */
+.webgl-viewport canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.webgl-error { position: absolute; inset: 25px 15px auto; background: #071310e8; padding: 15px; border: 1px solid var(--amber); }
+.demo-state-label { color: var(--cyan); font: .58rem ui-monospace, monospace; line-height: 1.6; }
+.demo-playback { border-top: 1px solid var(--border); padding-top: 10px; }
+.player-settings { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 12px 0; font-size: .65rem; }
+.player-settings label { flex: 1; min-width: 100px; }
+input[type="range"] { accent-color: var(--green); width: 100%; min-width: 0; margin: 8px 0; }
+.playback-time, output { font: .65rem ui-monospace, monospace; color: var(--text); }
+.camera-viewport.playable { padding: 0; }
+.camera-viewport video { width: 100%; max-height: 342px; display: block; background: #050B0A; }
+.camera-viewport.playable::before { display: none; }
+.camera-viewport.playable:fullscreen video { max-height: 100vh; height: 100%; object-fit: contain; }
+.media-state { position: absolute; background: #071310e8; padding: 12px; border: 1px solid var(--amber); }

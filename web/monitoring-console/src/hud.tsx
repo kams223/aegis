@@ -1,4 +1,7 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
+import { RecordedPlayer } from './camera/RecordedPlayer';
+import { APPROVED_RECORDINGS } from './camera/catalog';
+export { SimulationViewer as SimulationPanel } from './simulation/SimulationViewer';
 import type { Session, Snapshot } from './models';
 import { Badge, Card, Empty, Time, label } from './components';
 
@@ -28,37 +31,20 @@ export function RadarPanel({ snapshot }: { snapshot: Snapshot }) {
 export function CameraPanel({ snapshot }: { snapshot: Snapshot }) {
   const cameras = snapshot.evidence.filter(e => e.kind === 'camera_recording');
   const [cameraId, setCameraId] = useState(cameras[0]?.evidence_id ?? '');
-  const [fullscreenError, setFullscreenError] = useState('');
-  const viewport = useRef<HTMLDivElement>(null);
+  const [recordingId, setRecordingId] = useState<string | null>(null);
   const evidence = cameras.find(e => e.evidence_id === cameraId);
   const device = snapshot.registry.devices.find(d => d.sources.some(s => s.source_id === evidence?.source_id));
   const monitor = snapshot.sentinels.find(s => s.device_id === device?.device_id);
   const availability = monitor?.sensors.find(s => s.source_id === evidence?.source_id)?.status ?? 'unknown';
-  async function fullscreen() {
-    try {
-      if (!viewport.current?.requestFullscreen) { setFullscreenError('Fullscreen unavailable in this browser.'); return; }
-      await viewport.current.requestFullscreen(); setFullscreenError('');
-    } catch { setFullscreenError('Fullscreen unavailable or permission denied.'); }
-  }
   return <Card title="Drone camera" className="visual-panel"><p className="boundary-label">RECORDED REFERENCE · METADATA ONLY</p>
     {cameras.length > 1 && <label>Camera evidence<select value={cameraId} onChange={e => setCameraId(e.target.value)}>{cameras.map(e => <option key={e.evidence_id} value={e.evidence_id}>{e.evidence_id}</option>)}</select></label>}
-    <div ref={viewport} className="camera-viewport"><div className="camera-overlay"><span>{evidence?.source_id ?? 'Camera identifier unavailable'}</span><span>PLACEHOLDER</span></div><div className="camera-empty"><svg width="48" height="36" viewBox="0 0 48 36" aria-hidden="true"><path d="M3 7h28v22H3Z M31 14l13-7v22l-13-7 M8 32 39 2" /></svg><strong>NO VERIFIED CAMERA FEED</strong><small>No playable recording supplied</small></div><span className="viewport-caption">NO MEDIA LOADED · NO LIVE ACQUISITION</span></div>
-    <div className="viewport-toolbar"><Badge value={availability} /><button onClick={() => { void fullscreen(); }}>Fullscreen placeholder</button></div>
-    {fullscreenError && <p role="status">{fullscreenError}</p>}
+    {!evidence && <p>Camera identifier unavailable</p>}
+    {APPROVED_RECORDINGS.length > 0 && <label>Approved demo recording<select value={recordingId ?? ''} onChange={e => setRecordingId(e.target.value || null)}><option value="">No recording selected</option>{APPROVED_RECORDINGS.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}</select></label>}
+    <RecordedPlayer recordingId={recordingId} />
+    {APPROVED_RECORDINGS.length > 0 && <p className="note">Bundled demonstration playback is separate from evidence metadata and does not verify referenced recordings.</p>}
+    <Badge value={availability} />
     <dl><dt>Camera identifier</dt><dd>{evidence?.source_id ?? 'Not supplied'}</dd><dt>Device</dt><dd>{device?.device_id ?? 'Not supplied'}</dd><dt>Camera availability</dt><dd>{availability}</dd><dt>Playback status</dt><dd>Unavailable — metadata only</dd><dt>Recording timestamp</dt><dd>Not supplied</dd><dt>Evidence reference</dt><dd><code>{evidence?.evidence_id ?? 'Not supplied'}</code></dd><dt>Local reference metadata</dt><dd><code>{evidence?.local_path ?? 'Not supplied'}</code></dd></dl>
-    <p className="note">Reference existence or checksum does not establish a verified camera feed. Files are never fetched.</p>
-  </Card>;
-}
-
-export function SimulationPanel() {
-  const [mode, setMode] = useState<'2D' | '3D'>('3D');
-  const [view, setView] = useState<'front' | 'left' | 'right'>('front');
-  return <Card title="3D simulation" className="visual-panel"><p className="boundary-label">SIMULATION PREVIEW — ILLUSTRATIVE</p>
-    <div className={`simulation-viewport mode-${mode.toLowerCase()} view-${view}`} role="img" aria-label={`Abstract ${mode} environment, ${view} view; no device positions`}><div className="abstract-ridge ridge-back" /><div className="abstract-ridge" /><div className="perspective-grid" /><span className="viewport-caption">ABSTRACT ENVIRONMENT · NO WORLD STATE</span></div>
-    <div className="viewport-toolbar" role="group" aria-label="Illustrative visual mode">{(['2D', '3D'] as const).map(m => <button key={m} aria-pressed={mode === m} onClick={() => setMode(m)}>{m}</button>)}<button onClick={() => { setMode('3D'); setView('front'); }}>Reset view</button></div>
-    <div className="viewport-toolbar" role="group" aria-label="Illustrative camera orientation">{(['left', 'front', 'right'] as const).map(v => <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>{label(v)} view</button>)}</div>
-    <h3>Device-category legend</h3><ul className="category-legend"><li>◇ AEGIS native</li><li>□ Simulated</li><li>△ Third party</li></ul>
-    <p className="note">Legend only; no devices are placed in this scene. View controls change decorative perspective, not a physical camera. No coordinates, trajectories, ranges or physics are supplied.</p>
+    <p className="note">Reference existence or checksum does not establish a verified camera feed. Evidence paths are never fetched. Only explicitly approved bundled media can be played.</p>
   </Card>;
 }
 

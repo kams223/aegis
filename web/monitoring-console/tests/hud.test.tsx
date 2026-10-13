@@ -92,9 +92,9 @@ it('changes illustrative perspective and mode locally and resets them', () => {
   expect(screen.getByText('SIMULATION PREVIEW — ILLUSTRATIVE')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: '2D' }));
   fireEvent.click(screen.getByRole('button', { name: 'left view' }));
-  expect(screen.getByRole('img')).toHaveAccessibleName('Abstract 2D environment, left view; no device positions');
+  expect(screen.getByLabelText('Synthetic 2D demo environment, left view; illustrative models only')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Reset view' }));
-  expect(screen.getByRole('img')).toHaveAccessibleName('Abstract 3D environment, front view; no device positions');
+  expect(screen.getByLabelText('Synthetic 3D demo environment, right view; illustrative models only')).toBeVisible();
 });
 
 it('opens exactly the selected recent event in replay and preserves final-state boundaries', () => {
