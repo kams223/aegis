@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "profile_id": "metadata_edge_cases-metadata-v1",
+  "scenario_id": "Intentional metadata validation faults",
+  "description": "Explicit synthetic software inventory and diagnostic expectations; no physical performance claim.",
+  "expectations": {
+    "source_count": 2,
+    "observation_count": 2,
+    "delivery_count": 3,
+    "repeated_reference_count": 1,
+    "source_clock_domains": [],
+    "diagnostic_counts": {
+      "Informational": 20,
+      "Warning": 1,
+      "Invalid": 12
+    },
+    "metadata_validity": "failed"
+  }
+}

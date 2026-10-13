@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "profile_id": "baseline-metadata-v1",
+  "scenario_id": "JSON baseline camera/radar fixture",
+  "description": "Explicit synthetic software inventory and diagnostic expectations; no physical performance claim.",
+  "expectations": {
+    "source_count": 2,
+    "observation_count": 2,
+    "delivery_count": 2,
+    "repeated_reference_count": 0,
+    "source_clock_domains": [
+      "fixture:camera",
+      "fixture:radar"
+    ],
+    "diagnostic_counts": {
+      "Informational": 6,
+      "Warning": 0,
+      "Invalid": 0
+    },
+    "metadata_validity": "passed"
+  }
+}

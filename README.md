@@ -1003,6 +1003,73 @@ No executable configuration, dynamic imports, network access or automatic file
 writes are supported. This remains synthetic software inspection, not a physics
 simulator or physical-system readiness assessment.
 
+### Explicit profiles and batch reports (Phase 56)
+
+Run a bounded, explicitly supplied local batch; no discovery or output file writes
+occur unless your shell redirects stdout:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B -m examples.synthetic_observation_batch \
+--manifest examples/synthetic_validation_batch.json --format json --strict
+
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B -m examples.synthetic_observation_batch \
+--manifest examples/synthetic_validation_fault_batch.json --format html --strict \
+> /tmp/aegis-batch-validation.html
+```
+
+Open saved HTML with the browser's Open File action. Reports are static and usable
+without JavaScript or networks. The fault batch exits 1 after its complete report,
+even though its negative-test profile agrees with the expected Invalid diagnostics.
+
+Profile schema v1 is a closed object: `schema_version` (integer 1), `profile_id`,
+`scenario_id` (the scenario's exact label), `description`, and `expectations`.
+The supported expectation keys, evaluated in this fixed order, are `source_count`,
+`observation_count`, `delivery_count`, `repeated_reference_count`,
+`source_clock_domains`, `diagnostic_counts`, `metadata_validity`. Counts are
+nonnegative integers, excluding booleans. Domains are unique nonblank strings,
+compared in first source-inventory observation order; an empty batch has no raw
+observation clock to report. Diagnostic counts optionally declare any of
+`Informational`, `Warning`, `Invalid`, checked in that order. Metadata validity is
+`passed`, `failed` or `not_evaluated`, from the existing diagnostic metadata check.
+Only declared expectations are checked. An empty profile or unavailable requested
+inventory yields `not_evaluated`; a mismatch yields `failed`. Matching an expected
+`failed` metadata status establishes profile agreement only. Three reviewed
+profiles live in `examples/profiles/`, corresponding to the three existing scenarios.
+
+Batch manifest schema v1 requires `schema_version` (integer 1), `batch_id`,
+`description`, and ordered `entries`, each with `scenario` and optional `profile`
+relative file paths. Duplicate members, unknown fields, unsupported versions,
+non-finite values and invalid types fail. Manifest/profile inputs are limited to
+1 MiB, batches to 32 entries, domain lists to 256 items; scenario limits remain
+unchanged. Paths resolve against the manifest directory. Absolute paths, URLs,
+backslashes, dot/parent traversal and symlink escapes are rejected; symlinks staying
+inside that directory are allowed. Use trusted local files that do not change
+while loading; concurrent replacement of files is outside this example's scope.
+
+Each entry reports successful scenario/profile loading, metadata validity,
+inventory integrity, diagnostic counts, profile checks and failed expectations,
+and retains the unchanged original schema-v1 validation manifest. Batch scope is
+only the existing source-count/source-lineage/metadata checks and explicitly
+supplied profile assertions. Original unevaluated reconstruction, built-in and
+physical capabilities remain visible; they are not claimed as evaluated by a
+profile. Missing profiles remain `not_evaluated`. An invalid metadata result always
+fails the entry regardless of profile agreement. Any failed entry fails the batch;
+otherwise any unevaluated entry (or an empty batch) makes it `not_evaluated`;
+only fully evaluated scoped entries pass.
+
+`--strict` is optional: exit 0 passed, 1 failed, 2 not_evaluated. Non-strict reports
+exit 0. Invalid invocation, malformed manifest/scenario/profile, missing files or
+profile/scenario ID mismatch exits 2 with a deterministic indexed error on stderr
+and no partial stdout report. All entries are prepared before output. Input errors
+are distinct from reportable expectation mismatches. No single-scenario CLI output
+or exit code changes. No fixed built-in profile is applied to file-loaded scenarios.
+The example-local APIs are `load_profile`, `evaluate_profile`, `run_batch`,
+`render_batch_json`, and `render_batch_html`. They introduce no production API or
+runtime dependencies and make no physical-performance or operational-readiness
+claims.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`

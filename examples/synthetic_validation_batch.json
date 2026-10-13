@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "batch_id": "synthetic_validation_batch",
+  "description": "Explicit ordered local synthetic fixtures. Expected faults never conceal invalid metadata.",
+  "entries": [
+    {
+      "scenario": "scenarios/baseline.json",
+      "profile": "profiles/baseline.json"
+    },
+    {
+      "scenario": "scenarios/repeated_delivery.json",
+      "profile": "profiles/repeated_delivery.json"
+    }
+  ]
+}
