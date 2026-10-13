@@ -1070,6 +1070,110 @@ The example-local APIs are `load_profile`, `evaluate_profile`, `run_batch`,
 runtime dependencies and make no physical-performance or operational-readiness
 claims.
 
+### Synthetic regression baselines (Phase 57)
+
+Compare an explicitly supplied approved baseline with a fresh Phase 56 batch:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B -m examples.synthetic_observation_regression \
+--manifest examples/synthetic_validation_batch.json --baseline /tmp/reviewed-baseline.json \
+--format json --strict
+```
+
+Use `--format html` for a static, escaped offline difference table with no
+JavaScript or external assets. Reports go to stdout; comparison never writes files,
+scans directories or retrieves baselines from a network. Existing demonstration,
+scenario and batch commands remain unchanged.
+
+Generate a candidate only with an explicit new destination:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B -m examples.synthetic_observation_regression \
+--manifest examples/synthetic_validation_batch.json --generate-candidate \
+--baseline-id local-software-v1 --description "Candidate for human review" \
+--output /tmp/candidate-baseline.json
+```
+
+Generation emits no stdout and writes only a candidate, using exclusive creation
+(`O_CREAT | O_EXCL`, mode 0600). Existing files are never overwritten. The parent
+directory must exist; URLs, backslashes, null bytes, dot/parent traversal, repeated
+slashes and symlinks in the destination or its parents are rejected. Use trusted
+local directories that remain stable during generation. Atomic name creation does
+not promise crash-safe publication of complete contents; review the resulting file
+before approval. No directories are created automatically.
+
+Baseline schema v1 is a closed object with `schema_version` (integer 1),
+`baseline_id`, `description`, `source_batch_id`, `approval`, `report_digest`, and
+`report`. IDs and descriptions are nonblank UTF-8 strings. `approval` has exactly
+`status`, `approved_by`, and `approval_note`. Generated candidates have status
+`candidate` and null approval fields: **NOT APPROVED**. Candidates may be inspected
+and loaded, but comparison reports `not_evaluated` without authoritative differences.
+A reviewer must inspect the scenario/profile inputs, semantic snapshot, digest,
+and any failed or unavailable validation outcomes. If they approve that reference,
+they explicitly edit approval status to `approved` and supply their own nonblank
+`approved_by` and `approval_note`. No approver or timestamp is generated and no
+automatic promotion command exists. Approval is a human-authored declaration,
+not a verified identity, cryptographic signature or physical-system authorization.
+Test approval identities in tests are labeled `TEST-FIXTURE-ONLY`.
+
+`report` is the closed semantic snapshot, not the entire presentation report:
+`schema_version`, `batch_id`, ordered `entries`, and `overall_status`. Each entry
+contains `position`, `scenario_id`, `profile_id`, `scenario_loading`,
+`profile_loading`, `metadata_validation_status`, `inventory_integrity_status`,
+`profile_evaluation_status`, `diagnostic_counts`, `profile_checks`, `loading_error`,
+and `final_status`. The three diagnostic severity counts are nonnegative integers,
+excluding booleans. Profile checks preserve the existing fixed expectation order
+and contain exactly `id`, `status`, `expected`, and `actual`, with existing profile
+value types; unavailable actual values are null. Entries retain array order and
+positions; no sorting, identity deduplication or physical association is inferred.
+Descriptions, HTML formatting, redundant failed-expectation lists and nested
+scenario inspection manifests are outside this comparison scope. There are no
+generated timestamps, absolute paths or host-specific fields in the snapshot.
+
+The digest is lowercase SHA-256 of the snapshot's UTF-8 bytes from
+`json.dumps(report, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+allow_nan=False)`, with **no trailing newline**, BOM or Unicode normalization.
+Object member order and whitespace are immaterial; array order and exact text
+remain significant. The loader validates the closed snapshot before hashing.
+`source_batch_id` must equal the stored snapshot's `batch_id`. Inputs and generated
+artifacts are limited to 1 MiB, entries to 32, checks to the seven existing keys,
+and domain values to the existing 256-item limit. Unsupported versions, unknown or
+missing fields, wrong types, duplicate members, non-finite numbers, invalid UTF-8,
+incorrect digests and malformed local files are rejected.
+
+Comparison uses stable JSON Pointer paths and schema-ordered depth-first traversal.
+Differences report category, baseline/current values, and `added`, `removed` or
+`changed`. Arrays compare by index, so an insertion or reorder can produce several
+field changes; added/removed tail items have explicit classifications. Null remains
+a real value; classification distinguishes it from an absent item. A different
+current batch ID is a reported `batch_identity` change, not silently accepted as
+the same batch. Object member order does not alter difference ordering.
+
+Regression schema v1 reports baseline and batch IDs, approval status,
+`comparison_status`, underlying baseline/current report statuses, difference count,
+differences, and a summary showing each side's metadata validity, profile agreement
+and entry result. `unchanged` means the scoped approved snapshot reproduced;
+`changed` means semantic differences; `not_evaluated` means the candidate was not
+approved. Failed validation remains visible even when comparison is unchanged.
+An approved negative-test reference may contain failed metadata: reproducing it
+does not make that metadata valid. Unavailable validation also remains visible
+independently of whether the available snapshot changed.
+
+Strict comparison exits 0 for unchanged, 1 for changed, and 2 for not evaluated.
+These are regression comparison codes, not validation success codes. Non-strict
+successfully rendered reports exit 0. Invalid input or invocation exits 2 with an
+error on stderr and no partial report. Generation requires output, ID and description,
+supports JSON only, and cannot use `--strict`. Optimized Python is rejected because
+the existing synthetic validation requires assertion checks.
+
+The example-local APIs are `semantic_report`, `canonical_report`, `report_digest`,
+`candidate_baseline`, `write_candidate`, `load_baseline`, `compare_reports`,
+`render_json`, and `render_html`. Inputs are defensively copied. This is scoped
+synthetic software reproducibility, not complete production-contract validation,
+physical sensor-performance assessment or operational readiness.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`
