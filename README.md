@@ -1368,6 +1368,67 @@ The example-local APIs are `load_manifest`, `manifest_from_document`,
 `verify_dataset`, `run_verification`, `render_json`, and `render_html`. Immutable
 manifest values and the Phase 58 loaded dataset are read without input mutation.
 
+## Unified recorded dataset validation (Phase 60)
+
+The example-local `examples.recorded_dataset_pipeline` coordinator loads a
+Phase 58 dataset and Phase 59 integrity manifest once, then calls their existing
+metadata-validation and file-verification APIs independently. It preserves
+record and source order without repairing data or decoding recording content.
+Existing commands and fixtures retain their behavior.
+
+```bash
+PYTHONPATH=src python -B -m examples.recorded_dataset_pipeline \
+  --dataset examples/recorded_datasets/quality_warnings.json \
+  --manifest examples/recorded_datasets/integrity_match.json \
+  --format json --strict
+```
+
+Use `--format html` for an escaped static offline report. Neither mode writes
+files, accesses the network, or launches external processes. Example recordings
+are harmless synthetic placeholder bytes. Checksum agreement verifies expected
+bytes only; it does not authenticate provenance or establish physical accuracy.
+
+The closed version-1 unified report contains `schema_version`, `dataset_id`,
+`manifest_id`, `metadata_status`, `integrity_status`, `overall_status`,
+`metadata_summary`, `integrity_summary`, `source_inventory`, `diagnostics`, and
+`unevaluated_checks`. Each summary retains the complete original stage report
+under `report`, with `unavailable_reason` null when execution completed. Reports
+are defensively copied. Source inventory follows dataset order; each original
+stage report retains its own ordering. Unified diagnostics follow metadata then
+integrity, preserving each stage's diagnostic order and stable indices.
+
+Metadata statuses remain `passed`, `failed`, or `not_evaluated`. Integrity
+statuses remain `verified`, `mismatch`, or `not_evaluated`. Overall status is
+`failed` if metadata failed or integrity mismatched; otherwise `not_evaluated`
+if either stage was not evaluated; otherwise `passed`. Warnings alone do not
+fail the pipeline. Original optional checks outside the metadata stage's scope
+remain visible and do not override the separate integrity result. Source rows
+show counts, metadata diagnostics and stage availability rather than inventing
+per-source metadata verdicts.
+
+Malformed inputs, wrong dataset references, and missing or mismatched source
+associations are input errors with exit 2, empty stdout and clear stderr. An
+initially missing recording is rejected by the existing dataset loader. A
+recording unavailable after loading produces the original integrity stage's
+`not_evaluated` result while retaining metadata results. Explicit stage
+unavailability (`NotImplementedError`) or incomplete integrity I/O (`OSError`)
+retains the other stage and records a null report with a deterministic reason;
+unexpected programming errors are not swallowed.
+
+Strict exits are 0 for overall `passed`, 1 for `failed`, and 2 for
+`not_evaluated`. Successfully rendered non-strict reports exit 0. JSON uses
+sorted object keys, compact separators, unescaped Unicode, finite numbers only,
+and one final LF; arrays retain meaningful order. HTML has no JavaScript or
+external assets and includes both complete stage reports.
+
+Input and recording limits remain those enforced by the existing APIs: 1 MiB
+JSON inputs, at most 16 dataset sources and 4096 records, 16 MiB per recording,
+64 MiB aggregate declared/observed recording bytes, and 64 KiB streaming chunks.
+Existing relative-path confinement, descriptor-based regular-file checks and
+conservative symlink rejection remain in force. Verification is not a locked
+filesystem snapshot; the original observable-mutation checks and documented
+residual time-of-check/time-of-use limitations still apply.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`
