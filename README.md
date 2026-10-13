@@ -1514,6 +1514,91 @@ not accepted as numbers. IDs are opaque bounded ASCII tokens; text permits
 Unicode without control characters or lone surrogates. No values are silently
 repaired, reordered, deduplicated, interpolated or synchronized.
 
+## Deterministic simulated monitoring adapter (Phase 62)
+
+Replay supplied synthetic monitoring events into existing Phase 61 snapshots:
+
+```bash
+PYTHONPATH=src python -B -m examples.platform_monitoring_demo --format json
+PYTHONPATH=src python -B -m examples.platform_monitoring_demo --format html
+```
+
+The small fixture shows aerial and ground Sentinels, a third-party device,
+connectivity/health declarations, sensor availability, a harmless recording
+reference, an uncertain display observation, a predefined descriptive alert,
+read-only Copilot explanation and a synthetic operator interpretation review.
+One contradictory connectivity event is deliberately rejected. JSON and static
+escaped HTML include the initial snapshot ID, ordered event results, final
+validated snapshot and session summary. Valid demo invocations exit 0 even when
+individual events are rejected; invalid arguments/input exit 2 with empty stdout.
+Neither the demo nor reducer opens evidence, decodes media, writes files, uses
+wall-clock time or randomness, connects hardware, starts workers, accesses the
+network or launches processes. No streaming server, command or control API exists.
+
+`aegis.platform.monitoring` defines six closed frozen version-1 event contracts:
+`ConnectivityEvent`, `HealthEvent`, `AvailabilityEvent`, `EvidenceEvent`,
+`ObservationEvent` and `ReviewEvent`. Each carries event ID, explicit event type,
+device ID, optional source ID, timestamp/unit/clock domain and a typed bounded
+payload. Phase 61 health, availability, evidence, observation, alert, investigation
+and human-review contracts are reused. `event_from_document` dispatches only those
+six declared types and delegates strict decoding to existing contract helpers;
+unknown fields/versions/types and malformed payloads are rejected.
+
+`reduce_session(initial_snapshot, events)` accepts a validated Phase 61 snapshot
+and a tuple of at most 256 typed events. It revalidates all input schemas before
+reduction; malformed input fails the whole invocation without partial output.
+Well-formed events with state or relationship conflicts are rejected individually
+and processing continues. Every event is applied atomically through the existing
+snapshot validator. Rejection leaves state and clock watermarks unchanged, while
+the first occurrence reserves its event ID even if rejected. Duplicate occurrences
+receive explicit `DUPLICATE_EVENT_ID` diagnostics, never silent deduplication.
+
+Connectivity, health and availability updates name their expected prior state;
+contradictory predecessors are rejected. Device connectivity and the supplied
+Sentinel monitor change together. Devices without a supplied Sentinel monitor
+cannot receive sensor-availability updates; this is explicitly `MONITOR_UNAVAILABLE`.
+Unknown/unavailable Sentinel measurements cannot produce a declared-quality
+observation: uncertainty or missing quality must remain explicit. Evidence IDs
+and observation IDs cannot be overwritten. Evidence must exist before an
+observation refers to it; arrays preserve caller order without sorting or repair.
+
+An observation announcement may include at most one predefined alert and one
+permitted investigation with explicit Copilot actor/audit IDs. It computes the
+read-only explanation using Phase 61 `investigate` and adds all related records
+atomically. Review events update only the referenced review status and append the
+supplied human decision plus its audit record. Human confirmation concerns the
+interpretation of metadata, never engagement approval. Existing results/history
+are not silently rewritten: an update contradicting a stored investigation is
+rejected by snapshot validation. Rejected candidates expose a stable diagnostic.
+
+Device events use the device health clock; source events use that source's exact
+declared clock. Observation, health and review payload timestamps must equal their
+event timestamps. Timestamp values compare exactly across declared units using
+rational arithmetic within each device/clock domain; different domains and devices
+are never aligned. Initial health, observation and review timestamps seed known
+watermarks. Equal timestamps are allowed; regressions are rejected. Only accepted
+events advance the session watermark. Snapshot IDs remain caller-supplied, and
+event positions distinguish output stages; no synthetic wall-clock ID is generated.
+
+`aegis.platform.simulated_adapters` provides `aerial_sentinel_from_fixture`,
+`ground_sentinel_from_fixture` and `third_party_from_fixture`. They decode supplied
+closed device/monitor documents into existing immutable contracts and check their
+declared category, identity, connectivity and source inventory. No discovery,
+device-specific telemetry, configuration or acquisition occurs. Final evidence and
+cross-record relationships remain subject to the existing snapshot validator.
+
+Bounds and lexical evidence-path rules are inherited from Phase 61: 256-item
+collections, 128-character ordinary strings/IDs, 1024-character explanatory text,
+256-character local references, finite bounded numbers and explicit timestamp
+units. In-memory JSON parsing remains bounded to 4 MiB. Paths are metadata only,
+not proof of existence, confinement, symlink safety, provenance or authenticity.
+
+Replay is a bounded single-call simulation, not a persistent service. Event-ID
+uniqueness is session-local. Phase 61 snapshots do not retain timestamps for every
+connectivity/evidence announcement; callers must retain the original ordered
+events and their results if they need a complete replay history. The API does not provide resumable cursors,
+live adapters, sensor decoding, tracking, localization, threat scoring or control.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`
