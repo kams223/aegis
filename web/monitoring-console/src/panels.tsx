@@ -1,32 +1,23 @@
 import { useState } from 'react';
 import type { Session, Snapshot } from './models';
 import { Badge, Card, Empty, Metric, Time, label } from './components';
+import { RadarGraphic, RadarPanel, CameraPanel, SimulationPanel, DeviceStatus, RecentEvents, AlertSummary } from './hud';
 
-export function Overview({ session }: { session: Session }) {
+export function Overview({ session, onEventSelect }: { session: Session; onEventSelect: (index: number) => void }) {
   const snapshot = session.final_snapshot;
   return <>
-    <div className="metrics">
+    <div className="metrics" aria-label="Session metrics">
       <Metric title="Devices" value={snapshot.registry.devices.length} detail="Declared registry entries" />
       <Metric title="Applied events" value={session.summary.applied_count} detail="Accepted software updates" />
       <Metric title="Rejected events" value={session.summary.rejected_count} detail="Explicit validation diagnostics" />
       <Metric title="Observations" value={snapshot.observations.length} detail="Synthetic display metadata" />
+      <Metric title="Alerts" value={snapshot.alerts.length} detail="Descriptive observations" />
+      <Metric title="Reviews" value={snapshot.review_history.length} detail="Existing human decisions" />
     </div>
-    <div className="overview-grid">
-      <Card title="Session outcome">
-        <Badge value={session.summary.status} />
-        <p>{session.summary.event_count} supplied events processed in their declared order.</p>
-        <label className="progress-label" htmlFor="applied-progress">Applied events: {session.summary.applied_count} of {session.summary.event_count}</label>
-        <progress id="applied-progress" value={session.summary.applied_count} max={Math.max(1, session.summary.event_count)} />
-        <dl><dt>Initial snapshot reference</dt><dd><code>{session.initial_snapshot_id}</code></dd><dt>Final snapshot</dt><dd><code>{snapshot.snapshot_id}</code></dd><dt>Snapshot schema version</dt><dd>{snapshot.schema_version}</dd></dl>
-        <p className="note">Intermediate snapshots are not supplied. All device and observation panels show the final state.</p>
-      </Card>
-      <Card title="Final device inventory">
-        {snapshot.registry.devices.length ? <ul className="inventory">{snapshot.registry.devices.map(device => <li key={device.device_id}><div><strong>{device.device_id}</strong><small>{label(device.category)} · {device.device_type}</small></div><Badge value={device.connection_status} /></li>)}</ul> : <Empty>No devices are supplied.</Empty>}
-        <p className="note">Connection and health values are fixture declarations.</p>
-      </Card>
-      <Card title="Review context"><div className="mini-metrics"><Metric title="Alerts" value={snapshot.alerts.length} detail="Descriptive observations" /><Metric title="Reviews" value={snapshot.review_history.length} detail="Existing human decisions" /></div><p>Interpretation history and read-only explanations remain visible independently of event acceptance.</p></Card>
-      <Card title="Data boundaries"><span className="eyebrow">OFFLINE · READ ONLY</span><p>{snapshot.description}</p><p className="note">Evidence paths identify metadata references. Recording content is not loaded or verified by this console.</p></Card>
-    </div>
+    <div className="session-strip"><span>{session.summary.event_count} supplied events processed in their declared order.</span><span>Intermediate snapshots are not supplied. All device and observation panels show the final state.</span></div>
+    <div className="visual-grid"><RadarPanel snapshot={snapshot} /><CameraPanel snapshot={snapshot} /><SimulationPanel /></div>
+    <div className="dashboard-bottom"><DeviceStatus snapshot={snapshot} /><RecentEvents session={session} onSelect={onEventSelect} /><AlertSummary snapshot={snapshot} /></div>
+    <p className="note data-boundary">{snapshot.description}</p>
   </>;
 }
 
@@ -46,7 +37,7 @@ export function Observations({ snapshot }: { snapshot: Snapshot }) {
   const [selectedId, setSelectedId] = useState(snapshot.observations[0]?.observation_id ?? '');
   const selected = snapshot.observations.find(o => o.observation_id === selectedId);
   const evidence = snapshot.evidence.find(e => e.evidence_id === selected?.evidence_id);
-  return <div className="observation-grid"><Card title="Synthetic observation display" className="observation-display"><div className="decorative-rings" aria-hidden="true" /><p className="note">Non-geographic list. Decorative rings contain no plotted positions.</p>
+  return <div className="observation-grid"><Card title="Synthetic observation display" className="observation-display"><p className="boundary-label">SYNTHETIC DISPLAY — NON-GEOGRAPHIC</p><RadarGraphic /><p className="note">Non-geographic list. Decorative rings contain no plotted positions.</p>
     {snapshot.observations.length ? <ul className="observation-list">{snapshot.observations.map(o => <li key={o.observation_id}><button aria-pressed={o.observation_id === selectedId} onClick={() => setSelectedId(o.observation_id)}><div><strong>{o.observation_id}</strong><small>{o.source_id} · {o.category}</small></div><Badge value={o.quality} /></button></li>)}</ul> : <Empty>No observations are supplied.</Empty>}
   </Card><Card title="Observation metadata">{selected ? <><Badge value={selected.review_status} /><h3>{selected.observation_id}</h3><p>{selected.annotation}</p><dl><dt>Source</dt><dd><code>{selected.source_id}</code></dd><dt>Explicit timestamp</dt><dd><Time value={selected.timestamp} /></dd><dt>Quality</dt><dd>{selected.quality}</dd><dt>Uncertainty</dt><dd>{selected.uncertainty_note ?? 'No uncertainty note supplied'}</dd><dt>Evidence reference</dt><dd><code>{selected.evidence_id}</code></dd><dt>Recording-reference metadata</dt><dd><code>{evidence?.local_path ?? 'Unavailable'}</code></dd></dl><p className="note">A reference does not establish verified media, physical location, or threat identity.</p></> : <Empty>Select an observation to inspect its supplied metadata.</Empty>}</Card></div>;
 }
@@ -61,8 +52,8 @@ export function Alerts({ snapshot }: { snapshot: Snapshot }) {
   return <div className="overview-grid"><Card title="Descriptive alerts">{snapshot.alerts.length ? snapshot.alerts.map(a => <article className="record" key={a.alert_id}><Badge value={a.status} /><h3>{a.alert_id}</h3><p>{a.explanation.explanation}</p><small>Observation: {a.observation_id} · Code: {a.explanation.code}</small><p><code>{a.explanation.evidence_ids.join(', ')}</code></p></article>) : <Empty>No alerts are supplied.</Empty>}</Card><Card title="Copilot · read-only investigation history"><p className="note">Existing deterministic results only. Investigation execution and chat are unavailable.</p>{snapshot.investigation_requests.length ? snapshot.investigation_requests.map(request => { const result = snapshot.investigation_results.find(r => r.request_id === request.request_id); return <article className="record" key={request.request_id}><Badge value={result?.status ?? 'not_evaluated'} /><h3>{request.request_id}</h3><small>{label(request.action)} · Alert: {request.alert_id}</small><p>References: <code>{request.reference_ids.join(', ')}</code></p><p>{result?.summary ?? 'No investigation result supplied'}</p><small>Evidence: {result?.evidence_ids.join(', ') || 'Not supplied'}</small></article>; }) : <Empty>No investigation requests are supplied.</Empty>}</Card></div>;
 }
 
-export function EventReplay({ session }: { session: Session }) {
-  const [index, setIndex] = useState(0); const events = session.event_results; const event = events[index];
+export function EventReplay({ session, initialIndex = 0 }: { session: Session; initialIndex?: number }) {
+  const [index, setIndex] = useState(Math.max(0, Math.min(initialIndex, session.event_results.length - 1))); const events = session.event_results; const event = events[index];
   return <Card title="Ordered event replay"><p className="note">Navigate supplied event results locally. The final snapshot stays fixed; intermediate states are not provided.</p>
     {event ? <><div className="replay-controls"><button disabled={index === 0} onClick={() => setIndex(i => Math.max(0, i - 1))}>← Previous event</button><label>Jump to event<select value={index} onChange={e => setIndex(Number(e.target.value))}>{events.map((e, i) => <option key={i} value={i}>{i + 1}. {e.event_id} ({e.status})</option>)}</select></label><button disabled={index === events.length - 1} onClick={() => setIndex(i => Math.min(events.length - 1, i + 1))}>Next event →</button></div><div className="replay-position" role="status">Event {index + 1} of {events.length} · <strong>{event.event_id}</strong></div><Badge value={event.status} /><dl><dt>Event type</dt><dd>{label(event.event_type)}</dd><dt>Device</dt><dd><code>{event.device_id}</code></dd><dt>Source</dt><dd>{event.source_id ?? 'Device-level event; no source reference'}</dd><dt>Explicit timestamp</dt><dd><Time value={event.timestamp} /></dd><dt>Stable event index</dt><dd>{event.event_index}</dd></dl><h3>Rejection diagnostics</h3>{event.diagnostics.length ? event.diagnostics.map(d => <article className="diagnostic" key={d.code}><strong>{d.code}</strong><p>{d.explanation}</p><small>Severity: {d.severity} · Event index: {d.event_index}</small></article>) : <p>No rejection diagnostics supplied.</p>}</> : <Empty>No event results are supplied.</Empty>}
   </Card>;
