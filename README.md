@@ -1429,6 +1429,91 @@ conservative symlink rejection remain in force. Verification is not a locked
 filesystem snapshot; the original observable-mutation checks and documented
 residual time-of-check/time-of-use limitations still apply.
 
+## Offline platform foundation (Phase 61)
+
+`aegis.platform` is an isolated, standard-library-only foundation for a future
+shared web/desktop console and read-only investigation assistant. It adds no
+drivers, device discovery, hardware connections, LLM integration or network
+services. Existing production modules, recorded-data validators and CLIs are
+unchanged. Its observation records are display metadata, not fusion inputs,
+geographic positions, tracks, threat scores or control commands.
+
+```bash
+PYTHONPATH=src python -B -m examples.platform_snapshot_demo --format json
+PYTHONPATH=src python -B -m examples.platform_snapshot_demo --format html
+```
+
+The deterministic fixture includes one AEGIS-native aerial Sentinel, one
+simulated ground Sentinel, one third-party device, two synthetic display
+observations, a harmless camera evidence reference, an unusual annotation
+alert, a read-only investigation and an illustrative human review. All IDs,
+reviewer information and times are synthetic. The demo opens no evidence,
+decodes no media, writes no files and uses no wall clock. HTML is escaped,
+static and offline without scripts or external assets. JSON has sorted keys,
+compact separators, finite numbers, UTF-8-compatible Unicode and one final LF.
+Valid demo invocations exit 0; invalid arguments exit 2 with empty stdout.
+
+Contracts in `aegis.platform.contracts` are frozen dataclasses with immutable
+nested tuples. Each record has explicit `schema_version=1`; decoded documents
+must include every field, including explicit nulls, with no unknown fields.
+`to_document` returns an owned JSON-compatible copy, `from_document` validates
+closed schemas, and `parse_json` consumes bounded in-memory UTF-8 bytes only,
+rejecting duplicate keys, non-finite numbers and malformed input.
+
+Device contracts declare category (`aegis_native`, `third_party`, `simulated`),
+type (`aerial`, `ground`, `other`), adapter ID/version, connection status,
+health snapshot, capabilities and source references. Capability declarations
+are limited to recorded metadata/integrity, health snapshots, display
+observations and camera evidence, with explicit `supported`, `unsupported` or
+`unknown` support. They do not authorize any operation. Connection states are
+`offline`, `recorded` or `unknown`. `build_registry` accepts supplied tuple
+records, rejects duplicate device/source IDs and preserves caller order.
+
+Display observations include an opaque observation/source identity, explicit
+timestamp value/unit/clock domain, category, declared/uncertain/missing quality,
+annotation, review status and evidence ID. Uncertain or missing quality requires
+an explanatory note. No coordinate or physical measurement fields exist.
+Clocks are neither converted nor assumed synchronized; an observation must
+name its declared source clock. Sentinel monitoring preserves aerial/ground
+identity, connectivity, sensor availability, optional battery percentage,
+maintenance state, camera reference and human inspection state. Missing battery
+is null, not zero; availability and health are supplied declarations only.
+
+Evidence paths use bounded relative local references with no absolute paths,
+URLs, traversal, backslashes, ambiguous percent/query/fragment syntax or control
+characters. This layer performs lexical validation only: references are not
+opened, resolved, decoded or authenticated. A future reader must apply the
+existing recorded-data root confinement and descriptor-based checks before
+opening any reference; symlink safety is not established by this contract.
+
+`investigate` supports exactly five read-only actions: inspect a supplied
+dataset outcome, retrieve an existing evidence reference, summarize declared
+device health, explain an observation, and compare supplied offline validation
+statuses. It never retrieves file contents. Unsupported or mutating actions are
+rejected. Missing supplied outcomes return `not_evaluated`; failed metadata or
+mismatched integrity remains explicit even when a comparison is unchanged.
+There is no automatic trust, approval, device dispatch or settings mutation.
+
+`build_snapshot` combines a registry, evidence, observations, Sentinels, alerts,
+requests/results, human review history, audits and supplied validation outcomes
+into the closed `PlatformSnapshot` v1 schema. It rejects dangling or inconsistent
+relationships, unsupported display/camera capabilities, mismatched source
+clocks and fabricated investigation results. Arrays preserve supplied order.
+Review history starts at `unreviewed`, may move to `under_review`, `reviewed` or
+`dismissed`, and must explain the final declared status. Reviewed/dismissed
+states are terminal in v1. Audit references must agree with the recorded event;
+review audit actor/time must match the supplied human decision. These records
+describe review, not authorization to control a physical system.
+
+Bounds: each tuple and the registry-wide source inventory has at most 256
+items; IDs and ordinary strings have at most 128 characters, annotations and
+explanations at most 1024, and local paths at most 256. Numeric magnitudes are
+bounded by 10^18, timestamps require `s`, `ms`, `us` or `ns`, battery percentages
+require 0..100 or null, and JSON byte input is limited to 4 MiB. Booleans are
+not accepted as numbers. IDs are opaque bounded ASCII tokens; text permits
+Unicode without control characters or lone surrogates. No values are silently
+repaired, reordered, deduplicated, interpolated or synchronized.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`
