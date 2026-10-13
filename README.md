@@ -1599,6 +1599,84 @@ connectivity/evidence announcement; callers must retain the original ordered
 events and their results if they need a complete replay history. The API does not provide resumable cursors,
 live adapters, sensor decoding, tracking, localization, threat scoring or control.
 
+## Offline React monitoring console (Phase 63)
+
+`web/monitoring-console/` is an isolated React + TypeScript application for the
+deterministic Phase 62 session. It displays supplied final-state data and existing
+event results without executing investigations, reading media or controlling
+devices. The Python platform and all existing CLIs remain unchanged.
+
+From the repository root, enter the frontend directory and use a local Node.js
+installation (Node 22.22.2+ or Node 24.15+ LTS):
+
+```bash
+cd web/monitoring-console
+npm ci
+npm run typecheck
+npm test
+npm run fixture:check
+npm run build
+npm run dev
+```
+
+The development server binds to `127.0.0.1`; open its printed localhost address.
+`npm run preview` serves the production build locally. Production output is static
+HTML/CSS/JavaScript under `dist/`, with relative asset paths and no runtime backend.
+Serve that directory using a local static host, or reuse the components in a future
+Tauri webview. This phase does not implement the desktop shell. A static host is
+needed for browser module loading; opening index.html directly with file:// is not
+the supported browser path. No global packages or Python dependencies are needed.
+Development-tool module requests differ from the production application; production
+CSP disallows runtime connections; development HMR is disabled. The console loads
+its fixture from the bundled
+source import and has no API calls, telemetry, analytics, service workers or sync.
+
+Regenerate the checked-in fixture only through an explicit developer command:
+
+```bash
+npm run fixture:generate
+```
+
+The script calls the unchanged Phase 62 demo, validates its MonitoringSession
+contract and writes only the requested `src/data/session.json`. `fixture:check`
+requires byte-identical output, including serialization and final newline.
+No fields, session IDs, positions, live timestamps or intermediate snapshots are
+invented. The developer export command writes explicitly; the running UI never
+writes fixture or evidence files. Both commands use the existing AEGIS Python
+environment shown in package.json; portable environments may invoke the script
+directly with their own Python and `PYTHONPATH=../../src`.
+
+Panels cover overview counts and simulation labeling; filterable device registry,
+adapter/health/Sentinel declarations; non-geographic observation selection;
+plain-text evidence metadata; existing alerts and Copilot explanations; ordered
+event-result navigation; and existing human review/audit records with explicit
+units and clocks. Decorative rings have no plotted positions or animation. Replay
+does not reconstruct unavailable intermediate state. Device status is explicitly
+the final snapshot, not live health. Unknown and unevaluated information remains
+visible. Human review concerns interpretation only; there are no approval or
+submission controls.
+
+The frontend validates every nested version-1 record as a closed bounded schema,
+rejects duplicate JSON keys, malformed identifiers/paths, duplicate identities,
+inconsistent counts,
+missing health, dangling references, incompatible clocks and contradictory review
+history. Legitimate duplicate event occurrences must be explicitly rejected with
+the Phase 62 duplicate-event diagnostic. Rejected events may reference unavailable
+devices/sources as declared by the source report; applied events must resolve.
+JSON text is bounded to 4 MiB and nesting to 32 levels. The validator owns its
+returned data and does not repair inputs. Text is rendered
+through React escaping; evidence paths never become executable links. Python
+remains the authoritative platform validator: the console checks data shape and
+relationships and does not rerun Copilot or prove report origin/authenticity.
+
+Native buttons, labeled selectors, semantic headings/tables, a skip link, visible
+focus, text status indicators and responsive layouts support keyboard and small
+screens. Frontend tests cover malformed data, references, navigation boundaries,
+empty states, uncertainty, escaping, deterministic rendering and absent network
+effects. Python integration tests verify the authentic fixture and explicit export.
+Dependencies and lockfile are confined here; node_modules, dist and caches are
+ignored. No original dashboard files or Python production modules are modified.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`
