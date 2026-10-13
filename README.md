@@ -1272,6 +1272,102 @@ The example-local APIs are `load_dataset`, `dataset_from_document`,
 tuples contain immutable scalars and never retain caller-owned mutable structures.
 Metadata consistency does not establish physical measurement accuracy or readiness.
 
+### Recording byte integrity declarations (Phase 59)
+
+Verify bounded bytes without decoding or interpreting recording content:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src \
+/home/ali/venvs/aegis/bin/python -B -m examples.recorded_sensor_integrity \
+--dataset examples/recorded_datasets/quality_warnings.json \
+--manifest examples/recorded_datasets/integrity_match.json --format json --strict
+```
+
+Use `--format html` for a static escaped offline table. Both formats go to stdout;
+no report files or recording files are written. No media libraries, inference,
+network access, external processes or hardware acquisition are involved. Phase 58
+metadata quality and all existing CLI outputs remain separate and unchanged.
+
+Integrity manifest schema v1 is closed: `schema_version` (integer 1), `manifest_id`,
+`dataset_reference`, and ordered `entries`. Each entry has exactly `source_id`,
+`recording_reference`, `expected_size_bytes`, and `expected_sha256`. Sizes are
+nonnegative integers excluding booleans; SHA-256 text is exactly 64 lowercase hex
+characters. IDs are bounded to 128 characters, references to 256, manifests to
+1 MiB and entries to 16. Duplicate JSON keys, unknown/missing fields, unsupported
+versions, invalid UTF-8, non-finite values and incorrect types are rejected. Source
+IDs and recording-reference strings must each be unique. Expected values are
+declarations, not approval, authentication or proof of recording origin.
+
+The explicit Phase 58 dataset path defines the reference root as its resolved
+parent directory. `dataset_reference` must name that exact JSON path relative to
+the root. Entries must correspond exactly to every dataset source and its declared
+recording reference; missing, extra or mismatched associations are input errors
+before recording bytes are read. Manifest order is preserved in report entries.
+Datasets sharing one recording-reference string between sources cannot satisfy
+this integrity schema's uniqueness rule; no association is silently deduplicated.
+
+Only relative local paths are allowed: no URLs, absolute paths, drive syntax,
+backslashes, null bytes, empty components, dot/parent traversal or repeated slashes.
+Integrity verification refuses all symlinks in references, including internal ones;
+this is stricter than unchanged Phase 58 existence checks. A pinned root descriptor
+and directory-relative no-follow opens anchor every path component. Special files,
+including devices, sockets, pipes and directories in file positions, are refused
+before opening/reading their contents. File descriptor type/identity is checked
+again immediately after open. Platforms lacking no-follow directory-descriptor
+support produce `not_evaluated`; no unsafe path-based fallback is used.
+
+Limits are 16 MiB per recording and 64 MiB aggregate. Declared sizes exceeding
+these limits are rejected as input errors. Actual regular-file sizes are checked
+before streaming, and eligible files' aggregate size is preflighted before any
+recording reads. Oversized actual files or aggregates remain `not_evaluated`.
+Streaming reads use at most 64 KiB chunks. Every returned byte counts toward both
+limits, including optional one-byte EOF probes; probes are omitted when no budget
+remains. No entire recording is retained in memory. Empty files are valid and use
+the standard SHA-256 digest of empty bytes.
+
+Verification compares the descriptor's pre/post identity, mode, size, modification
+and change metadata, then rechecks the current named reference. These filesystem
+metadata values are used internally and never emitted in reports. Short reads,
+unexpected growth, observable mutation or reference replacement leave the digest
+unavailable and the entry `not_evaluated`. Missing files, permission/I/O errors,
+unsupported file types and unavailable descriptor support have stable diagnostic
+codes without host-specific exception text. A stable, fully read file is `verified`
+only when both observed size and SHA-256 agree; disagreements are `mismatch`.
+
+The existing Phase 58 loader requires recording references to exist when loading
+the dataset. Initially missing recordings therefore remain invalid input, exit 2
+with empty stdout. Files that disappear or become unavailable after loading are
+reportable `not_evaluated` entries. No missing-file example manifest is shipped
+because it would conflict with those unchanged loading rules; adversarial tests
+exercise disappearance after loading. The three synthetic manifest fixtures use
+the existing harmless placeholder and show matching bytes, incorrect size and
+incorrect digest without changing any Phase 58 fixture.
+
+Report schema v1 contains `schema_version`, `manifest_id`, `dataset_id`,
+`verification_status`, `file_count`, `verified_count`, `mismatch_count`,
+`not_evaluated_count`, `entries`, `diagnostics`, and `limitations`. Each entry has
+source/reference identities, expected and actual sizes/digests, `bytes_read`,
+`integrity_status`, and `diagnostic_codes`. Actual size is the observed preflight
+size; `bytes_read` separately records consumed bytes, even for interrupted reads.
+Unknown sizes/digests are null. Digests are emitted only after stable completion.
+Diagnostics follow manifest index and then detection order. Overall precedence is
+`mismatch > not_evaluated > verified`; an empty file inventory is `not_evaluated`.
+Strict exits are 0 verified, 1 mismatch, 2 not evaluated. Non-strict rendered reports
+exit 0. Invalid inputs/invocations exit 2 with clear stderr and no partial stdout.
+
+Use stable trusted directories and input JSON files. Descriptor anchoring and
+observable change checks reduce time-of-check/time-of-use risks but do not provide
+an atomic filesystem snapshot. Path replacement after the final check, ancestor
+directory changes, hard-link provenance, coarse filesystem metadata, or changes
+that evade observable metadata are outside the guarantees. A pathname can change
+between type-check and open; the descriptor is revalidated before any content read.
+Byte equality does not authenticate provenance, physical accuracy or operational
+readiness. No timestamps are aligned and no sensor measurements are interpreted.
+
+The example-local APIs are `load_manifest`, `manifest_from_document`,
+`verify_dataset`, `run_verification`, `render_json`, and `render_html`. Immutable
+manifest values and the Phase 58 loaded dataset are read without input mutation.
+
 ## Troubleshooting
 
 ### `ModuleNotFoundError: No module named 'aegis'`

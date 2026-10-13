@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "manifest_id": "synthetic-integrity-match",
+  "dataset_reference": "quality_warnings.json",
+  "entries": [
+    {
+      "source_id": "metadata-fixture",
+      "recording_reference": "placeholder.txt",
+      "expected_size_bytes": 173,
+      "expected_sha256": "258a91bf77fcf8588e76aa8ae85edeee0b5a9d92fc23f4039635210ed9f3d1f2"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "manifest_id": "synthetic-integrity-digest-mismatch",
+  "dataset_reference": "quality_warnings.json",
+  "entries": [
+    {
+      "source_id": "metadata-fixture",
+      "recording_reference": "placeholder.txt",
+      "expected_size_bytes": 173,
+      "expected_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ]
+}
