@@ -245,3 +245,17 @@ input[type="range"] { accent-color: var(--green); width: 100%; min-width: 0; mar
 .radar-frame:fullscreen .radar-inspection-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); align-items: start; }
 @media (min-width: 1151px) { .observation-display .radar-inspection-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); align-items: start; } }
 @media (max-width: 760px) { .radar-frame:fullscreen .radar-inspection-layout { grid-template-columns: 1fr; } .observation-inspector { max-height: 70vh; } }
+
+/* Phase 68: deterministic, record-linked analyst explanations. */
+.analyst-mode { display: inline-block; color: var(--cyan); font: .67rem ui-monospace, monospace; padding: 8px; border: 1px solid var(--border); }
+.analyst-question-controls { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; margin: 16px 0; }
+.analyst-panel select, .analyst-panel input { width: 100%; min-width: 0; max-width: 100%; }
+.analyst-panel input { background: var(--background); border: 1px solid var(--border); color: var(--text); font: inherit; padding: 10px; border-radius: 2px; }
+.analyst-answer { margin-top: 18px; max-height: 620px; overflow: auto; border-top: 1px solid var(--border); }
+.analyst-answer h3 { padding: 8px 0; }
+.analyst-claim { margin: 12px 0; padding: 12px; border-left: 2px solid var(--cyan); background: var(--elevated); overflow-wrap: anywhere; }
+.analyst-claim > strong { font: .65rem ui-monospace, monospace; }
+.analyst-limitation { border-color: var(--amber); }
+.analyst-references { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.analyst-references button, .analyst-references span { font: .62rem ui-monospace, monospace; overflow-wrap: anywhere; }
+@media (max-width: 760px) { .analyst-question-controls { grid-template-columns: 1fr; } .analyst-answer { max-height: 70vh; } }
