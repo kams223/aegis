@@ -233,3 +233,15 @@ input[type="range"] { accent-color: var(--green); width: 100%; min-width: 0; mar
 .demo-observation-details { border: 1px solid #884545; background: var(--elevated); padding: 14px; margin: 12px 0; }
 .demo-detail-controls { display: flex; flex-wrap: wrap; gap: 8px; }
 .demo-detail-controls button { font-size: .65rem; flex: 1 1 130px; }
+
+/* Phase 67: supplied observation metadata stays distinct from fictional demos. */
+.radar-inspection-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.observation-inspector { min-width: 0; max-height: 620px; overflow: auto; padding: 14px; border: 1px solid var(--cyan); border-left: 3px solid var(--cyan); background: var(--elevated); }
+.observation-inspector h3 { overflow-wrap: anywhere; }
+.inspector-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.inspector-heading button { font-size: .65rem; }
+.observation-inspector dl { grid-template-columns: minmax(85px, .8fr) minmax(0, 1.3fr); }
+.observation-inspector p { overflow-wrap: anywhere; }
+.radar-frame:fullscreen .radar-inspection-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); align-items: start; }
+@media (min-width: 1151px) { .observation-display .radar-inspection-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); align-items: start; } }
+@media (max-width: 760px) { .radar-frame:fullscreen .radar-inspection-layout { grid-template-columns: 1fr; } .observation-inspector { max-height: 70vh; } }

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { ObservationInspector } from './observation/ObservationInspector';
 import { RadarDisplay } from './radar/RadarDisplay';
 export { RadarDisplay as RadarGraphic } from './radar/RadarDisplay';
 import { RecordedPlayer } from './camera/RecordedPlayer';
@@ -10,10 +11,12 @@ import { Badge, Card, Empty, Time, label } from './components';
 export function RadarPanel({ snapshot }: { snapshot: Snapshot }) {
   const [selectedId, setSelectedId] = useState(snapshot.observations[0]?.observation_id ?? '');
   const selected = snapshot.observations.find(o => o.observation_id === selectedId);
+  const trigger = useRef<HTMLButtonElement | null>(null);
+  const [focusRequest, setFocusRequest] = useState(0);
   return <Card title="Tactical radar" className="visual-panel"><RadarDisplay>
-    <h3>Non-spatial observations · {snapshot.observations.length}</h3>
-    {snapshot.observations.length ? <ul className="hud-observations">{snapshot.observations.map(o => <li key={o.observation_id}><button aria-pressed={selectedId === o.observation_id} onClick={() => setSelectedId(o.observation_id)}><code>{o.observation_id}</code><Badge value={o.quality} /></button></li>)}</ul> : <Empty>No observations are supplied.</Empty>}
-    {selected && <details key={selected.observation_id} open><summary>Selected observation metadata</summary><p>{selected.annotation}</p><dl><dt>Source</dt><dd>{selected.source_id}</dd><dt>Time</dt><dd><Time value={selected.timestamp} /></dd><dt>Uncertainty</dt><dd>{selected.uncertainty_note ?? 'No uncertainty note supplied'}</dd><dt>Review</dt><dd>{selected.review_status}</dd><dt>Evidence</dt><dd><code>{selected.evidence_id}</code></dd></dl></details>}
+    <div className="radar-inspection-layout"><div><h3>Non-spatial observations · {snapshot.observations.length}</h3>
+    {snapshot.observations.length ? <ul className="hud-observations">{snapshot.observations.map(o => <li key={o.observation_id}><button ref={element => { if (element && selectedId === o.observation_id) trigger.current = element; }} aria-pressed={selectedId === o.observation_id} onClick={event => { trigger.current = event.currentTarget; setFocusRequest(n => n + 1); setSelectedId(o.observation_id); }}><code>{o.observation_id}</code><Badge value={o.quality} /></button></li>)}</ul> : <Empty>No observations are supplied.</Empty>}
+    </div>{selected ? <ObservationInspector observation={selected} snapshot={snapshot} focusRequest={focusRequest} onClose={() => { setSelectedId(''); trigger.current?.focus(); }} /> : <Empty>Select an observation to inspect its supplied metadata.</Empty>}</div>
     <details><summary>Supplied sensor availability</summary>{snapshot.sentinels.length ? snapshot.sentinels.map(s => <ul key={s.device_id} className="compact-list">{s.sensors.map(sensor => <li key={sensor.source_id}>{sensor.source_id}: {sensor.status}</li>)}</ul>) : <p>Unknown — no Sentinel monitors supplied.</p>}</details>
   </RadarDisplay></Card>;
 }

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Session, Snapshot } from './models';
 import { Badge, Card, Empty, Metric, Time, label } from './components';
+import { ObservationInspector } from './observation/ObservationInspector';
 import { SensorDiagnostics } from './fusion/SensorFusionPanel';
 import { RadarGraphic, RadarPanel, CameraPanel, SimulationPanel, DeviceStatus, RecentEvents, AlertSummary } from './hud';
 
@@ -37,11 +38,14 @@ export function Devices({ snapshot }: { snapshot: Snapshot }) {
 
 export function Observations({ snapshot }: { snapshot: Snapshot }) {
   const [selectedId, setSelectedId] = useState(snapshot.observations[0]?.observation_id ?? '');
+  const trigger = useRef<HTMLButtonElement | null>(null);
+  const [focusRequest, setFocusRequest] = useState(0);
   const selected = snapshot.observations.find(o => o.observation_id === selectedId);
-  const evidence = snapshot.evidence.find(e => e.evidence_id === selected?.evidence_id);
-  return <div className="observation-grid"><Card title="Synthetic observation display" className="observation-display"><RadarGraphic /><p className="note">Non-geographic list. Decorative rings contain no plotted positions.</p>
-    {snapshot.observations.length ? <ul className="observation-list">{snapshot.observations.map(o => <li key={o.observation_id}><button aria-pressed={o.observation_id === selectedId} onClick={() => setSelectedId(o.observation_id)}><div><strong>{o.observation_id}</strong><small>{o.source_id} · {o.category}</small></div><Badge value={o.quality} /></button></li>)}</ul> : <Empty>No observations are supplied.</Empty>}
-  </Card><Card title="Observation metadata">{selected ? <><Badge value={selected.review_status} /><h3>{selected.observation_id}</h3><p>{selected.annotation}</p><dl><dt>Source</dt><dd><code>{selected.source_id}</code></dd><dt>Explicit timestamp</dt><dd><Time value={selected.timestamp} /></dd><dt>Quality</dt><dd>{selected.quality}</dd><dt>Uncertainty</dt><dd>{selected.uncertainty_note ?? 'No uncertainty note supplied'}</dd><dt>Evidence reference</dt><dd><code>{selected.evidence_id}</code></dd><dt>Recording-reference metadata</dt><dd><code>{evidence?.local_path ?? 'Unavailable'}</code></dd></dl><p className="note">A reference does not establish verified media, physical location, or threat identity.</p></> : <Empty>Select an observation to inspect its supplied metadata.</Empty>}</Card></div>;
+  return <Card title="Synthetic observation display" className="observation-display"><RadarGraphic>
+    <p className="note">Non-geographic list. Validated observations have no plotted positions; optional fictional markers are separate.</p>
+    <div className="radar-inspection-layout"><div>{snapshot.observations.length ? <ul className="observation-list">{snapshot.observations.map(o => <li key={o.observation_id}><button ref={element => { if (element && selectedId === o.observation_id) trigger.current = element; }} aria-pressed={o.observation_id === selectedId} onClick={event => { trigger.current = event.currentTarget; setFocusRequest(n => n + 1); setSelectedId(o.observation_id); }}><div><strong>{o.observation_id}</strong><small>{o.source_id} · {o.category}</small></div><Badge value={o.quality} /></button></li>)}</ul> : <Empty>No observations are supplied.</Empty>}</div>
+    {selected ? <ObservationInspector observation={selected} snapshot={snapshot} focusRequest={focusRequest} onClose={() => { setSelectedId(''); trigger.current?.focus(); }} /> : <Empty>Select an observation to inspect its supplied metadata.</Empty>}</div>
+  </RadarGraphic></Card>;
 }
 
 export function Evidence({ snapshot }: { snapshot: Snapshot }) {
