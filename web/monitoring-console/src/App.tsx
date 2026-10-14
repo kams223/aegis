@@ -4,11 +4,12 @@ import { loadSession } from './validate';
 import { Overview, Devices, Observations, Evidence, Alerts, EventReplay, Reviews } from './panels';
 import { CameraPanel, SimulationPanel } from './hud';
 import { Badge } from './components';
+import { FlightOperations } from './flight/FlightOperations';
 import { SensorFusionPanel } from './fusion/SensorFusionPanel';
 
 const panels = [
   ['Overview', 'Overview'], ['Devices', 'Devices'], ['Observations', 'Radar / Observations'],
-  ['Sensor Fusion', 'SENSOR FUSION'], ['Evidence', 'Camera / Evidence'], ['Simulation', 'Simulation'], ['Alerts & Copilot', 'Alerts & Copilot'],
+  ['Sensor Fusion', 'SENSOR FUSION'], ['Evidence', 'Camera / Evidence'], ['Simulation', 'Simulation'], ['Flight Operations', 'Flight Operations'], ['Alerts & Copilot', 'Alerts & Copilot'],
   ['Event replay', 'Event Replay'], ['Review & audit', 'Review & Audit'],
 ] as const;
 type Panel = typeof panels[number][0];
@@ -30,6 +31,7 @@ export default function App({ text = fixtureText }: { text?: string }) {
     : panel === 'Sensor Fusion' ? <SensorFusionPanel snapshot={snapshot} />
     : panel === 'Evidence' ? <><CameraPanel snapshot={snapshot} /><Evidence snapshot={snapshot} /></>
     : panel === 'Simulation' ? <SimulationPanel />
+    : panel === 'Flight Operations' ? <FlightOperations />
     : panel === 'Alerts & Copilot' ? <Alerts snapshot={snapshot} />
     : panel === 'Event replay' ? <EventReplay key={`${session.initial_snapshot_id}:${replayIndex}`} session={session} initialIndex={replayIndex} />
     : <Reviews snapshot={snapshot} />;
@@ -44,7 +46,7 @@ export default function App({ text = fixtureText }: { text?: string }) {
     <div className="workspace">
       <header className="topbar"><span className="simulation">SIMULATION</span><div className="system-telemetry"><span>SESSION REF <code>{session.initial_snapshot_id}</code></span><span>SNAPSHOT v{snapshot.schema_version}</span><span>DEVICES {snapshot.registry.devices.length}</span><span>MONITORING <Badge value={session.summary.status} /></span></div><span className="read-only">READ ONLY</span></header>
       <main id="main-content" tabIndex={-1}>
-        <div className="page-heading"><div><span className="eyebrow">AEGIS / TACTICAL HUD / OFFLINE</span><h1>{panel === 'Overview' ? 'Monitoring overview' : panel}</h1><p>Inspect supplied software evidence and final simulation state.</p></div><div className="snapshot-label"><span>FINAL SNAPSHOT</span><code>{snapshot.snapshot_id}</code></div></div>
+        <div className="page-heading"><div><span className="eyebrow">AEGIS / TACTICAL HUD / OFFLINE</span><h1>{panel === 'Overview' ? 'Monitoring overview' : panel}</h1><p>{panel === 'Flight Operations' ? 'Separate fictional vehicle slots · read-only interface demonstration.' : 'Inspect supplied software evidence and final simulation state.'}</p></div><div className="snapshot-label"><span>FINAL SNAPSHOT</span><code>{snapshot.snapshot_id}</code></div></div>
         {content}
         <footer className="workspace-footer">AEGIS · Local inspection only<span>Final snapshot v{snapshot.schema_version} · No live hardware integration</span></footer>
       </main>

@@ -25,10 +25,10 @@ it('renders six grounded metrics and the three dashboard viewports', () => {
   expect(screen.getByText('SESSION REF')).toHaveTextContent('synthetic-platform-v1');
 });
 
-it('provides nine accessible navigation destinations with the expanded visible labels', () => {
+it('provides ten accessible navigation destinations with the expanded visible labels', () => {
   render(<App />);
   const nav = screen.getByRole('navigation');
-  expect(within(nav).getAllByRole('button')).toHaveLength(9);
+  expect(within(nav).getAllByRole('button')).toHaveLength(10);
   expect(within(nav).getByText('Radar / Observations')).toBeVisible();
   expect(within(nav).getByText('Camera / Evidence')).toBeVisible();
   fireEvent.click(within(nav).getByRole('button', { name: 'Simulation' }));
@@ -140,11 +140,11 @@ it('does not invent operational telemetry or expose command controls', () => {
   expect(container.querySelector('video, audio, iframe, form, textarea')).toBeNull();
 });
 
-it('supports keyboard navigation to all nine destinations', async () => {
+it('supports keyboard navigation to all ten destinations', async () => {
   const user = userEvent.setup();
   render(<App />);
   await user.tab(); expect(screen.getByRole('link')).toHaveFocus();
-  for (const name of ['Overview', 'Devices', 'Observations', 'Sensor Fusion', 'Evidence', 'Simulation', 'Alerts & Copilot', 'Event replay', 'Review & audit']) {
+  for (const name of ['Overview', 'Devices', 'Observations', 'Sensor Fusion', 'Evidence', 'Simulation', 'Flight Operations', 'Alerts & Copilot', 'Event replay', 'Review & audit']) {
     await user.tab(); expect(screen.getByRole('button', { name })).toHaveFocus();
   }
   await user.keyboard('{Enter}');
@@ -191,6 +191,6 @@ it('makes no external requests when navigating or using preview controls', () =>
   render(<App />);
   fireEvent.click(screen.getByRole('button', { name: '2D' }));
   fireEvent.click(screen.getByRole('button', { name: 'right view' }));
-  for (const name of ['Devices', 'Observations', 'Evidence', 'Simulation', 'Alerts & Copilot', 'Event replay', 'Review & audit']) fireEvent.click(screen.getByRole('button', { name }));
+  for (const name of ['Devices', 'Observations', 'Evidence', 'Simulation', 'Flight Operations', 'Alerts & Copilot', 'Event replay', 'Review & audit']) fireEvent.click(screen.getByRole('button', { name }));
   expect(fetch).not.toHaveBeenCalled(); expect(xhr).not.toHaveBeenCalled(); expect(socket).not.toHaveBeenCalled();
 });

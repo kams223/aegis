@@ -259,3 +259,21 @@ input[type="range"] { accent-color: var(--green); width: 100%; min-width: 0; mar
 .analyst-references { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .analyst-references button, .analyst-references span { font: .62rem ui-monospace, monospace; overflow-wrap: anywhere; }
 @media (max-width: 760px) { .analyst-question-controls { grid-template-columns: 1fr; } .analyst-answer { max-height: 70vh; } }
+
+/* Phase 69: isolated read-only flight demonstration workspace. */
+.flight-selection { max-width: 760px; }
+.flight-selection select { width: 100%; min-width: 0; }
+.flight-selected { margin-top: 16px; }
+.flight-selected dl { max-width: 800px; }
+.flight-environment { display: inline-block; font: .65rem ui-monospace, monospace; padding: 6px 8px; border: 1px solid var(--border); color: var(--text); }
+.flight-environment[data-environment="REAL"] { border-color: var(--amber); color: #f8ce83; }
+.flight-environment[data-environment="SITL"] { border-color: var(--cyan); color: #98d5ec; }
+.flight-environment[data-environment="SYNTHETIC"] { border-color: var(--green); color: #a0f3bc; }
+.flight-main-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.flight-camera .camera-viewport { aspect-ratio: 16 / 9; }
+.flight-fleet { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 12px; }
+.flight-fleet article { min-width: 0; padding: 14px; background: var(--elevated); border: 1px solid var(--border); }
+.flight-fleet p, .flight-fleet h3 { overflow-wrap: anywhere; }
+.flight-fleet button { width: 100%; margin-top: 12px; }
+.flight-telemetry dd { border-left: 2px solid var(--amber); padding-left: 10px; }
+@media (max-width: 900px) { .flight-main-grid { grid-template-columns: 1fr; } }
