@@ -277,3 +277,14 @@ input[type="range"] { accent-color: var(--green); width: 100%; min-width: 0; mar
 .flight-fleet button { width: 100%; margin-top: 12px; }
 .flight-telemetry dd { border-left: 2px solid var(--amber); padding-left: 10px; }
 @media (max-width: 900px) { .flight-main-grid { grid-template-columns: 1fr; } }
+
+/* Phase 70B: recorded evaluation states, never live telemetry. */
+.offline-telemetry { margin-top: 16px; }
+.offline-telemetry input, .offline-telemetry select { max-width: 100%; min-width: 0; }
+.offline-telemetry > button { margin-top: 12px; }
+.telemetry-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; margin-top: 16px; }
+.telemetry-fields article { min-width: 0; border: 1px solid var(--border); padding: 12px; background: var(--elevated); }
+.telemetry-fields article[data-freshness="stale"], .telemetry-fields article[data-freshness="invalid"] { border-color: var(--amber); }
+.telemetry-fields strong { font: .65rem ui-monospace, monospace; }
+.telemetry-fields pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .7rem; }
+.offline-telemetry p, .offline-telemetry li { overflow-wrap: anywhere; }

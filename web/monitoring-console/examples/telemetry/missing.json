@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "normalization_policy_version": 1,
+  "document_type": "sitl_replay",
+  "description": "FICTIONAL NORMALIZED EXAMPLE — NOT CAPTURED MAVLINK OR GENUINE SIMULATOR OUTPUT",
+  "sources": [
+    {
+      "vehicle_id": "fictional-px4",
+      "autopilot_family": "PX4",
+      "environment": "SITL",
+      "source_id": "fictional-simulator",
+      "session_id": "session-a",
+      "system_id": 1,
+      "component_id": 1,
+      "source_clock_domain": "fictional:boot-a",
+      "receipt_clock_domain": "replay:receipt"
+    }
+  ],
+  "records": [],
+  "evaluation_timestamp": {
+    "value": "1000",
+    "unit": "ms",
+    "clock_domain": "replay:receipt"
+  },
+  "policy": {
+    "fresh_for_ms": {
+      "altitude": 1000,
+      "ground_speed": 1000,
+      "battery": 1000,
+      "flight_mode": 1000,
+      "link_status": 1000,
+      "reception": 1000
+    },
+    "reception_timeout_ms": 3000
+  }
+}
