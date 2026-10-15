@@ -175,7 +175,7 @@ it('imports only explicit snapshots, keeps demo the default and preserves demo s
 it('shows recorded evaluation, stale last-known data and no live indicators or camera media', async () => {
   const { container } = render(<OfflineTelemetry />); const s = replayTelemetry(loadTelemetryReplay(staleText)); upload(file(canonicalTelemetry(s)).f);
   expect(await screen.findByLabelText('Recorded source/session')).toBeVisible();
-  expect(screen.getAllByText('STALE — LAST KNOWN AT EVALUATION')).toHaveLength(5);
+  expect(screen.getAllByText('Stale · Last reported')).toHaveLength(5);
   expect(screen.getByText('RECORDED SNAPSHOT — NEVER LIVE · SEPARATE FROM DEMO FLEET')).toBeVisible();
   expect(screen.getByText('NO VERIFIED CAMERA FEED')).toBeVisible(); expect(container.querySelector('video,audio,iframe,[src],form')).toBeNull();
 });
@@ -191,7 +191,7 @@ it('does not read oversized imports and rejects malformed JSON, UTF-8, replay in
 it('clears recorded data explicitly and escapes imported provenance text', async () => {
   const d = data(); d.records[0].provenance.note = '<script>alert(1)</script>';
   const { container } = render(<OfflineTelemetry />); upload(file(canonicalTelemetry(replayTelemetry(d))).f); await screen.findByLabelText('Recorded source/session');
-  expect(screen.getByText(/fictional_normalized.*<script>/)).toBeVisible(); expect(container.querySelector('script')).toBeNull();
+  fireEvent.click(screen.getByText('altitude evidence details')); expect(screen.getByText(/fictional_normalized.*<script>/)).toBeVisible(); expect(container.querySelector('script')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Clear recorded snapshot' })); expect(screen.queryByLabelText('Recorded source/session')).toBeNull();
 });
 
