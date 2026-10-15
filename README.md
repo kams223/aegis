@@ -1820,3 +1820,58 @@ Potential post-MVP work includes:
 ## Status
 
 The current version demonstrates a complete offline vertical slice from recorded video through detection, persistent tracking, SQLite-backed world-model persistence, quality evaluation, auditable run history, historical track queries, performance comparison, tested APIs, and browser dashboards.
+
+
+## Offline normalized SITL telemetry replay (Phase 70B)
+
+The Flight Operations data-source selector defaults to the unchanged fictional
+fleet. Its separate recorded-snapshot view imports only an explicitly selected
+local UTF-8 JSON file (maximum 1 MiB). No vehicle, simulator, wire protocol,
+network bridge, clock, camera or command connection is added.
+
+The independent closed telemetry contract and normalization policy are version 1.
+Replay documents declare at most eight source/session identities and 256 ordered
+records. Identifiers are bounded to 128 characters, notes to 1024, nesting to 24,
+and both input and output JSON to 1 MiB. Unknown fields/versions, duplicate keys,
+non-finite numbers and incorrect types/units are rejected. Timestamp values are
+unsigned decimal strings bounded to uint64; receipt/evaluation timestamps use
+milliseconds in one explicitly shared receipt clock. Source timestamps may use
+ms/us/ns in each declared source clock and are never aligned across sources.
+
+Replay requires explicit evaluation time and per-field freshness intervals plus
+reception timeout (positive integer milliseconds, maximum one hour). Values are
+stale when age exceeds the interval; the exact boundary remains available at
+that recorded evaluation. An invalid/conflicting/regressing/future record is
+rejected atomically and never refreshes field or reception timestamps. Rejections
+are reported in supplied order. Missing/null values are not zero; an explicitly
+supplied missing record clears that field. Previous valid values survive rejected
+updates and age normally. Unknown altitude references or absent reference IDs
+cannot become accepted altitude. Mode fields remain raw; no mode, link-health,
+physical accuracy or readiness interpretation is performed.
+
+Snapshot v1 embeds its replay input and contains derived fields, reception states,
+provenance and diagnostics. Import recomputes the complete snapshot and rejects
+any mismatch. This establishes software reproducibility, not source authenticity.
+Imported field states are historical states at evaluation, never current/live.
+Canonical JSON sorts object keys lexically, preserves array ordering, uses compact
+JSON and rejects non-finite values. The CLI appends one newline.
+
+All six examples under `web/monitoring-console/examples/telemetry/` are explicitly
+fictional normalized contract inputs, not captured MAVLink or genuine SITL output.
+`px4.json` and `ardupilot.json` include declared zero scalars to test zero handling;
+`missing.json`, `stale.json` and `conflict.json` exercise absent, aged and rejected
+records; `unsupported.json` must fail strict input loading.
+
+Using the existing Node toolchain from the console directory:
+
+```bash
+node scripts/replay_telemetry.mjs examples/telemetry/px4.json > /tmp/aegis-px4-snapshot.json
+```
+
+Output is stdout only; shell redirection is an explicit user write. The CLI reads
+one explicit bounded regular local file, rejects symlinks, and emits empty stdout
+with exit 2 for invalid input. No automatic report writes occur. A snapshot with
+record rejections is rendered successfully with its rejection summary intact.
+Select “Recorded offline SITL snapshot” and import that file in Flight Operations.
+Only that user-selected file is read; input text is escaped, paths are not executed,
+and the restrictive CSP, camera catalog and monitoring fixture remain unchanged.

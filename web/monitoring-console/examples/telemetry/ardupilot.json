@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "normalization_policy_version": 1,
+  "document_type": "sitl_replay",
+  "description": "FICTIONAL NORMALIZED EXAMPLE — NOT CAPTURED MAVLINK OR GENUINE SIMULATOR OUTPUT",
+  "sources": [
+    {
+      "vehicle_id": "fictional-ardupilot",
+      "autopilot_family": "ArduPilot",
+      "environment": "SITL",
+      "source_id": "fictional-simulator",
+      "session_id": "session-a",
+      "system_id": 1,
+      "component_id": 1,
+      "source_clock_domain": "fictional:boot-a",
+      "receipt_clock_domain": "replay:receipt"
+    }
+  ],
+  "records": [
+    {
+      "vehicle_id": "fictional-ardupilot",
+      "autopilot_family": "ArduPilot",
+      "environment": "SITL",
+      "source_id": "fictional-simulator",
+      "session_id": "session-a",
+      "system_id": 1,
+      "component_id": 1,
+      "record_id": "fictional-1",
+      "field": "altitude",
+      "value": {
+        "value": 0,
+        "unit": "m",
+        "reference": "home_relative",
+        "reference_id": "fictional-home-a"
+      },
+      "source_timestamp": {
+        "value": "50",
+        "unit": "ms",
+        "clock_domain": "fictional:boot-a"
+      },
+      "receipt_timestamp": {
+        "value": "900",
+        "unit": "ms",
+        "clock_domain": "replay:receipt"
+      },
+      "validation": "valid",
+      "diagnostic_codes": [],
+      "provenance": {
+        "kind": "fictional_normalized",
+        "record_reference": "fictional-input-1",
+        "note": "Explicit fictional scalar for contract testing only; not produced by a simulator."
+      }
+    },
+    {
+      "vehicle_id": "fictional-ardupilot",
+      "autopilot_family": "ArduPilot",
+      "environment": "SITL",
+      "source_id": "fictional-simulator",
+      "session_id": "session-a",
+      "system_id": 1,
+      "component_id": 1,
+      "record_id": "fictional-2",
+      "field": "ground_speed",
+      "value": {
+        "value": 0,
+        "unit": "m/s"
+      },
+      "source_timestamp": {
+        "value": "50",
+        "unit": "ms",
+        "clock_domain": "fictional:boot-a"
+      },
+      "receipt_timestamp": {
+        "value": "900",
+        "unit": "ms",
+        "clock_domain": "replay:receipt"
+      },
+      "validation": "valid",
+      "diagnostic_codes": [],
+      "provenance": {
+        "kind": "fictional_normalized",
+        "record_reference": "fictional-input-2",
+        "note": "Explicit fictional scalar for contract testing only; not produced by a simulator."
+      }
+    },
+    {
+      "vehicle_id": "fictional-ardupilot",
+      "autopilot_family": "ArduPilot",
+      "environment": "SITL",
+      "source_id": "fictional-simulator",
+      "session_id": "session-a",
+      "system_id": 1,
+      "component_id": 1,
+      "record_id": "fictional-3",
+      "field": "battery",
+      "value": {
+        "battery_id": "fictional-battery",
+        "percentage": 0,
+        "unit": "%"
+      },
+      "source_timestamp": {
+        "value": "50",
+        "unit": "ms",
+        "clock_domain": "fictional:boot-a"
+      },
+      "receipt_timestamp": {
+        "value": "900",
+        "unit": "ms",
+        "clock_domain": "replay:receipt"
+      },
+      "validation": "valid",
+      "diagnostic_codes": [],
+      "provenance": {
+        "kind": "fictional_normalized",
+        "record_reference": "fictional-input-3",
+        "note": "Explicit fictional scalar for contract testing only; not produced by a simulator."
+      }
+    },
+    {
+      "vehicle_id": "fictional-ardupilot",
+      "autopilot_family": "ArduPilot",
+      "environment": "SITL",
+      "source_id": "fictional-simulator",
+      "session_id": "session-a",
+      "system_id": 1,
+      "component_id": 1,
+      "record_id": "fictional-4",
+      "field": "flight_mode",
+      "value": {
+        "base_mode": 0,
+        "custom_mode": "0"
+      },
+      "source_timestamp": {
+        "value": "50",
+        "unit": "ms",
+        "clock_domain": "fictional:boot-a"
+      },
+      "receipt_timestamp": {
+        "value": "900",
+        "unit": "ms",
+        "clock_domain": "replay:receipt"
+      },
+      "validation": "valid",
+      "diagnostic_codes": [],
+      "provenance": {
+        "kind": "fictional_normalized",
+        "record_reference": "fictional-input-4",
+        "note": "Explicit fictional scalar for contract testing only; not produced by a simulator."
+      }
+    },
+    {
+      "vehicle_id": "fictional-ardupilot",
+      "autopilot_family": "ArduPilot",
+      "environment": "SITL",
+      "source_id": "fictional-simulator",
+      "session_id": "session-a",
+      "system_id": 1,
+      "component_id": 1,
+      "record_id": "fictional-5",
+      "field": "link_status",
+      "value": {
+        "status": "unknown",
+        "note": "No link health measurement or readiness inference."
+      },
+      "source_timestamp": {
+        "value": "50",
+        "unit": "ms",
+        "clock_domain": "fictional:boot-a"
+      },
+      "receipt_timestamp": {
+        "value": "900",
+        "unit": "ms",
+        "clock_domain": "replay:receipt"
+      },
+      "validation": "valid",
+      "diagnostic_codes": [],
+      "provenance": {
+        "kind": "fictional_normalized",
+        "record_reference": "fictional-input-5",
+        "note": "Explicit fictional scalar for contract testing only; not produced by a simulator."
+      }
+    }
+  ],
+  "evaluation_timestamp": {
+    "value": "1000",
+    "unit": "ms",
+    "clock_domain": "replay:receipt"
+  },
+  "policy": {
+    "fresh_for_ms": {
+      "altitude": 1000,
+      "ground_speed": 1000,
+      "battery": 1000,
+      "flight_mode": 1000,
+      "link_status": 1000,
+      "reception": 1000
+    },
+    "reception_timeout_ms": 3000
+  }
+}
