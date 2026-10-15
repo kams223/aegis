@@ -288,3 +288,44 @@ input[type="range"] { accent-color: var(--green); width: 100%; min-width: 0; mar
 .telemetry-fields strong { font: .65rem ui-monospace, monospace; }
 .telemetry-fields pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .7rem; }
 .offline-telemetry p, .offline-telemetry li { overflow-wrap: anywhere; }
+
+.telemetry-timeline { margin-top: 1.5rem; border-top: 1px solid currentColor; padding-top: 1rem; overflow-wrap: anywhere; }
+.timeline-controls { display: flex; flex-wrap: wrap; gap: .75rem; align-items: end; }
+.timeline-controls label { flex: 1 1 16rem; min-width: 0; }
+.timeline-controls select { width: 100%; }
+.telemetry-timeline input { display: block; width: min(100%, 28rem); box-sizing: border-box; }
+.telemetry-timeline [aria-invalid=true] { border: 2px solid #ffb4a8; }
+.timeline-record { margin-block: 1rem; padding: 1rem; border: 1px solid currentColor; }
+.telemetry-timeline :is(input, select, button):focus-visible { outline: 3px solid #8edcff; outline-offset: 3px; }
+
+/* Phase 71C: compact recorded inspection; no shared workspace changes. */
+.telemetry-toolbar { display: grid; grid-template-columns: minmax(180px, 1fr) auto minmax(200px, 1.4fr); gap: 12px; align-items: end; }
+.telemetry-toolbar .import-summary { grid-column: 1 / -1; margin: 0; }
+.telemetry-toolbar input[type=file] { width: 100%; font: inherit; }
+.offline-telemetry .telemetry-timeline { margin-top: .5rem; padding-top: .5rem; border-color: var(--border); }
+.offline-telemetry .timeline-controls { display: grid; grid-template-columns: auto minmax(180px, 1fr) auto minmax(140px, .7fr); gap: 10px; }
+.timeline-controls .frontier-scrubber { grid-column: 1 / -1; }
+.timeline-controls input[type=range] { width: 100%; max-width: none; accent-color: var(--cyan); min-height: 32px; }
+.timeline-evaluation { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.timeline-evaluation input { flex: 0 1 24ch; min-width: 0; padding: 8px; color: var(--text); background: var(--background); border: 1px solid var(--border); font: inherit; }
+.timeline-evaluation p { margin: 0; }
+.offline-telemetry .telemetry-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
+.offline-telemetry .telemetry-fields h3 { margin: 0 0 8px; text-transform: capitalize; }
+.offline-telemetry .telemetry-value { display: block; font: 600 1rem ui-monospace, monospace; overflow-wrap: anywhere; }
+.field-state { display: inline-block; margin-top: 8px; font-size: .75rem; }
+.telemetry-fields [data-freshness=stale] .field-state, .telemetry-fields [data-freshness=invalid] .field-state { color: var(--amber); }
+.offline-telemetry .timeline-record { padding: 8px 12px; margin-block: 8px; border-color: var(--border); }
+.timeline-record h4, .timeline-record p { margin: 4px 0; }
+.offline-telemetry details summary { margin-top: 8px; font-size: .75rem; }
+.offline-telemetry :is(input, select, button, summary):focus-visible { outline: 3px solid #8edcff; outline-offset: 3px; }
+@media (max-width: 900px) {
+  .telemetry-toolbar { grid-template-columns: minmax(0, 1fr) auto; }
+  .telemetry-toolbar > label:last-of-type { grid-column: 1 / -1; }
+  .offline-telemetry .telemetry-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .offline-telemetry .timeline-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .telemetry-toolbar, .offline-telemetry .telemetry-fields { grid-template-columns: minmax(0, 1fr); }
+  .timeline-evaluation { align-items: stretch; flex-direction: column; }
+  .timeline-evaluation input { flex-basis: auto; width: 100%; }
+}
