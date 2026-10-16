@@ -1,4 +1,11 @@
-:root { color-scheme: dark; --background: #050B0A; --sidebar: #071310; --panel: #101D1B; --elevated: #142421; --green: #22C55E; --radar: #00FF88; --border: #174B39; --text: #E8F5EE; --muted: #8CA99E; --amber: #F59E0B; --red: #EF4444; --cyan: #38BDF8; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--background); color: var(--text); font-synthesis: none; text-rendering: optimizeLegibility; }
+:root { color-scheme: dark; --background: #080F12; --sidebar: #0B1518; --panel: #0E1C21; --elevated: #14262C; --green: #55DBA5; --radar: #00FF88; --border: #2A4349; --text: #E3EDF0; --muted: #ABBDC2; --amber: #F3C276; --red: #F19C9C; --cyan: #72C9EC; --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-data: ui-monospace, SFMono-Regular, Consolas, monospace;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+  --radius-control: 4px; --radius-panel: 6px;
+  --border-subtle: #20363C; --surface-hover: #1C353D; --surface-selected: #16352E;
+  --status-good-bg: #102D24; --status-warning-bg: #302819; --status-critical-bg: #332126;
+  --focus: var(--cyan); --motion-fast: 120ms; --motion-ease: ease-out;
+  font-family: var(--font-ui); background: var(--background); color: var(--text); font-synthesis: none; text-rendering: optimizeLegibility; }
 * { box-sizing: border-box; }
 body { margin: 0; }
 button, select { font: inherit; color: var(--text); background: var(--elevated); border: 1px solid var(--border); border-radius: 2px; padding: .6rem .7rem; }
@@ -329,3 +336,66 @@ input[type="range"] { accent-color: var(--green); width: 100%; min-width: 0; mar
   .timeline-evaluation { align-items: stretch; flex-direction: column; }
   .timeline-evaluation input { flex-basis: auto; width: 100%; }
 }
+
+/* Phase 72B: technical workstation presentation, using existing local CSS. */
+.card { background: var(--panel); border-color: var(--border); border-radius: var(--radius-panel); padding: var(--space-4); box-shadow: 0 2px 8px #00000020; }
+.card::after { display: none; }
+.card > h2 { color: var(--text); font-size: .8125rem; letter-spacing: .045em; padding-bottom: var(--space-3); margin-bottom: var(--space-3); border-color: var(--border-subtle); }
+.card > h2::before { width: 3px; height: 12px; border-radius: 1px; background: var(--cyan); }
+.card p, .card label { font-size: .8125rem; line-height: 1.5; }
+.card small, .card .note { font-size: .75rem !important; line-height: 1.45; }
+.card h3 { font-size: .8125rem; color: var(--text); }
+.card dl { font-size: .8125rem; gap: var(--space-2) var(--space-3); }
+.card code { font-family: var(--font-data); font-size: .75rem; }
+button, select { border-radius: var(--radius-control); }
+button { transition: background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease); }
+button:hover:not(:disabled) { background: var(--surface-hover); border-color: var(--cyan); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+summary { padding-block: var(--space-1); }
+.badge { max-width: 100%; white-space: normal; overflow-wrap: anywhere; border-radius: var(--radius-control); font: .75rem/1.35 var(--font-data); color: var(--muted); background: var(--elevated); border-color: var(--border); padding: 4px 7px; }
+.badge.good { color: var(--green); background: var(--status-good-bg); border-color: var(--green); }
+.badge.warning { color: var(--amber); background: var(--status-warning-bg); border-color: var(--amber); }
+.badge.critical { color: var(--red); background: var(--status-critical-bg); border-color: var(--red); }
+.badge .status-dot { width: 6px; height: 6px; flex-shrink: 0; }
+.badge.warning .status-dot { border-radius: 0; transform: rotate(45deg); }
+.badge.critical .status-dot { border-radius: 0; }
+.badge.neutral .status-dot { background: transparent; border: 1px solid currentColor; }
+.metric { padding: var(--space-3); border-radius: var(--radius-panel); border-top-color: var(--border); }
+.metric > span { color: var(--muted); font: .75rem/1.35 var(--font-data); letter-spacing: .02em; }
+.metric > strong { color: var(--text); font: 600 1.65rem/1.15 var(--font-data); margin: var(--space-2) 0; font-variant-numeric: tabular-nums; }
+.metric > small { font-size: .75rem; line-height: 1.35; }
+.metric[data-tone=warning] { border-top-color: var(--amber); }
+.metric[data-tone=warning] > strong { color: var(--amber); }
+.workspace-shell .topbar { background: var(--sidebar); padding-block: var(--space-3); }
+.workspace-shell .topbar > strong { font-size: .875rem; letter-spacing: .02em; }
+.workspace-shell .page-heading { margin-bottom: var(--space-4); }
+.workspace-shell .page-heading h1 { font-size: clamp(1.25rem, 1.8vw, 1.75rem); letter-spacing: -.025em; }
+.workspace-shell .page-heading p { font-size: .8125rem; color: var(--muted); }
+.workspace-shell .workspace-primary button { font-size: .8125rem; border-radius: var(--radius-control); }
+.workspace-shell nav button[aria-current=page] { color: var(--text); background: var(--surface-selected); }
+.workspace-shell .system-telemetry { font-size: .6875rem; }
+.workspace-shell .system-telemetry code { font-size: inherit; }
+.command-dashboard { display: grid; gap: var(--space-4); min-width: 0; }
+.command-dashboard .metrics { margin: 0; gap: var(--space-2); }
+.command-dashboard .session-strip { padding: 0; font: .75rem/1.4 var(--font-data); gap: var(--space-3); }
+.command-dashboard .card { margin-bottom: 0; }
+.command-dashboard .dashboard-bottom, .command-dashboard .visual-grid { gap: var(--space-3); }
+.command-dashboard .event-timeline { max-height: 320px; }
+.command-dashboard .event-timeline button { padding-block: var(--space-2); }
+.command-dashboard .visual-grid .camera-viewport { aspect-ratio: 16 / 9; min-height: 0; }
+.command-dashboard .visual-grid .simulation-viewport { height: 240px; }
+.command-dashboard .visual-grid .observation-inspector { max-height: 320px; }
+.command-dashboard .viewport-toolbar { margin-block: var(--space-2); gap: var(--space-2); }
+.command-dashboard .data-boundary { margin: 0; }
+@media (max-width: 760px) {
+  .command-dashboard { gap: var(--space-3); }
+  .command-dashboard .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .card { padding: var(--space-3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  button { transition: none; }
+}
+
+/* Keep the evidence canvas scroll local and visibly keyboard focusable. */
+.reference-diagram { min-width: 0; scrollbar-gutter: stable; }
+.reference-diagram:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }

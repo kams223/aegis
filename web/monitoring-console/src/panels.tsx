@@ -1,27 +1,27 @@
 import { useRef, useState } from 'react';
 import type { Session, Snapshot } from './models';
-import { Badge, Card, Empty, Metric, Time, label } from './components';
+import { Badge, Card, Empty, Metric, MetricGroup, Time, label } from './components';
 import { ObservationInspector } from './observation/ObservationInspector';
 import { SensorDiagnostics } from './fusion/SensorFusionPanel';
 import { RadarGraphic, RadarPanel, CameraPanel, SimulationPanel, DeviceStatus, RecentEvents, AlertSummary } from './hud';
 
 export function Overview({ session, onEventSelect }: { session: Session; onEventSelect: (index: number) => void }) {
   const snapshot = session.final_snapshot;
-  return <>
-    <div className="metrics" aria-label="Session metrics">
+  return <section className="command-dashboard" aria-label="Command Center dashboard">
+    <MetricGroup>
       <Metric title="Devices" value={snapshot.registry.devices.length} detail="Declared registry entries" />
       <Metric title="Applied events" value={session.summary.applied_count} detail="Accepted software updates" />
-      <Metric title="Rejected events" value={session.summary.rejected_count} detail="Explicit validation diagnostics" />
+      <Metric title="Rejected events" value={session.summary.rejected_count} detail="Explicit validation diagnostics" tone="warning" />
       <Metric title="Observations" value={snapshot.observations.length} detail="Synthetic display metadata" />
       <Metric title="Alerts" value={snapshot.alerts.length} detail="Descriptive observations" />
       <Metric title="Reviews" value={snapshot.review_history.length} detail="Existing human decisions" />
-    </div>
+    </MetricGroup>
     <div className="session-strip"><span>{session.summary.event_count} supplied events processed in their declared order.</span><span>Intermediate snapshots are not supplied. All device and observation panels show the final state.</span></div>
-    <div className="visual-grid"><RadarPanel snapshot={snapshot} /><CameraPanel snapshot={snapshot} /><SimulationPanel /></div>
     <div className="dashboard-bottom"><DeviceStatus snapshot={snapshot} /><RecentEvents session={session} onSelect={onEventSelect} /><AlertSummary snapshot={snapshot} /></div>
+    <div className="visual-grid"><RadarPanel snapshot={snapshot} /><CameraPanel snapshot={snapshot} /><SimulationPanel /></div>
     <SensorDiagnostics snapshot={snapshot} />
     <p className="note data-boundary">{snapshot.description}</p>
-  </>;
+  </section>;
 }
 
 export function Devices({ snapshot }: { snapshot: Snapshot }) {
