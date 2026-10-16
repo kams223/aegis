@@ -1,3 +1,4 @@
+import { navigateTo } from './navigation';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { readFileSync, mkdtempSync, writeFileSync, symlinkSync, rmSync } from 'node:fs';
@@ -196,10 +197,10 @@ it('clears recorded data explicitly and escapes imported provenance text', async
 });
 
 it('maintains monitoring metrics, analyst navigation and simulation playback after offline inspection', () => {
-  render(<App />); fireEvent.click(screen.getByRole('button', { name: 'Flight Operations' }));
+  render(<App />); navigateTo('Flight Operations');
   fireEvent.change(screen.getByLabelText('Flight data source'), { target: { value: 'recorded' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Sensor Fusion' })); expect(screen.getByRole('heading', { name: 'AEGIS AI Analyst' })).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Overview' })); expect(screen.getByRole('article', { name: 'Devices' }).querySelector('strong')).toHaveTextContent('03');
+  navigateTo('Sensor Fusion'); expect(screen.getByRole('heading', { name: 'AEGIS AI Analyst' })).toBeVisible();
+  navigateTo('Overview'); expect(screen.getByRole('article', { name: 'Devices' }).querySelector('strong')).toHaveTextContent('03');
   fireEvent.click(screen.getByRole('button', { name: 'Step simulation' })); expect(screen.getByLabelText('Simulation time')).toHaveTextContent('0.25 / 12.00 s');
 });
 

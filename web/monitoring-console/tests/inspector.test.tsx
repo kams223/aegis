@@ -1,3 +1,4 @@
+import { navigateTo } from './navigation';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -64,7 +65,7 @@ it('preserves fullscreen observation inspection and native exit', async () => {
 });
 
 it('keeps the observations-page inspector inside the fullscreen radar boundary', () => {
-  const { container } = render(<App />); fireEvent.click(screen.getByRole('button', { name: 'Observations' }));
+  const { container } = render(<App />); navigateTo('Observations');
   fireEvent.click(screen.getByRole('button', { name: /monitor-unusual/ }));
   expect(container.querySelector('.radar-frame')!.contains(inspector())).toBe(true);
   expect(inspector()).toHaveTextContent('Illustrative missing context.');
@@ -84,7 +85,7 @@ it('keeps fictional marker details and validated inspector structurally separate
 });
 
 it('integrates graph observation selection with the same supplied provenance inspector', async () => {
-  const user = userEvent.setup(); render(<App />); fireEvent.click(screen.getByRole('button', { name: 'Sensor Fusion' }));
+  const user = userEvent.setup(); render(<App />); navigateTo('Sensor Fusion');
   const node = screen.getByRole('button', { name: 'Diagram: observation monitor-unusual' }); node.focus(); await user.keyboard(' ');
   expect(within(inspector()).getByRole('heading', { name: 'monitor-unusual' })).toHaveFocus();
   expect(inspector()).toHaveTextContent('display-r:evidence'); expect(inspector()).toHaveTextContent('third-party');

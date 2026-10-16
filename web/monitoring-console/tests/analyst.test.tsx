@@ -1,3 +1,4 @@
+import { navigateTo } from './navigation';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -10,7 +11,7 @@ import fixtureText from '../src/data/session.json?raw';
 const snapshot = () => loadSession(fixtureText).final_snapshot;
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 const ask = (q: string) => { fireEvent.change(screen.getByLabelText('Question text'), { target: { value: q } }); fireEvent.click(screen.getByRole('button', { name: 'Explain supplied evidence' })); };
-const enterFusion = () => { render(<App />); fireEvent.click(screen.getByRole('button', { name: 'Sensor Fusion' })); };
+const enterFusion = () => { render(<App />); navigateTo('Sensor Fusion'); };
 
 it('produces repeatable evidence answers without modifying or retaining mutable input records', () => {
   const s = snapshot(), before = JSON.stringify(s);
@@ -99,7 +100,7 @@ it('shows an explicit unsupported-question state without generating an operation
 });
 
 it('navigates evidence references to existing metadata without executing paths', () => {
-  const { container } = render(<App />); fireEvent.click(screen.getByRole('button', { name: 'Sensor Fusion' }));
+  const { container } = render(<App />); navigateTo('Sensor Fusion');
   fireEvent.click(screen.getByRole('button', { name: 'Analyst reference evidence camera-a:evidence, claim 1' }));
   expect(screen.getByRole('heading', { name: 'evidence: camera-a:evidence' })).toHaveFocus();
   expect(container.querySelector('.inspection-json')).toHaveTextContent('examples/recorded_datasets/placeholder.txt');
@@ -120,7 +121,7 @@ it('keeps analyst context separate from fictional markers and leaves monitoring 
   fireEvent.click(screen.getByRole('button', { name: 'SHOW SYNTHETIC DEMO MARKERS' }));
   fireEvent.click(screen.getByRole('button', { name: /Inspect synthetic demo demo-marker-01:/ }));
   fireEvent.click(screen.getByRole('button', { name: 'Step simulation' })); expect(screen.getByLabelText('Simulation time')).toHaveTextContent('0.25 / 12.00 s');
-  fireEvent.click(screen.getByRole('button', { name: 'Sensor Fusion' }));
+  navigateTo('Sensor Fusion');
   const options = within(screen.getByLabelText('Observation context')).getAllByRole('option');
   expect(options).toHaveLength(snapshot().observations.length+1); expect(options.map(o => o.textContent).join('')).not.toContain('demo-marker-');
   expect(container.querySelector('.reference-diagram')).toBeInTheDocument(); expect(fixtureText).toBe(before);

@@ -1,3 +1,5 @@
+import { WORKSPACES } from '../src/layout/workspaces';
+import { navigateTo } from './navigation';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -22,18 +24,17 @@ it('renders six grounded metrics and the three dashboard viewports', () => {
     expect(within(metrics).getByRole('article', { name }).querySelector('strong')).toHaveTextContent(number!);
   }
   for (const name of ['Tactical radar', 'Drone camera', '3D simulation', 'Device status', 'Recent events', 'Alerts']) expect(screen.getByRole('heading', { name, level: 2 })).toBeVisible();
+  expect(screen.getByText('MONITORING FIXTURE · FINAL SNAPSHOT').parentElement).toHaveTextContent(fixture().final_snapshot.snapshot_id);
   expect(screen.getByText('SESSION REF')).toHaveTextContent('synthetic-platform-v1');
 });
 
-it('provides ten accessible navigation destinations with the expanded visible labels', () => {
+it('provides five workspaces with contextual page labels', () => {
   render(<App />);
-  const nav = screen.getByRole('navigation');
-  expect(within(nav).getAllByRole('button')).toHaveLength(10);
-  expect(within(nav).getByText('Radar / Observations')).toBeVisible();
-  expect(within(nav).getByText('Camera / Evidence')).toBeVisible();
-  fireEvent.click(within(nav).getByRole('button', { name: 'Simulation' }));
+  expect(within(screen.getByRole('navigation', { name: 'Workspaces' })).getAllByRole('button')).toHaveLength(5);
+  navigateTo('Observations'); expect(screen.getByRole('button', { name: 'Camera & Evidence' })).toBeVisible();
+  navigateTo('Simulation');
   expect(screen.getByRole('heading', { name: 'Simulation', level: 1 })).toBeVisible();
-  expect(within(nav).getByRole('button', { name: 'Simulation' })).toHaveAttribute('aria-current', 'page');
+  expect(within(screen.getByRole('navigation', { name: 'Workspace pages' })).getByRole('button', { name: 'Simulation' })).toHaveAttribute('aria-current', 'page');
 });
 
 it('keeps the radar decorative and observations non-spatial', () => {
@@ -100,7 +101,7 @@ it('changes illustrative perspective and mode locally and resets them', () => {
 it('opens exactly the selected recent event in replay and preserves final-state boundaries', () => {
   render(<App />);
   fireEvent.click(screen.getByRole('button', { name: 'Inspect event 7: conflict-1' }));
-  expect(screen.getByRole('heading', { name: 'Event replay', level: 1 })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Event Replay', level: 1 })).toBeVisible();
   expect(screen.getByRole('status')).toHaveTextContent('Event 7 of 7');
   expect(screen.getByText('CONFLICTING_UPDATE')).toBeVisible();
   expect(screen.getByRole('button', { name: /Next event/ })).toBeDisabled();
@@ -144,11 +145,16 @@ it('supports keyboard navigation to all ten destinations', async () => {
   const user = userEvent.setup();
   render(<App />);
   await user.tab(); expect(screen.getByRole('link')).toHaveFocus();
-  for (const name of ['Overview', 'Devices', 'Observations', 'Sensor Fusion', 'Evidence', 'Simulation', 'Flight Operations', 'Alerts & Copilot', 'Event replay', 'Review & audit']) {
-    await user.tab(); expect(screen.getByRole('button', { name })).toHaveFocus();
+  for (const workspace of WORKSPACES) {
+    const primary = within(screen.getByRole('navigation', { name: 'Workspaces' })).getByRole('button', { name: workspace.label });
+    primary.focus(); await user.keyboard('{Enter}');
+    for (const page of workspace.pages) {
+      const button = within(screen.getByRole('navigation', { name: 'Workspace pages' })).getByRole('button', { name: page.label });
+      button.focus(); await user.keyboard('{Enter}');
+      expect(button).toHaveFocus(); expect(button).toHaveAttribute('aria-current', 'page');
+    }
   }
-  await user.keyboard('{Enter}');
-  expect(screen.getByRole('heading', { name: 'Review & audit', level: 1 })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Review & Audit', level: 1 })).toBeVisible();
 });
 
 it('implements reduced-motion and bounded responsive decorative sizing in CSS', () => {
@@ -161,8 +167,9 @@ it('implements reduced-motion and bounded responsive decorative sizing in CSS', 
 });
 
 it('preserves external CSS and the restrictive CSP', () => {
-  expect(html.match(/rel="stylesheet"/g)).toHaveLength(1);
+  expect(html.match(/rel="stylesheet"/g)).toHaveLength(2);
   expect(html).toContain('href="./src/styles.css"');
+  expect(html).toContain('href="./src/layout/workspace-shell.css"');
   expect(html).toContain("style-src 'self'"); expect(html).toContain("connect-src 'none'");
   expect(html).not.toMatch(/unsafe-inline|https?:/);
   expect(main).not.toContain('styles.css');
@@ -191,6 +198,6 @@ it('makes no external requests when navigating or using preview controls', () =>
   render(<App />);
   fireEvent.click(screen.getByRole('button', { name: '2D' }));
   fireEvent.click(screen.getByRole('button', { name: 'right view' }));
-  for (const name of ['Devices', 'Observations', 'Evidence', 'Simulation', 'Flight Operations', 'Alerts & Copilot', 'Event replay', 'Review & audit']) fireEvent.click(screen.getByRole('button', { name }));
+  for (const name of ['Devices', 'Observations', 'Evidence', 'Simulation', 'Flight Operations', 'Alerts & Copilot', 'Event replay', 'Review & audit'] as const) navigateTo(name);
   expect(fetch).not.toHaveBeenCalled(); expect(xhr).not.toHaveBeenCalled(); expect(socket).not.toHaveBeenCalled();
 });
