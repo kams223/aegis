@@ -1,3 +1,4 @@
+import { navigateTo } from './navigation';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -170,7 +171,7 @@ it('shows unavailable inventory clearly for a valid empty fixture', () => {
   const session = fixture(); const s = session.final_snapshot;
   s.registry.devices = []; s.evidence = []; s.observations = []; s.sentinels = []; s.alerts = []; s.investigation_requests = []; s.investigation_results = []; s.review_history = []; s.audit_entries = []; s.validation_results = [];
   session.event_results = []; session.summary = { schema_version: 1, event_count: 0, applied_count: 0, rejected_count: 0, status: 'completed' };
-  render(<App text={JSON.stringify(validateSession(session))} />); fireEvent.click(screen.getByRole('button', { name: 'Sensor Fusion' }));
+  render(<App text={JSON.stringify(validateSession(session))} />); navigateTo('Sensor Fusion');
   expect(screen.getAllByText('No declared sensor inputs are supplied.')).toHaveLength(2);
   expect(screen.getByText('No metadata selected.')).toBeVisible();
 });
@@ -201,7 +202,7 @@ it('preserves demo playback when adjusting the dashboard radar and adds fusion n
   fireEvent.change(screen.getByLabelText('Decorative ring density'), { target: { value: '6' } });
   expect(screen.getByLabelText('Simulation time')).toHaveTextContent('0.25 / 12.00 s');
   expect(screen.getByRole('article', { name: 'Applied events' }).querySelector('strong')).toHaveTextContent('06');
-  fireEvent.click(screen.getByRole('button', { name: 'Sensor Fusion' }));
+  navigateTo('Sensor Fusion');
   expect(screen.getByRole('heading', { name: 'Sensor Fusion', level: 1 })).toBeVisible();
   expect(screen.getByRole('button', { name: 'Sensor Fusion' })).toHaveAttribute('aria-current', 'page');
 });

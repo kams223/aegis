@@ -1,3 +1,4 @@
+import { navigateTo } from './navigation';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -8,7 +9,7 @@ import { DEMO_VEHICLES } from '../src/flight/demo';
 import fixtureText from '../src/data/session.json?raw';
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 const selected = () => screen.getByRole('region', { name: 'Selected vehicle details' });
-const open = () => { render(<App />); fireEvent.click(screen.getByRole('button', { name: 'Flight Operations' })); };
+const open = () => { render(<App />); navigateTo('Flight Operations'); };
 
 it('adds accessible Flight Operations navigation and its read-only sections', () => {
   open(); expect(screen.getByRole('heading', { name: 'Flight Operations', level: 1 })).toBeVisible();
@@ -107,16 +108,16 @@ it('keeps deeply frozen demo records and monitoring data unchanged through selec
   }
   open(); fireEvent.click(screen.getByRole('button', { name: `Inspect flight vehicle ${DEMO_VEHICLES[4]!.vehicleId}` }));
   expect(JSON.stringify(DEMO_VEHICLES)).toBe(before); expect(fixtureText).toBe(fixture);
-  fireEvent.click(screen.getByRole('button', { name: 'Overview' })); expect(screen.getByRole('article', { name: 'Devices' }).querySelector('strong')).toHaveTextContent('03');
+  navigateTo('Overview'); expect(screen.getByRole('article', { name: 'Devices' }).querySelector('strong')).toHaveTextContent('03');
 });
 
 it('preserves observation, radar, analyst, graph and simulation behavior after workspace navigation', () => {
-  open(); fireEvent.click(screen.getByRole('button', { name: 'Observations' }));
+  open(); navigateTo('Observations');
   expect(screen.getByText('No observation markers')).toBeVisible(); fireEvent.click(screen.getByRole('button', { name: /monitor-unusual/ }));
   expect(screen.getByRole('region', { name: 'Validated observation inspector' })).toHaveTextContent('Illustrative missing context.');
-  fireEvent.click(screen.getByRole('button', { name: 'Sensor Fusion' })); expect(screen.getByRole('heading', { name: 'AEGIS AI Analyst' })).toBeVisible();
+  navigateTo('Sensor Fusion'); expect(screen.getByRole('heading', { name: 'AEGIS AI Analyst' })).toBeVisible();
   expect(screen.getByRole('group', { name: 'Declared reference relationships' })).toBeVisible();
-  fireEvent.click(screen.getByRole('button', { name: 'Simulation' })); fireEvent.click(screen.getByRole('button', { name: 'Step simulation' }));
+  navigateTo('Simulation'); fireEvent.click(screen.getByRole('button', { name: 'Step simulation' }));
   expect(screen.getByLabelText('Simulation time')).toHaveTextContent('0.25 / 12.00 s');
 });
 
