@@ -16,7 +16,7 @@ export function Overview({ session, onEventSelect }: { session: Session; onEvent
       <Metric title="Alerts" value={snapshot.alerts.length} detail="Descriptive observations" />
       <Metric title="Reviews" value={snapshot.review_history.length} detail="Existing human decisions" />
     </MetricGroup>
-    <div className="session-strip"><span>{session.summary.event_count} supplied events processed in their declared order.</span><span>Intermediate snapshots are not supplied. All device and observation panels show the final state.</span></div>
+    <div className="session-strip"><span>{session.summary.event_count} supplied events processed in their declared order.</span><span>Intermediate snapshots are not supplied in the original session. Overview panels show its final state; Sensor Fusion offers separately generated replay prefixes.</span></div>
     <div className="dashboard-bottom"><DeviceStatus snapshot={snapshot} /><RecentEvents session={session} onSelect={onEventSelect} /><AlertSummary snapshot={snapshot} /></div>
     <div className="visual-grid"><RadarPanel snapshot={snapshot} /><CameraPanel snapshot={snapshot} /><SimulationPanel /></div>
     <SensorDiagnostics snapshot={snapshot} />
