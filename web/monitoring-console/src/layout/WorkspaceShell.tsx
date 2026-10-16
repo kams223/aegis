@@ -20,7 +20,8 @@ export function WorkspaceShell({ page, onNavigate, focusRequest, fixtureId, fixt
     <a className="skip-link" href="#main-content">Skip to monitoring content</a>
     <aside className="sidebar">
       <div className="brand"><svg width="34" height="38" aria-hidden="true" viewBox="0 0 32 36"><path d="M16 2 29 7v13L16 34 3 20V7Z" /><path d="m9 22 7-13 7 13M12 17h8" /></svg><div><strong>AEGIS</strong><small>MONITORING CONSOLE</small></div></div>
-      <nav className="workspace-primary" aria-label="Workspaces">
+      <p className="workspace-scroll-help" id="workspace-scroll-help">Scroll horizontally or Tab through all five workspaces.</p>
+      <nav className="workspace-primary" aria-label="Workspaces" aria-describedby="workspace-scroll-help">
         {WORKSPACES.map(w => <button key={w.id} type="button" aria-current={w.id === workspace.id ? 'page' : undefined} onClick={() => { if (w.id !== workspace.id) onNavigate(w.pages[0].id); }}>{w.label}</button>)}
       </nav>
       <div className="sidebar-footer">Local inspection only · No vehicle control link</div>

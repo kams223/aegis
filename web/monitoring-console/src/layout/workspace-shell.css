@@ -7,11 +7,17 @@
 .workspace-shell main { width: 100%; }
 .workspace-shell :is(.workspace-primary, .workspace-pages) button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
 .workspace-shell .page-heading h1:focus { outline: 2px solid var(--cyan); outline-offset: 4px; }
+.workspace-shell .workspace-scroll-help { display: none; }
+.workspace-shell .topbar > *, .workspace-shell .system-telemetry > span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.workspace-shell .system-telemetry { flex: 1 1 20rem; max-width: 100%; }
 @media (max-width: 760px) {
-  .workspace-shell .workspace-primary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workspace-shell .sidebar { min-width: 0; max-width: 100%; }
+  .workspace-shell .workspace-scroll-help { display: block; margin: 0; color: var(--muted); font-size: .75rem; }
+  .workspace-shell .workspace-primary { display: flex; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; min-width: 0; max-width: 100%; padding: 8px; gap: 6px; }
+  .workspace-shell .workspace-primary button { flex: 0 0 auto; width: auto; }
   .workspace-shell .workspace-pages { display: flex; }
   .workspace-shell .page-heading { gap: 10px; margin-bottom: 14px; }
 }
 @media (max-width: 420px) {
-  .workspace-shell .workspace-primary { grid-template-columns: minmax(0, 1fr); }
+  .workspace-shell .sidebar { padding: 12px; gap: 8px; }
 }
