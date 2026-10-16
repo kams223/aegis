@@ -8,7 +8,7 @@ import { WorkspaceShell } from './layout/WorkspaceShell';
 import { INITIAL_PAGE } from './layout/workspaces';
 import type { PageId } from './layout/workspaces';
 import { FlightOperations } from './flight/FlightOperations';
-import { SensorFusionPanel } from './fusion/SensorFusionPanel';
+import { FusionReplay } from './fusion/FusionReplay';
 
 export default function App({ text = fixtureText }: { text?: string }) {
   const [panel, setPanel] = useState<PageId>(INITIAL_PAGE);
@@ -32,7 +32,7 @@ export default function App({ text = fixtureText }: { text?: string }) {
   const content = panel === 'Overview' ? <Overview session={session} onEventSelect={openEvent} />
     : panel === 'Devices' ? <Devices snapshot={snapshot} />
     : panel === 'Observations' ? <Observations snapshot={snapshot} />
-    : panel === 'Sensor Fusion' ? <SensorFusionPanel snapshot={snapshot} />
+    : panel === 'Sensor Fusion' ? <FusionReplay session={session} />
     : panel === 'Evidence' ? <><CameraPanel snapshot={snapshot} /><Evidence snapshot={snapshot} /></>
     : panel === 'Simulation' ? <SimulationPanel />
     : panel === 'Flight Operations' ? <FlightOperations />

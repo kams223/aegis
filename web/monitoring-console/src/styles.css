@@ -399,3 +399,18 @@ summary { padding-block: var(--space-1); }
 /* Keep the evidence canvas scroll local and visibly keyboard focusable. */
 .reference-diagram { min-width: 0; scrollbar-gutter: stable; }
 .reference-diagram:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+
+/* Event selection feedback is finite and never represents a live sensor stream. */
+.fusion-replay-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.fusion-replay-toolbar > *, .fusion-event-inspector dd { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.fusion-replay-toolbar label { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.fusion-replay-toolbar select { max-width: 100%; }
+.fusion-replay-scrubber { display: block; }
+.fusion-event-inspector { animation: fusion-event-selection 180ms ease-out; }
+.graph-node[data-event-active] rect { stroke: var(--cyan); stroke-width: 3; }
+tr[data-event-active] { background: var(--surface-selected); }
+@keyframes fusion-event-selection { from { opacity: .65; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .fusion-event-inspector { animation: none; } }
+.graph-node rect { transition: stroke var(--motion-fast) var(--motion-ease), stroke-width var(--motion-fast) var(--motion-ease); }
+tr[data-event-active] { transition: background-color var(--motion-fast) var(--motion-ease); }
+@media (prefers-reduced-motion: reduce) { .graph-node rect, tr[data-event-active] { transition: none; } }
