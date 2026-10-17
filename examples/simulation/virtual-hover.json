@@ -1,0 +1,62 @@
+{
+  "autopilot_body_frame": "autopilot_frd",
+  "autopilot_world_frame": "autopilot_ned",
+  "data_origin": "simulated",
+  "description": "Fictional bounded hover intent and stationary ground placeholder; no executable mission or physics output.",
+  "duration_ns": "10000000000",
+  "environment": {
+    "angle_unit": "rad",
+    "bounds_m": [
+      20.0,
+      20.0,
+      5.0
+    ],
+    "description": "Empty level plane; extents are declared metadata, not an installed SDF world.",
+    "environment_id": "fictional-test-enclosure",
+    "length_unit": "m",
+    "schema_version": 1,
+    "world": "fictional_flat_plane",
+    "world_frame": "world_enu"
+  },
+  "frame_mapping": "not_implemented",
+  "hover_altitude_m": 1.0,
+  "objective": "virtual_hover",
+  "provenance": "AEGIS Phase 74A authored offline scenario metadata; not a simulator recording.",
+  "scenario_id": "virtual-hover-v1",
+  "schema_version": 1,
+  "seed": 42,
+  "step_ns": "10000000",
+  "vehicles": [
+    {
+      "body_frame": "body_flu",
+      "initial_position_m": [
+        0.0,
+        0.0,
+        0.25
+      ],
+      "kind": "aerial",
+      "model": "x500",
+      "schema_version": 1,
+      "vehicle_id": "virtual-quad-01"
+    },
+    {
+      "body_frame": "body_flu",
+      "initial_position_m": [
+        2.0,
+        0.0,
+        0.0
+      ],
+      "kind": "ground",
+      "model": "ground_placeholder",
+      "schema_version": 1,
+      "vehicle_id": "virtual-ground-01"
+    }
+  ],
+  "versions": {
+    "autopilot": "PX4-SITL",
+    "autopilot_version": "1.16.0",
+    "schema_version": 1,
+    "simulator": "gz-sim",
+    "simulator_version": "8.3.0"
+  }
+}
