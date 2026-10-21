@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.9">
+  <world name="aegis_passive_aircraft">
+    <gravity>0 0 -9.81</gravity>
+    <physics name="bounded_steps" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+    </physics>
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics">
+      <engine>
+        <filename>gz-physics-dartsim-plugin</filename>
+      </engine>
+    </plugin>
+    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact" />
+    <model name="ground">
+      <static>true</static>
+      <link name="plane">
+        <collision name="ground_collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>10 10</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="ground_visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>10 10</size>
+            </plane>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+    <include>
+      <uri>file:///opt/aegis/passive-aircraft.sdf</uri>
+      <name>passive_aircraft</name>
+      <pose>0 0 1 0 0 0</pose>
+    </include>
+  </world>
+</sdf>

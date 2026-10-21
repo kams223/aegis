@@ -180,3 +180,11 @@ Primary references:
 - https://gazebosim.org/api/sim/8/physics.html
 - https://github.com/gazebosim/gz-sim/blob/gz-sim8/src/cmd/cmdsim.rb.in
 - https://github.com/gazebosim/gz-sim/blob/gz-sim8/src/systems/pose_publisher/PosePublisher.cc
+
+## Phase 75A passive aircraft
+
+The separate [passive aircraft experiment](PASSIVE-AIRCRAFT.md) reuses the verified
+Phase 74B pinned-image execution policy for one non-actuated rigid aircraft.
+See [actual results](PASSIVE-AIRCRAFT-RESULTS.md) and
+[machine-readable measurements](passive-aircraft-results.json). It remains
+experimental Gazebo 8.15.0 and does not change the Phase 74A 8.3.0 contract.
