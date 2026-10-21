@@ -1,0 +1,35 @@
+{
+  "name": "aegis-simulation-candidate",
+  "services": {
+    "inspect": {
+      "image": "aegis-physics-runtime:candidate",
+      "pull_policy": "never",
+      "platform": "linux/amd64",
+      "user": "10001:10001",
+      "read_only": true,
+      "network_mode": "none",
+      "cap_drop": ["ALL"],
+      "security_opt": ["no-new-privileges:true"],
+      "init": true,
+      "cpus": 1.0,
+      "mem_limit": "2g",
+      "memswap_limit": "2g",
+      "pids_limit": 128,
+      "shm_size": "64m",
+      "restart": "no",
+      "tmpfs": [
+        "/tmp:rw,noexec,nosuid,nodev,size=64m,mode=1777",
+        "/run:rw,noexec,nosuid,nodev,size=16m",
+        "/work:rw,noexec,nosuid,nodev,size=256m,uid=10001,gid=10001"
+      ],
+      "environment": {
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "HOME": "/work",
+        "CMAKE_BUILD_PARALLEL_LEVEL": "1",
+        "MAKEFLAGS": "-j1"
+      },
+      "entrypoint": ["/opt/venv/bin/python"],
+      "command": ["--version"]
+    }
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "checked_at_utc": "2026-10-21",
+  "base_image": "ubuntu:24.04@sha256:a2d43bffc46670d7108bb3c0468c67c5557c4c92e83e1e34cbff1322ad1b94dc",
+  "base_index_digest": "sha256:68ee22004a9109b44973313b02ff7b1de250f1de0f5ecb628d73f579aaff33ac",
+  "base_manifest_hash_verified": true,
+  "osrf_source": "https://packages.osrfoundation.org/gazebo/ubuntu-stable",
+  "key_url": "https://packages.osrfoundation.org/gazebo.gpg",
+  "key_fingerprint": "D2486D2DD83DB69272AFE98867170598AF249743",
+  "key_sha256": "15d0300460e0c9c0efb21fa9770c0bf228988a07d71c4fac985c2161954a25a4",
+  "key_trust": "HTTPS key URL from official installation documentation; no independent fingerprint attestation",
+  "inrelease_sha256": "6b1a02d9384741ac9d5984ab250b0e512a576844c7cd0bdfc8970d2774423f3a",
+  "index_sha256": "3ee5c599b066cac46373a6ab2c64d9b3983c95cf982cfa8a347224719dbd7f07",
+  "index_size_bytes": 106623,
+  "signature_and_index_hash_verified": true,
+  "exact_8_3_0_in_current_noble_index": false,
+  "exact_8_3_0_in_current_osrf_sim8_pool": false,
+  "advertised_packages": [
+    {
+      "Package": "gz-sim8-cli",
+      "Version": "8.15.0-1~noble",
+      "Architecture": "amd64",
+      "Filename": "pool/main/g/gz-sim8/gz-sim8-cli_8.15.0-1~noble_amd64.deb",
+      "Size": "9478",
+      "SHA256": "401c3a0eef606fb83954c82e8da06e3cc040d302867cda9df8fa5da9e9da1f04",
+      "Depends": "libgz-sim8 (= 8.15.0-1~noble)"
+    },
+    {
+      "Package": "gz-tools2",
+      "Version": "2.0.4-1~noble",
+      "Architecture": "amd64",
+      "Filename": "pool/main/g/gz-tools2/gz-tools2_2.0.4-1~noble_amd64.deb",
+      "Size": "23664",
+      "SHA256": "ffa472118cef638c15d72af7493fd1ebcf81d1eda0f24df002fce657ee1b8833",
+      "Depends": "ruby:any, libc6 (>= 2.14), libgcc-s1 (>= 4.2), libstdc++6 (>= 13.1)"
+    },
+    {
+      "Package": "libgz-physics7-dartsim",
+      "Version": "7.8.0-1~noble",
+      "Architecture": "amd64",
+      "Filename": "pool/main/g/gz-physics7/libgz-physics7-dartsim_7.8.0-1~noble_amd64.deb",
+      "Size": "356146",
+      "SHA256": "08bba5c9771d1f378ddaaa2718404b0113e05823af76cef9b59a58253abfb930",
+      "Depends": "libassimp5 (>= 5.3.1+ds), libbullet3.24t64 (>= 3.24+dfsg), libc6 (>= 2.32), libdart-core+collisions+odelcpsolver6.13 (>= 6.13.2+ds1), libgcc-s1 (>= 3.0), libgz-common5 (>= 5.8.0), libgz-common5-graphics (>= 5.8.0), libgz-math7 (>= 7.6.0), libgz-physics7 (>= 7.8.0), libsdformat14 (>= 14.9.0), libstdc++6 (>= 13.1)"
+    },
+    {
+      "Package": "libgz-sim8",
+      "Version": "8.15.0-1~noble",
+      "Architecture": "amd64",
+      "Filename": "pool/main/g/gz-sim8/libgz-sim8_8.15.0-1~noble_amd64.deb",
+      "Size": "7096680",
+      "SHA256": "d6081a74c80de3ad2f3a46d65e745a70b0664ace449aa6edcebba55bfa94a8f9",
+      "Depends": "libc6 (>= 2.38), libgcc-s1 (>= 3.3.1), libgz-common5 (>= 5.8.0), libgz-common5-av (>= 5.8.0), libgz-common5-events (>= 5.8.0), libgz-common5-geospatial (>= 5.8.0), libgz-common5-graphics (>= 5.8.0), libgz-common5-io (>= 5.8.0), libgz-fuel-tools9 (>= 9.1.1), libgz-gui8 (>= 8.4.0), libgz-math7 (>= 7.6.0), libgz-msgs10 (>= 10.4.0), libgz-physics7 (>= 7.8.0), libgz-plugin2 (>= 2.0.4), libgz-rendering8 (>= 8.2.3), libgz-sensors8 (>= 8.2.2), libgz-sensors8-air-pressure (>= 8.2.2), libgz-sensors8-air-speed (>= 8.2.2), libgz-sensors8-altimeter (>= 8.2.2), libgz-sensors8-boundingbox-camera (>= 8.2.2), libgz-sensors8-camera (>= 8.2.2), libgz-sensors8-depth-camera (>= 8.2.2), libgz-sensors8-dvl (>= 8.2.2), libgz-sensors8-force-torque (>= 8.2.2), libgz-sensors8-gpu-lidar (>= 8.2.2), libgz-sensors8-imu (>= 8.2.2), libgz-sensors8-logical-camera (>= 8.2.2), libgz-sensors8-magnetometer (>= 8.2.2), libgz-sensors8-navsat (>= 8.2.2), libgz-sensors8-rendering (>= 8.2.2), libgz-sensors8-rgbd-camera (>= 8.2.2), libgz-sensors8-segmentation-camera (>= 8.2.2), libgz-sensors8-thermal-camera (>= 8.2.2), libgz-sensors8-wide-angle-camera (>= 8.2.2), libgz-transport13 (>= 13.5.0), libgz-transport13-log (>= 13.5.0), libgz-transport13-parameters (>= 13.5.0), libprotobuf32t64 (>= 3.21.12), libpython3.12t64 (>= 3.12.1), libqt5core5t64 (>= 5.15.1), libqt5gui5t64 (>= 5.2.0) | libqt5gui5-gles (>= 5.2.0), libqt5qml5 (>= 5.0.2), libqt5quick5 (>= 5.0.2) | libqt5quick5-gles (>= 5.0.2), libqt5widgets5t64 (>= 5.0.2), libsdformat14 (>= 14.9.0), libstdc++6 (>= 13.1), libtinyxml2-10 (>= 10.0.0), qml-module-qtqml-models2"
+    },
+    {
+      "Package": "libgz-sim8-plugins",
+      "Version": "8.15.0-1~noble",
+      "Architecture": "amd64",
+      "Filename": "pool/main/g/gz-sim8/libgz-sim8-plugins_8.15.0-1~noble_amd64.deb",
+      "Size": "3840874",
+      "SHA256": "756792a64629f1b2c382608c17bba35d21f0720547d9f97649a7e09411e34d2a",
+      "Depends": "libc6 (>= 2.38), libgcc-s1 (>= 3.3.1), libgz-common5 (>= 5.8.0), libgz-common5-av (>= 5.8.0), libgz-common5-events (>= 5.8.0), libgz-common5-geospatial (>= 5.8.0), libgz-common5-graphics (>= 5.8.0), libgz-common5-io (>= 5.8.0), libgz-fuel-tools9 (>= 9.1.1), libgz-gui8 (>= 8.4.0), libgz-math7 (>= 7.6.0), libgz-msgs10 (>= 10.4.0), libgz-physics7 (>= 7.8.0), libgz-plugin2 (>= 2.0.4), libgz-rendering8 (>= 8.2.3), libgz-sensors8 (>= 8.2.2), libgz-sensors8-air-pressure (>= 8.2.2), libgz-sensors8-air-speed (>= 8.2.2), libgz-sensors8-altimeter (>= 8.2.2), libgz-sensors8-boundingbox-camera (>= 8.2.2), libgz-sensors8-camera (>= 8.2.2), libgz-sensors8-depth-camera (>= 8.2.2), libgz-sensors8-dvl (>= 8.2.2), libgz-sensors8-force-torque (>= 8.2.2), libgz-sensors8-gpu-lidar (>= 8.2.2), libgz-sensors8-imu (>= 8.2.2), libgz-sensors8-logical-camera (>= 8.2.2), libgz-sensors8-magnetometer (>= 8.2.2), libgz-sensors8-navsat (>= 8.2.2), libgz-sensors8-rendering (>= 8.2.2), libgz-sensors8-rgbd-camera (>= 8.2.2), libgz-sensors8-segmentation-camera (>= 8.2.2), libgz-sensors8-thermal-camera (>= 8.2.2), libgz-sensors8-wide-angle-camera (>= 8.2.2), libgz-sim8 (>= 8.15.0), libgz-transport13 (>= 13.5.0), libgz-transport13-log (>= 13.5.0), libprotobuf32t64 (>= 3.21.12), libpython3.12t64 (>= 3.12.1), libqt5core5t64 (>= 5.15.1), libqt5gui5t64 (>= 5.0.2) | libqt5gui5-gles (>= 5.0.2), libqt5qml5 (>= 5.0.2), libqt5quick5 (>= 5.0.2) | libqt5quick5-gles (>= 5.0.2), libqt5widgets5t64 (>= 5.0.2), libsdformat14 (>= 14.9.0), libstdc++6 (>= 13.1), libtinyxml2-10 (>= 10.0.0)"
+    },
+    {
+      "Package": "python3-gz-msgs10",
+      "Version": "10.4.0-1~noble",
+      "Architecture": "amd64",
+      "Filename": "pool/main/g/gz-msgs10/python3-gz-msgs10_10.4.0-1~noble_amd64.deb",
+      "Size": "40554",
+      "SHA256": "082f2a7a947af0c3e88fe4765dd82dba6f596f31a601269e0585ab675ba1f6dc",
+      "Depends": "libgz-msgs10 (= 10.4.0-1~noble), python3-protobuf, python3:any"
+    },
+    {
+      "Package": "python3-gz-transport13",
+      "Version": "13.6.0-1~noble",
+      "Architecture": "amd64",
+      "Filename": "pool/main/g/gz-transport13/python3-gz-transport13_13.6.0-1~noble_amd64.deb",
+      "Size": "115346",
+      "SHA256": "19c718c01159ca14e49124bf0a0b9cd142db3efe898459ee64ad26a4c3df4ccc",
+      "Depends": "libgz-transport13 (= 13.6.0-1~noble), python3-pybind11, python3-gz-msgs10, libc6 (>= 2.32), libgcc-s1 (>= 3.3.1), libstdc++6 (>= 13.1), python3 (<< 3.13), python3 (>= 3.12~), python3:any"
+    }
+  ],
+  "downloaded_package_archives": false,
+  "closure_complete": false,
+  "closure_packages": null,
+  "blockers": [
+    "Authenticated Ubuntu and OSRF dependency closure with exact versions and hashes",
+    "Downloaded and checksum-verified .deb archive bundle",
+    "Resource-bounded image builder",
+    "Verified built image identity and actual Gazebo version"
+  ]
+}
