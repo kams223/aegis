@@ -1,0 +1,1652 @@
+{
+  "schema_version": 1,
+  "artifact_kind": "measured_summary",
+  "phase": "75B",
+  "parent_commit": "48c25f88ef8401d7c6c477256093bff7a1af4aa1",
+  "generated_at_utc": "2026-10-21T20:22:53.010875+00:00",
+  "raw_artifacts_tracked": false,
+  "raw_artifact_base": "temporary directory; actual review paths documented in SENSORS.md",
+  "runs": [
+    {
+      "run_id": "aegis75b-sensors-20261021-1",
+      "report_sha256": "cb6361449ef92b330070a2eb9fdcb7122e52e7ed285bc820174a85cbfceaf1ee",
+      "container_log_sha256": "46d6d52e48c41e91b303ba58df63d61a95cf9649753f51fc51f5f01cd37848da",
+      "success": false,
+      "cleanup_ok": true,
+      "error": "Physics verification failed",
+      "runtime_error": "Wrong pose identity",
+      "started_at": "2026-10-21T20:11:20.191343085Z",
+      "finished_at": "2026-10-21T20:11:30.38312591Z",
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "image_id": "sha256:6c8e5ebdd2a35796d4fd2cb0a1034438f32e86c9f540384128f074b346e1a6ac",
+      "gazebo_version": "8.15.0",
+      "world_name": "aegis_sensor_aircraft",
+      "aircraft_model_name": "passive_aircraft",
+      "profile": {
+        "schema_version": 1,
+        "profile_id": "sensor-aircraft-8.15.0-experimental",
+        "image": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+        "platform": "linux/amd64",
+        "expected_gazebo_version": "8.15.0",
+        "image_os": "ubuntu-22.04",
+        "world_sha256": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c",
+        "phase74a_compatible": false,
+        "memory_bytes": 1073741824,
+        "cpus": 1,
+        "pids": 128,
+        "iterations": 2000,
+        "step_ns": 1000000,
+        "timeout_seconds": 35,
+        "host_timeout_seconds": 55,
+        "minimum_available_memory_bytes": 2147483648,
+        "model_sha256": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9"
+      },
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "container_exit_code": 2,
+      "server_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "peak_memory_bytes": 116584448,
+      "peak_memory_mib": 111.18359375,
+      "peak_pids": 20,
+      "pose_samples": 200,
+      "clock_samples": 68,
+      "verdict": null,
+      "sensor_analysis": {
+        "passed": false,
+        "diagnostics": [
+          "gnss: Unexpected sensor header frame"
+        ],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "sensor_configurations": {
+        "imu": {
+          "topic": "/aegis/sensors/imu",
+          "message": "gz.msgs.IMU",
+          "rate_hz": 100,
+          "frame": "body FLU; sensor coincident and aligned at link origin",
+          "units": {
+            "acceleration": "m/s^2",
+            "angular_velocity": "rad/s",
+            "orientation": "unit quaternion xyzw"
+          },
+          "interpretation": "specific force R_world_to_sensor * (a_world - gravity); orientation relative to initial world alignment"
+        },
+        "gnss": {
+          "topic": "/aegis/sensors/gnss",
+          "message": "gz.msgs.NavSat",
+          "rate_hz": 20,
+          "frame": "WGS84 latitude/longitude; elevation relative to spherical origin",
+          "units": {
+            "latitude": "deg",
+            "longitude": "deg",
+            "altitude": "m"
+          },
+          "origin": {
+            "latitude_deg": 0,
+            "longitude_deg": 0,
+            "elevation_m": 0,
+            "heading_deg": 0,
+            "world": "ENU"
+          }
+        },
+        "barometer": {
+          "topic": "/aegis/sensors/barometer",
+          "message": "gz.msgs.FluidPressure",
+          "rate_hz": 50,
+          "frame": "scalar atmospheric pressure at sensor origin",
+          "units": {
+            "pressure": "Pa",
+            "derived_altitude": "m"
+          },
+          "model": "Gazebo Sensors 8 standard lapse atmosphere with geopotential correction; P0=101325 Pa, T0=288.15 K, L=0.0065 K/m, g=9.80665, M=28.9644, R=8314.32, earth radius=6356766 m; zero altitude at world z=0, not geographic elevation"
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "3e87d6ee99d2265d89c1b3c7c1245515a7f39918624e8bfaccf8f701e3ba7185",
+        "sensor_checks.py": "fe308710402c22336678e7440c02ce49db7feb722cd4833eb1c1e15fd3cd88f7",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "synthetic": false
+    },
+    {
+      "run_id": "aegis75b-sensors-20261021-2",
+      "report_sha256": "03dd4b6501bd044e00efbb2d590b19c614d944c76d5ffe725293c5656b88fdd6",
+      "container_log_sha256": "7f263b8b767dfa9ff7026acfe45b05fa960057ff49c977f92ae90388cf1485eb",
+      "success": true,
+      "cleanup_ok": true,
+      "error": null,
+      "runtime_error": null,
+      "started_at": "2026-10-21T20:15:03.388708081Z",
+      "finished_at": "2026-10-21T20:15:11.661187466Z",
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "image_id": "sha256:6c8e5ebdd2a35796d4fd2cb0a1034438f32e86c9f540384128f074b346e1a6ac",
+      "gazebo_version": "8.15.0",
+      "world_name": "aegis_sensor_aircraft",
+      "aircraft_model_name": "passive_aircraft",
+      "profile": {
+        "schema_version": 1,
+        "profile_id": "sensor-aircraft-8.15.0-experimental",
+        "image": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+        "platform": "linux/amd64",
+        "expected_gazebo_version": "8.15.0",
+        "image_os": "ubuntu-22.04",
+        "world_sha256": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c",
+        "phase74a_compatible": false,
+        "memory_bytes": 1073741824,
+        "cpus": 1,
+        "pids": 128,
+        "iterations": 2000,
+        "step_ns": 1000000,
+        "timeout_seconds": 35,
+        "host_timeout_seconds": 55,
+        "minimum_available_memory_bytes": 2147483648,
+        "model_sha256": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9"
+      },
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "container_exit_code": 0,
+      "server_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "peak_memory_bytes": 104595456,
+      "peak_memory_mib": 99.75,
+      "peak_pids": 20,
+      "pose_samples": 200,
+      "clock_samples": 48,
+      "verdict": {
+        "passed": true,
+        "initial_pose": {
+          "time_ns": 10000000,
+          "frame": "aegis_passive_aircraft",
+          "name": "passive_aircraft",
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.9994604500000001,
+          "qx": 0.0,
+          "qy": 0.0,
+          "qz": 0.0,
+          "qw": 1.0
+        },
+        "final_pose": {
+          "time_ns": 2000000000,
+          "frame": "aegis_passive_aircraft",
+          "name": "passive_aircraft",
+          "x": 1.3708604375865352e-09,
+          "y": 9.639201006660074e-19,
+          "z": 0.07980835874293275,
+          "qx": -6.492403078806193e-18,
+          "qy": 8.60894379670195e-09,
+          "qz": -1.2446171608717856e-20,
+          "qw": 1.0
+        },
+        "gravity_verified": true,
+        "ground_contact": true,
+        "settled": true,
+        "settled_ranges": {
+          "x": 3.4451244574664395e-10,
+          "y": 4.31140860127022e-20,
+          "z": 0.0004999421597609577,
+          "qx": 2.9857551999398444e-19,
+          "qy": 2.153202785782516e-09,
+          "qz": 2.8135499802969708e-21,
+          "qw": 0.0
+        },
+        "clock_advancing": true,
+        "ground_contact_samples": 157
+      },
+      "sensor_analysis": {
+        "passed": true,
+        "diagnostics": [],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "gnss": {
+            "max_position_residual_m": 0.0005297403793215194,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "sensor_configurations": {
+        "imu": {
+          "topic": "/aegis/sensors/imu",
+          "message": "gz.msgs.IMU",
+          "rate_hz": 100,
+          "frame": "body FLU; sensor coincident and aligned at link origin",
+          "units": {
+            "acceleration": "m/s^2",
+            "angular_velocity": "rad/s",
+            "orientation": "unit quaternion xyzw"
+          },
+          "interpretation": "specific force R_world_to_sensor * (a_world - gravity); orientation relative to initial world alignment"
+        },
+        "gnss": {
+          "topic": "/aegis/sensors/gnss",
+          "message": "gz.msgs.NavSat",
+          "rate_hz": 20,
+          "frame": "WGS84 latitude/longitude; elevation relative to spherical origin",
+          "units": {
+            "latitude": "deg",
+            "longitude": "deg",
+            "altitude": "m"
+          },
+          "origin": {
+            "latitude_deg": 0,
+            "longitude_deg": 0,
+            "elevation_m": 0,
+            "heading_deg": 0,
+            "world": "ENU"
+          }
+        },
+        "barometer": {
+          "topic": "/aegis/sensors/barometer",
+          "message": "gz.msgs.FluidPressure",
+          "rate_hz": 50,
+          "frame": "scalar atmospheric pressure at sensor origin",
+          "units": {
+            "pressure": "Pa",
+            "derived_altitude": "m"
+          },
+          "model": "Gazebo Sensors 8 standard lapse atmosphere with geopotential correction; P0=101325 Pa, T0=288.15 K, L=0.0065 K/m, g=9.80665, M=28.9644, R=8314.32, earth radius=6356766 m; zero altitude at world z=0, not geographic elevation"
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "e1544afeea6232a9c6f32c91b71ee3487642b82bf3c9a014a357aa4bce15ba0f",
+        "sensor_checks.py": "300bebc16ee7674d3eaae18d348b331395a99cec0fd14d5f93cc02240d4ef251",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "synthetic": false
+    },
+    {
+      "run_id": "aegis75b-sensors-20261021-final",
+      "report_sha256": "c700afd8362a1ec8aad1ddb19136a77ebccbb055e011f708cd40532c52738656",
+      "container_log_sha256": "e99c9436fdf10c6fcb23f207ac41b7d995c09c9b0c50afa86ec09b267ab6d84e",
+      "success": true,
+      "cleanup_ok": true,
+      "error": null,
+      "runtime_error": null,
+      "started_at": "2026-10-21T20:18:24.387994693Z",
+      "finished_at": "2026-10-21T20:18:34.443020196Z",
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "image_id": "sha256:6c8e5ebdd2a35796d4fd2cb0a1034438f32e86c9f540384128f074b346e1a6ac",
+      "gazebo_version": "8.15.0",
+      "world_name": "aegis_sensor_aircraft",
+      "aircraft_model_name": "passive_aircraft",
+      "profile": {
+        "schema_version": 1,
+        "profile_id": "sensor-aircraft-8.15.0-experimental",
+        "image": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+        "platform": "linux/amd64",
+        "expected_gazebo_version": "8.15.0",
+        "image_os": "ubuntu-22.04",
+        "world_sha256": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c",
+        "phase74a_compatible": false,
+        "memory_bytes": 1073741824,
+        "cpus": 1,
+        "pids": 128,
+        "iterations": 2000,
+        "step_ns": 1000000,
+        "timeout_seconds": 35,
+        "host_timeout_seconds": 55,
+        "minimum_available_memory_bytes": 2147483648,
+        "model_sha256": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9"
+      },
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "container_exit_code": 0,
+      "server_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "peak_memory_bytes": 104701952,
+      "peak_memory_mib": 99.8515625,
+      "peak_pids": 20,
+      "pose_samples": 200,
+      "clock_samples": 67,
+      "verdict": {
+        "passed": true,
+        "initial_pose": {
+          "time_ns": 10000000,
+          "frame": "aegis_passive_aircraft",
+          "name": "passive_aircraft",
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.9994604500000001,
+          "qx": 0.0,
+          "qy": 0.0,
+          "qz": 0.0,
+          "qw": 1.0
+        },
+        "final_pose": {
+          "time_ns": 2000000000,
+          "frame": "aegis_passive_aircraft",
+          "name": "passive_aircraft",
+          "x": 1.3708604375865352e-09,
+          "y": 9.639201006660074e-19,
+          "z": 0.07980835874293275,
+          "qx": -6.492403078806193e-18,
+          "qy": 8.60894379670195e-09,
+          "qz": -1.2446171608717856e-20,
+          "qw": 1.0
+        },
+        "gravity_verified": true,
+        "ground_contact": true,
+        "settled": true,
+        "settled_ranges": {
+          "x": 3.4451244574664395e-10,
+          "y": 4.31140860127022e-20,
+          "z": 0.0004999421597609577,
+          "qx": 2.9857551999398444e-19,
+          "qy": 2.153202785782516e-09,
+          "qz": 2.8135499802969708e-21,
+          "qw": 0.0
+        },
+        "clock_advancing": true,
+        "ground_contact_samples": 157
+      },
+      "sensor_analysis": {
+        "passed": true,
+        "diagnostics": [],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "gnss": {
+            "max_position_residual_m": 0.0005297403793215194,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "sensor_configurations": {
+        "imu": {
+          "topic": "/aegis/sensors/imu",
+          "message": "gz.msgs.IMU",
+          "rate_hz": 100,
+          "frame": "body FLU; sensor coincident and aligned at link origin",
+          "units": {
+            "acceleration": "m/s^2",
+            "angular_velocity": "rad/s",
+            "orientation": "unit quaternion xyzw"
+          },
+          "interpretation": "specific force R_world_to_sensor * (a_world - gravity); orientation relative to initial world alignment"
+        },
+        "gnss": {
+          "topic": "/aegis/sensors/gnss",
+          "message": "gz.msgs.NavSat",
+          "rate_hz": 20,
+          "frame": "WGS84 latitude/longitude; elevation relative to spherical origin",
+          "units": {
+            "latitude": "deg",
+            "longitude": "deg",
+            "altitude": "m"
+          },
+          "origin": {
+            "latitude_deg": 0,
+            "longitude_deg": 0,
+            "elevation_m": 0,
+            "heading_deg": 0,
+            "world": "ENU"
+          }
+        },
+        "barometer": {
+          "topic": "/aegis/sensors/barometer",
+          "message": "gz.msgs.FluidPressure",
+          "rate_hz": 50,
+          "frame": "scalar atmospheric pressure at sensor origin",
+          "units": {
+            "pressure": "Pa",
+            "derived_altitude": "m"
+          },
+          "model": "Gazebo Sensors 8 standard lapse atmosphere with geopotential correction; P0=101325 Pa, T0=288.15 K, L=0.0065 K/m, g=9.80665, M=28.9644, R=8314.32, earth radius=6356766 m; zero altitude at world z=0, not geographic elevation"
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "5e16511671bbabec0b8ea67ba76a83bcce141e701e12f5dbaeb997f4ffe1ee3b",
+        "sensor_checks.py": "60e9cfeab1ef4038029b9eb6959b700d37e50d3f3641928f867bc1d57acc963b",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "synthetic": false
+    },
+    {
+      "run_id": "aegis75b-sensors-20261021-review",
+      "report_sha256": "de20fb2d81faabd81d9da836342fbca125f68f4b1e3953958b3c5e7f6280bb93",
+      "container_log_sha256": "87620192629924f035f19eee965dbfdad954f9037b84f9c84da1944f7cf2ec03",
+      "success": true,
+      "cleanup_ok": true,
+      "error": null,
+      "runtime_error": null,
+      "started_at": "2026-10-21T20:20:26.015172552Z",
+      "finished_at": "2026-10-21T20:20:32.879069135Z",
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "image_id": "sha256:6c8e5ebdd2a35796d4fd2cb0a1034438f32e86c9f540384128f074b346e1a6ac",
+      "gazebo_version": "8.15.0",
+      "world_name": "aegis_sensor_aircraft",
+      "aircraft_model_name": "passive_aircraft",
+      "profile": {
+        "schema_version": 1,
+        "profile_id": "sensor-aircraft-8.15.0-experimental",
+        "image": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+        "platform": "linux/amd64",
+        "expected_gazebo_version": "8.15.0",
+        "image_os": "ubuntu-22.04",
+        "world_sha256": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c",
+        "phase74a_compatible": false,
+        "memory_bytes": 1073741824,
+        "cpus": 1,
+        "pids": 128,
+        "iterations": 2000,
+        "step_ns": 1000000,
+        "timeout_seconds": 35,
+        "host_timeout_seconds": 55,
+        "minimum_available_memory_bytes": 2147483648,
+        "model_sha256": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9"
+      },
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "container_exit_code": 0,
+      "server_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "peak_memory_bytes": 110751744,
+      "peak_memory_mib": 105.62109375,
+      "peak_pids": 20,
+      "pose_samples": 200,
+      "clock_samples": 36,
+      "verdict": {
+        "passed": true,
+        "initial_pose": {
+          "time_ns": 10000000,
+          "frame": "aegis_sensor_aircraft",
+          "name": "passive_aircraft",
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.9994604500000001,
+          "qx": 0.0,
+          "qy": 0.0,
+          "qz": 0.0,
+          "qw": 1.0
+        },
+        "final_pose": {
+          "time_ns": 2000000000,
+          "frame": "aegis_sensor_aircraft",
+          "name": "passive_aircraft",
+          "x": 1.3708604375865352e-09,
+          "y": 9.639201006660074e-19,
+          "z": 0.07980835874293275,
+          "qx": -6.492403078806193e-18,
+          "qy": 8.60894379670195e-09,
+          "qz": -1.2446171608717856e-20,
+          "qw": 1.0
+        },
+        "gravity_verified": true,
+        "ground_contact": true,
+        "settled": true,
+        "settled_ranges": {
+          "x": 3.4451244574664395e-10,
+          "y": 4.31140860127022e-20,
+          "z": 0.0004999421597609577,
+          "qx": 2.9857551999398444e-19,
+          "qy": 2.153202785782516e-09,
+          "qz": 2.8135499802969708e-21,
+          "qw": 0.0
+        },
+        "clock_advancing": true,
+        "ground_contact_samples": 157
+      },
+      "sensor_analysis": {
+        "passed": true,
+        "diagnostics": [],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "gnss": {
+            "max_position_residual_m": 0.0005297403793215194,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "sensor_configurations": {
+        "imu": {
+          "topic": "/aegis/sensors/imu",
+          "message": "gz.msgs.IMU",
+          "rate_hz": 100,
+          "frame": "body FLU; sensor coincident and aligned at link origin",
+          "units": {
+            "acceleration": "m/s^2",
+            "angular_velocity": "rad/s",
+            "orientation": "unit quaternion xyzw"
+          },
+          "interpretation": "specific force R_world_to_sensor * (a_world - gravity); orientation relative to initial world alignment"
+        },
+        "gnss": {
+          "topic": "/aegis/sensors/gnss",
+          "message": "gz.msgs.NavSat",
+          "rate_hz": 20,
+          "frame": "WGS84 latitude/longitude; elevation relative to spherical origin",
+          "units": {
+            "latitude": "deg",
+            "longitude": "deg",
+            "altitude": "m"
+          },
+          "origin": {
+            "latitude_deg": 0,
+            "longitude_deg": 0,
+            "elevation_m": 0,
+            "heading_deg": 0,
+            "world": "ENU"
+          }
+        },
+        "barometer": {
+          "topic": "/aegis/sensors/barometer",
+          "message": "gz.msgs.FluidPressure",
+          "rate_hz": 50,
+          "frame": "scalar atmospheric pressure at sensor origin",
+          "units": {
+            "pressure": "Pa",
+            "derived_altitude": "m"
+          },
+          "model": "Gazebo Sensors 8 standard lapse atmosphere with geopotential correction; P0=101325 Pa, T0=288.15 K, L=0.0065 K/m, g=9.80665, M=28.9644, R=8314.32, earth radius=6356766 m; zero altitude at world z=0, not geographic elevation"
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "43374999cb4a077f99e666a98cafa9270387c471f50dcb149f79c1364aaf2905",
+        "sensor_checks.py": "60e9cfeab1ef4038029b9eb6959b700d37e50d3f3641928f867bc1d57acc963b",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "synthetic": false
+    },
+    {
+      "run_id": "aegis75b-aircraft-20261021",
+      "report_sha256": "34202a5400593fe2cd715f8f2c432be4ce780245dc6966694183de0620a17d9d",
+      "container_log_sha256": "45ac42d5fde3f85a785e5ec4cf7abe556a16ebacfff3f3385bbc5a9f838e5a2e",
+      "success": true,
+      "cleanup_ok": true,
+      "error": null,
+      "runtime_error": null,
+      "started_at": "2026-10-21T20:16:50.139049132Z",
+      "finished_at": "2026-10-21T20:16:57.115788132Z",
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "image_id": "sha256:6c8e5ebdd2a35796d4fd2cb0a1034438f32e86c9f540384128f074b346e1a6ac",
+      "gazebo_version": "8.15.0",
+      "world_name": "aegis_passive_aircraft",
+      "aircraft_model_name": "passive_aircraft",
+      "profile": {
+        "schema_version": 1,
+        "profile_id": "passive-aircraft-8.15.0-experimental",
+        "image": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+        "platform": "linux/amd64",
+        "expected_gazebo_version": "8.15.0",
+        "image_os": "ubuntu-22.04",
+        "world_sha256": "a2444761884218b419c71a8ba5c2249d304ca13b94850b4752b3c74f11be3035",
+        "phase74a_compatible": false,
+        "memory_bytes": 1073741824,
+        "cpus": 1,
+        "pids": 128,
+        "iterations": 2000,
+        "step_ns": 1000000,
+        "timeout_seconds": 35,
+        "host_timeout_seconds": 55,
+        "minimum_available_memory_bytes": 2147483648,
+        "model_sha256": "b3e2086296198b5ecff61606f92db3ef3cd071f943f55b913f5d51289a3f24bc"
+      },
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "container_exit_code": 0,
+      "server_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "peak_memory_bytes": 102424576,
+      "peak_memory_mib": 97.6796875,
+      "peak_pids": 17,
+      "pose_samples": 200,
+      "clock_samples": 39,
+      "verdict": {
+        "passed": true,
+        "initial_pose": {
+          "time_ns": 10000000,
+          "frame": "aegis_passive_aircraft",
+          "name": "passive_aircraft",
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.9994604500000001,
+          "qx": 0.0,
+          "qy": 0.0,
+          "qz": 0.0,
+          "qw": 1.0
+        },
+        "final_pose": {
+          "time_ns": 2000000000,
+          "frame": "aegis_passive_aircraft",
+          "name": "passive_aircraft",
+          "x": 1.3708604375865352e-09,
+          "y": 9.639201006660074e-19,
+          "z": 0.07980835874293275,
+          "qx": -6.492403078806193e-18,
+          "qy": 8.60894379670195e-09,
+          "qz": -1.2446171608717856e-20,
+          "qw": 1.0
+        },
+        "gravity_verified": true,
+        "ground_contact": true,
+        "settled": true,
+        "settled_ranges": {
+          "x": 3.4451244574664395e-10,
+          "y": 4.31140860127022e-20,
+          "z": 0.0004999421597609577,
+          "qx": 2.9857551999398444e-19,
+          "qy": 2.153202785782516e-09,
+          "qz": 2.8135499802969708e-21,
+          "qw": 0.0
+        },
+        "clock_advancing": true,
+        "ground_contact_samples": 157
+      },
+      "sensor_analysis": null,
+      "sensor_configurations": null,
+      "harness_sha256": {
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c"
+      },
+      "synthetic": false
+    },
+    {
+      "run_id": "aegis75b-gravity-20261021",
+      "report_sha256": "4021971f77fd3acc80ff48eca944489e6cfe1c4bf6e72a4189fffae751aab159",
+      "container_log_sha256": "ff67f513f7147d2268e8169d207c79f915b9f01b53ebcda0134217909386dce4",
+      "success": true,
+      "cleanup_ok": true,
+      "error": null,
+      "runtime_error": null,
+      "started_at": "2026-10-21T20:17:09.933982896Z",
+      "finished_at": "2026-10-21T20:17:17.670386621Z",
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "image_id": "sha256:6c8e5ebdd2a35796d4fd2cb0a1034438f32e86c9f540384128f074b346e1a6ac",
+      "gazebo_version": "8.15.0",
+      "world_name": "aegis_gravity",
+      "aircraft_model_name": null,
+      "profile": {
+        "schema_version": 1,
+        "profile_id": "gazebo-prebuilt-8.15.0-experimental",
+        "image": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+        "platform": "linux/amd64",
+        "expected_gazebo_version": "8.15.0",
+        "image_os": "ubuntu-22.04",
+        "world_sha256": "b1a97a4bd9c0ac9908f7bc853ca439bbe3bc1921aa7be9f8dff1ee55788241e8",
+        "phase74a_compatible": false,
+        "memory_bytes": 1073741824,
+        "cpus": 1,
+        "pids": 128,
+        "iterations": 2000,
+        "step_ns": 1000000,
+        "timeout_seconds": 35,
+        "host_timeout_seconds": 55,
+        "minimum_available_memory_bytes": 2147483648
+      },
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "container_exit_code": 0,
+      "server_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "peak_memory_bytes": 82116608,
+      "peak_memory_mib": 78.3125,
+      "peak_pids": null,
+      "pose_samples": 200,
+      "clock_samples": 48,
+      "verdict": {
+        "passed": true,
+        "initial_height_m": 0.9994604500000001,
+        "initial_time_ns": 10000000,
+        "final_height_m": 0.09999989388001289,
+        "settled_height_range_m": 1.0000524656300636e-06,
+        "settled_duration_ns": 500000000,
+        "ground_contact_samples": 158,
+        "downward_motion": true,
+        "ground_contact": true,
+        "settled": true,
+        "clock_advancing": true
+      },
+      "sensor_analysis": null,
+      "sensor_configurations": null,
+      "harness_sha256": null,
+      "synthetic": false
+    }
+  ],
+  "limitations": [
+    "Ideal noise-free sensors; single two-second level passive drop; no flight or hardware validation",
+    "Nearest measured pose within 11 ms; local equatorial WGS84 tangent approximation",
+    "GNSS has no fix-validity flag; proto3 scalar zero defaults do not attest field presence",
+    "IMU force checks cover free-fall and settled magnitudes, not general rotated dynamics or impact calibration",
+    "Pressure reference is world z=0; GNSS origin elevation deliberately zero",
+    "Pinned prebuilt image retained; source rebuild provenance remains unresolved from Phase 74B"
+  ],
+  "tests": {
+    "focused_log": "aegis75b-focused-tests.log",
+    "regression_log": "aegis75b-full-tests-final.log",
+    "sandbox_attempt": {
+      "log": "aegis75b-full-tests.log",
+      "result": "stalled without output; SIGINT unresponsive; task-owned process terminated with SIGTERM; rerun outside sandbox with 360 s timeout"
+    },
+    "focused": {
+      "log_sha256": "6191d9376483305191a652ee8bf88f828736a8aba6d52959c16388b92bf491d2",
+      "passed": 148,
+      "skipped": 2,
+      "failed": 0,
+      "exit_code": 0
+    },
+    "regression": {
+      "log_sha256": "41c3a8a5aea2bc79a36ef6561fb1bf95aaceea810d40b9b00e0990fca725a6c1",
+      "passed": 2324,
+      "skipped": 2,
+      "failed": 0,
+      "exit_code": 0,
+      "seconds": 87.74
+    }
+  },
+  "peak_pids_definition": "cgroup v2 tasks including threads",
+  "compatibility_probe": {
+    "gazebo_version": "8.15.0",
+    "plugins_found": [
+      "gz-sim-imu-system",
+      "gz-sim-navsat-system",
+      "gz-sim-air-pressure-system"
+    ],
+    "python_schemas_imported": [
+      "gz.msgs10.imu_pb2.IMU",
+      "gz.msgs10.navsat_pb2.NavSat",
+      "gz.msgs10.fluid_pressure_pb2.FluidPressure"
+    ],
+    "probe_before_implementation": true
+  },
+  "finalization": {
+    "reviewed_against_main": "48c25f88ef8401d7c6c477256093bff7a1af4aa1",
+    "recorded_at_utc": "2026-10-21T20:31:35.479092+00:00",
+    "raw_artifacts_tracked": false,
+    "artifact_root_convention": "Each run_id is a directory beneath an external evidence root; review roots are documented in SENSORS.md",
+    "baseline_assets_and_phase74a_contract_unchanged": true,
+    "repeat_groups": [
+      {
+        "group": "aegis75b-finalization",
+        "final_source": false,
+        "runs": [
+          {
+            "run_id": "aegis75b-finalization/repeat-1",
+            "success": true,
+            "cleanup_ok": true,
+            "report_sha256": "303a4935063c7365801561334a40a3c1c71dd73e841ef00f10e39f5fefd135f9",
+            "container_log_sha256": "5561b78a7e70c6cb831f078052aadb8508b5c8836a4983d11c9735e027163ac8",
+            "launcher_log_sha256": "5c1d4ce106a302b1bb4d3a42beb8ff0f209532844d9ce9c53a9e9baa21d13cd4",
+            "recorded_at_utc": "2026-10-21T20:27:39.750858+00:00",
+            "host_error": null,
+            "runtime_error": null,
+            "unpause_acknowledged": true,
+            "server_exit_code": 0,
+            "container_exit_code": 0,
+            "attach_exit_code": 0,
+            "oom_killed": false,
+            "timed_out": false,
+            "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+            "gazebo_version": "8.15.0",
+            "harness_sha256": {
+              "sensors.py": "928f2b3181501923172657db01fdfad8ffc069533b6ed43c3eff60dc5a9cec15",
+              "sensor_checks.py": "a0c4945c471eb0493be9835705ee3bcb7ca7823be5b72a41d23ddcc4ae108e37",
+              "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+              "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+              "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+              "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+              "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+              "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+            },
+            "container_policy": {
+              "NetworkMode": "none",
+              "Memory": 1073741824,
+              "MemorySwap": 1073741824,
+              "NanoCpus": 1000000000,
+              "PidsLimit": 128,
+              "Privileged": false,
+              "ReadonlyRootfs": true,
+              "CapDrop": [
+                "ALL"
+              ],
+              "SecurityOpt": [
+                "no-new-privileges:true"
+              ],
+              "Devices": [],
+              "PortBindings": {}
+            },
+            "peak_memory_bytes": 113516544,
+            "peak_pids": 20,
+            "server_wall_seconds": 6.549129716004245,
+            "pose_samples": 200,
+            "clock_samples": 41,
+            "contact_samples": 157,
+            "sensor_sample_counts": {
+              "imu": 201,
+              "gnss": 41,
+              "barometer": 101
+            },
+            "sensor_analysis": {
+              "passed": true,
+              "diagnostics": [],
+              "streams": {
+                "imu": {
+                  "samples": 201,
+                  "expected_rate_hz": 100,
+                  "first_time_ns": 1000000,
+                  "last_time_ns": 2000000000,
+                  "mean_rate_hz": 100.05002501250625,
+                  "minimum_interval_ns": 9000000,
+                  "maximum_interval_ns": 10000000
+                },
+                "gnss": {
+                  "samples": 41,
+                  "expected_rate_hz": 20,
+                  "first_time_ns": 1000000,
+                  "last_time_ns": 2000000000,
+                  "mean_rate_hz": 20.010005002501252,
+                  "minimum_interval_ns": 49000000,
+                  "maximum_interval_ns": 50000000
+                },
+                "barometer": {
+                  "samples": 101,
+                  "expected_rate_hz": 50,
+                  "first_time_ns": 1000000,
+                  "last_time_ns": 2000000000,
+                  "mean_rate_hz": 50.02501250625313,
+                  "minimum_interval_ns": 19000000,
+                  "maximum_interval_ns": 20000000
+                }
+              },
+              "comparisons": {
+                "imu": {
+                  "free_fall_max_specific_force_m_s2": 0.0,
+                  "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+                  "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+                  "max_orientation_quaternion_distance": 4.306405682965364e-12
+                },
+                "gnss": {
+                  "max_position_residual_m": 0.0005297403793215194,
+                  "matching": "nearest actual pose <=11 ms; no interpolation",
+                  "tolerance_m": 0.05
+                },
+                "barometer": {
+                  "max_position_residual_m": 0.0005297400074809611,
+                  "matching": "nearest actual pose <=11 ms; no interpolation",
+                  "tolerance_m": 0.05
+                }
+              }
+            },
+            "sensor_payload_sha256": {
+              "imu": "097ca9e85c6248c53f5d575e66de9396e374df01b940afe83c2d4d1c3b02d60d",
+              "gnss": "2eb3fce899f783c94e1c01296e7fad745f0725e75007278c5850fc8d5e964e21",
+              "barometer": "be75ffe3a09addcb4634f5ae31303a5981c9b65d79a5799f223a57dcf09dfd7b"
+            }
+          },
+          {
+            "run_id": "aegis75b-finalization/repeat-2",
+            "success": true,
+            "cleanup_ok": true,
+            "report_sha256": "bbe3b87e99226752bf91d9da782a38bb17e7c3f06a60bc67fc66cf008a4f9424",
+            "container_log_sha256": "23514d22858b953e5caaf7f4fa73ac9289480448557e406e89c4e59d76ffc6ee",
+            "launcher_log_sha256": "348ecb20b1c28bbff9b031ce52caa8f3172b47d0c2d25338e4641ef6eef1f442",
+            "recorded_at_utc": "2026-10-21T20:27:47.965485+00:00",
+            "host_error": null,
+            "runtime_error": null,
+            "unpause_acknowledged": true,
+            "server_exit_code": 0,
+            "container_exit_code": 0,
+            "attach_exit_code": 0,
+            "oom_killed": false,
+            "timed_out": false,
+            "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+            "gazebo_version": "8.15.0",
+            "harness_sha256": {
+              "sensors.py": "928f2b3181501923172657db01fdfad8ffc069533b6ed43c3eff60dc5a9cec15",
+              "sensor_checks.py": "a0c4945c471eb0493be9835705ee3bcb7ca7823be5b72a41d23ddcc4ae108e37",
+              "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+              "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+              "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+              "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+              "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+              "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+            },
+            "container_policy": {
+              "NetworkMode": "none",
+              "Memory": 1073741824,
+              "MemorySwap": 1073741824,
+              "NanoCpus": 1000000000,
+              "PidsLimit": 128,
+              "Privileged": false,
+              "ReadonlyRootfs": true,
+              "CapDrop": [
+                "ALL"
+              ],
+              "SecurityOpt": [
+                "no-new-privileges:true"
+              ],
+              "Devices": [],
+              "PortBindings": {}
+            },
+            "peak_memory_bytes": 104800256,
+            "peak_pids": 20,
+            "server_wall_seconds": 8.840439450985286,
+            "pose_samples": 200,
+            "clock_samples": 63,
+            "contact_samples": 157,
+            "sensor_sample_counts": {
+              "imu": 201,
+              "gnss": 41,
+              "barometer": 101
+            },
+            "sensor_analysis": {
+              "passed": true,
+              "diagnostics": [],
+              "streams": {
+                "imu": {
+                  "samples": 201,
+                  "expected_rate_hz": 100,
+                  "first_time_ns": 1000000,
+                  "last_time_ns": 2000000000,
+                  "mean_rate_hz": 100.05002501250625,
+                  "minimum_interval_ns": 9000000,
+                  "maximum_interval_ns": 10000000
+                },
+                "gnss": {
+                  "samples": 41,
+                  "expected_rate_hz": 20,
+                  "first_time_ns": 1000000,
+                  "last_time_ns": 2000000000,
+                  "mean_rate_hz": 20.010005002501252,
+                  "minimum_interval_ns": 49000000,
+                  "maximum_interval_ns": 50000000
+                },
+                "barometer": {
+                  "samples": 101,
+                  "expected_rate_hz": 50,
+                  "first_time_ns": 1000000,
+                  "last_time_ns": 2000000000,
+                  "mean_rate_hz": 50.02501250625313,
+                  "minimum_interval_ns": 19000000,
+                  "maximum_interval_ns": 20000000
+                }
+              },
+              "comparisons": {
+                "imu": {
+                  "free_fall_max_specific_force_m_s2": 0.0,
+                  "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+                  "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+                  "max_orientation_quaternion_distance": 4.306405682965364e-12
+                },
+                "gnss": {
+                  "max_position_residual_m": 0.0005297403793215194,
+                  "matching": "nearest actual pose <=11 ms; no interpolation",
+                  "tolerance_m": 0.05
+                },
+                "barometer": {
+                  "max_position_residual_m": 0.0005297400074809611,
+                  "matching": "nearest actual pose <=11 ms; no interpolation",
+                  "tolerance_m": 0.05
+                }
+              }
+            },
+            "sensor_payload_sha256": {
+              "imu": "097ca9e85c6248c53f5d575e66de9396e374df01b940afe83c2d4d1c3b02d60d",
+              "gnss": "2eb3fce899f783c94e1c01296e7fad745f0725e75007278c5850fc8d5e964e21",
+              "barometer": "be75ffe3a09addcb4634f5ae31303a5981c9b65d79a5799f223a57dcf09dfd7b"
+            }
+          }
+        ],
+        "sensor_comparison": {
+          "imu": {
+            "sample_counts": [
+              201,
+              201
+            ],
+            "sample_count_delta": 0,
+            "timestamps_equal": true,
+            "native_rows_equal": true,
+            "values_comparable_at_same_timestamps": true,
+            "max_absolute_numeric_delta": 0.0,
+            "delta_units": "native units documented per sensor; maximum across components",
+            "time_ranges_ns": [
+              [
+                1000000,
+                2000000000
+              ],
+              [
+                1000000,
+                2000000000
+              ]
+            ]
+          },
+          "gnss": {
+            "sample_counts": [
+              41,
+              41
+            ],
+            "sample_count_delta": 0,
+            "timestamps_equal": true,
+            "native_rows_equal": true,
+            "values_comparable_at_same_timestamps": true,
+            "max_absolute_numeric_delta": 0.0,
+            "delta_units": "native units documented per sensor; maximum across components",
+            "time_ranges_ns": [
+              [
+                1000000,
+                2000000000
+              ],
+              [
+                1000000,
+                2000000000
+              ]
+            ]
+          },
+          "barometer": {
+            "sample_counts": [
+              101,
+              101
+            ],
+            "sample_count_delta": 0,
+            "timestamps_equal": true,
+            "native_rows_equal": true,
+            "values_comparable_at_same_timestamps": true,
+            "max_absolute_numeric_delta": 0.0,
+            "delta_units": "native units documented per sensor; maximum across components",
+            "time_ranges_ns": [
+              [
+                1000000,
+                2000000000
+              ],
+              [
+                1000000,
+                2000000000
+              ]
+            ]
+          }
+        },
+        "pose_rows_equal": true,
+        "clock_rows_equal": false,
+        "memory_peak_delta_bytes": -8716288,
+        "server_wall_time_delta_seconds": 2.2913097349810414,
+        "unrelated_docker_services_unchanged": true,
+        "unrelated_service_names": [
+          "duckdns",
+          "nginx-proxy-manager",
+          "single-node-wazuh.dashboard-1",
+          "single-node-wazuh.indexer-1",
+          "single-node-wazuh.manager-1"
+        ],
+        "remaining_experiment_containers": [],
+        "lifecycle_sha256": "d0db4ba4fffe6e115288ebca8c67c8eff29fdad8a32ec647a70697b4e2da7c2f",
+        "services_before_sha256": "607a133d5fd64c58e1d879a83c17b54a2e96b8047b1777faef95c5b705f412bc",
+        "services_after_sha256": "607a133d5fd64c58e1d879a83c17b54a2e96b8047b1777faef95c5b705f412bc"
+      },
+      {
+        "group": "aegis75b-finalization-reviewed",
+        "final_source": true,
+        "runs": [
+          {
+            "run_id": "aegis75b-finalization-reviewed/repeat-1",
+            "success": true,
+            "cleanup_ok": true,
+            "report_sha256": "63dc4efd88f6a3bd143c706f7af6f167a2282240ffe26a8f6138d5e37c3b1b4e",
+            "container_log_sha256": "931fa25c44253816a8f2efc2f4e54371685a63ea67df52c2e7e05c4fb6151ffd",
+            "launcher_log_sha256": "d025cde8827be14e5ae46075b1a4cfd415abc74beed0b98d2886d8462985adea",
+            "recorded_at_utc": "2026-10-21T20:29:05.441063+00:00",
+            "host_error": null,
+            "runtime_error": null,
+            "unpause_acknowledged": true,
+            "server_exit_code": 0,
+            "container_exit_code": 0,
+            "attach_exit_code": 0,
+            "oom_killed": false,
+            "timed_out": false,
+            "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+            "gazebo_version": "8.15.0",
+            "harness_sha256": {
+              "sensors.py": "928f2b3181501923172657db01fdfad8ffc069533b6ed43c3eff60dc5a9cec15",
+              "sensor_checks.py": "64a68d2d8c47d01b0290619dca381e70364a2555ef7221d070ef1c0d1599923f",
+              "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+              "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+              "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+              "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+              "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+              "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+            },
+            "container_policy": {
+              "NetworkMode": "none",
+              "Memory": 1073741824,
+              "MemorySwap": 1073741824,
+              "NanoCpus": 1000000000,
+              "PidsLimit": 128,
+              "Privileged": false,
+              "ReadonlyRootfs": true,
+              "CapDrop": [
+                "ALL"
+              ],
+              "SecurityOpt": [
+                "no-new-privileges:true"
+              ],
+              "Devices": [],
+              "PortBindings": {}
+            },
+            "peak_memory_bytes": 104960000,
+            "peak_pids": 20,
+            "server_wall_seconds": 5.933390406018589,
+            "pose_samples": 200,
+            "clock_samples": 35,
+            "contact_samples": 157,
+            "sensor_sample_counts": {
+              "imu": 201,
+              "gnss": 41,
+              "barometer": 101
+            },
+            "sensor_analysis": {
+              "passed": true,
+              "diagnostics": [],
+              "streams": {
+                "imu": {
+                  "samples": 201,
+                  "expected_rate_hz": 100,
+                  "first_time_ns": 1000000,
+                  "last_time_ns": 2000000000,
+                  "mean_rate_hz": 100.05002501250625,
+                  "minimum_interval_ns": 9000000,
+                  "maximum_interval_ns": 10000000
+                },
+                "gnss": {
+                  "samples": 41,
+                  "expected_rate_hz": 20,
+                  "first_time_ns": 1000000,
+                  "last_time_ns": 2000000000,
+                  "mean_rate_hz": 20.010005002501252,
+                  "minimum_interval_ns": 49000000,
+                  "maximum_interval_ns": 50000000
+                },
+                "barometer": {
+                  "samples": 101,
+                  "expected_rate_hz": 50,
+                  "first_time_ns": 1000000,
+                  "last_time_ns": 2000000000,
+                  "mean_rate_hz": 50.02501250625313,
+                  "minimum_interval_ns": 19000000,
+                  "maximum_interval_ns": 20000000
+                }
+              },
+              "comparisons": {
+                "imu": {
+                  "free_fall_max_specific_force_m_s2": 0.0,
+                  "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+                  "settled_max_specific_force_vector_error_m_s2": 8.449277583956987e-11,
+                  "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+                  "max_orientation_quaternion_distance": 4.306405682965364e-12
+                },
+                "gnss": {
+                  "max_position_residual_m": 0.0005297403793215194,
+                  "matching": "nearest actual pose <=11 ms; no interpolation",
+                  "tolerance_m": 0.05
+                },
+                "barometer": {
+                  "max_position_residual_m": 0.0005297400074809611,
+                  "matching": "nearest actual pose <=11 ms; no interpolation",
+                  "tolerance_m": 0.05
+                }
+              }
+            },
+            "sensor_payload_sha256": {
+              "imu": "097ca9e85c6248c53f5d575e66de9396e374df01b940afe83c2d4d1c3b02d60d",
+              "gnss": "2eb3fce899f783c94e1c01296e7fad745f0725e75007278c5850fc8d5e964e21",
+              "barometer": "be75ffe3a09addcb4634f5ae31303a5981c9b65d79a5799f223a57dcf09dfd7b"
+            }
+          },
+          {
+            "run_id": "aegis75b-finalization-reviewed/repeat-2",
+            "success": false,
+            "cleanup_ok": true,
+            "report_sha256": "8680a538f6abb2aa91728021f7a2a8002086369b10e344e99273d2aa2dcd4e76",
+            "container_log_sha256": "1a171f7dca282887f5b08231e9f2b6da82e8dd346137eb50cfb611a98f470ba1",
+            "launcher_log_sha256": "7f5a40b4f5ef966c82d47af12a54eeae73e6fc995b077e757b9e5c071f968d0c",
+            "recorded_at_utc": "2026-10-21T20:29:13.047822+00:00",
+            "host_error": "Physics verification failed",
+            "runtime_error": "Missing or excessive observations",
+            "unpause_acknowledged": false,
+            "server_exit_code": 0,
+            "container_exit_code": 2,
+            "attach_exit_code": 2,
+            "oom_killed": false,
+            "timed_out": false,
+            "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+            "gazebo_version": "8.15.0",
+            "harness_sha256": {
+              "sensors.py": "928f2b3181501923172657db01fdfad8ffc069533b6ed43c3eff60dc5a9cec15",
+              "sensor_checks.py": "64a68d2d8c47d01b0290619dca381e70364a2555ef7221d070ef1c0d1599923f",
+              "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+              "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+              "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+              "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+              "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+              "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+            },
+            "container_policy": {
+              "NetworkMode": "none",
+              "Memory": 1073741824,
+              "MemorySwap": 1073741824,
+              "NanoCpus": 1000000000,
+              "PidsLimit": 128,
+              "Privileged": false,
+              "ReadonlyRootfs": true,
+              "CapDrop": [
+                "ALL"
+              ],
+              "SecurityOpt": [
+                "no-new-privileges:true"
+              ],
+              "Devices": [],
+              "PortBindings": {}
+            },
+            "peak_memory_bytes": 111816704,
+            "peak_pids": 20,
+            "server_wall_seconds": 5.776102092000656,
+            "pose_samples": 0,
+            "clock_samples": 6,
+            "contact_samples": 0,
+            "sensor_sample_counts": {
+              "imu": 0,
+              "gnss": 1,
+              "barometer": 1
+            },
+            "sensor_analysis": {
+              "passed": false,
+              "diagnostics": [
+                "ground_truth: Missing ground truth"
+              ],
+              "streams": {},
+              "comparisons": {}
+            },
+            "sensor_payload_sha256": {
+              "imu": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "gnss": "f06e1371e7912c60fae7652d023be38202014e90d8c5ee679cce4204c54f3890",
+              "barometer": "777fbbf544489cf6c0776a8d748e3421d7293bf3309d4dfc66b79554693c8f2b"
+            }
+          }
+        ],
+        "sensor_comparison": {
+          "imu": {
+            "sample_counts": [
+              201,
+              0
+            ],
+            "sample_count_delta": -201,
+            "timestamps_equal": false,
+            "native_rows_equal": false,
+            "values_comparable_at_same_timestamps": false,
+            "max_absolute_numeric_delta": null,
+            "delta_units": "native units documented per sensor; maximum across components",
+            "time_ranges_ns": [
+              [
+                1000000,
+                2000000000
+              ],
+              null
+            ]
+          },
+          "gnss": {
+            "sample_counts": [
+              41,
+              1
+            ],
+            "sample_count_delta": -40,
+            "timestamps_equal": false,
+            "native_rows_equal": false,
+            "values_comparable_at_same_timestamps": false,
+            "max_absolute_numeric_delta": null,
+            "delta_units": "native units documented per sensor; maximum across components",
+            "time_ranges_ns": [
+              [
+                1000000,
+                2000000000
+              ],
+              [
+                1000000,
+                1000000
+              ]
+            ]
+          },
+          "barometer": {
+            "sample_counts": [
+              101,
+              1
+            ],
+            "sample_count_delta": -100,
+            "timestamps_equal": false,
+            "native_rows_equal": false,
+            "values_comparable_at_same_timestamps": false,
+            "max_absolute_numeric_delta": null,
+            "delta_units": "native units documented per sensor; maximum across components",
+            "time_ranges_ns": [
+              [
+                1000000,
+                2000000000
+              ],
+              [
+                1000000,
+                1000000
+              ]
+            ]
+          }
+        },
+        "pose_rows_equal": false,
+        "clock_rows_equal": false,
+        "memory_peak_delta_bytes": 6856704,
+        "server_wall_time_delta_seconds": -0.15728831401793286,
+        "unrelated_docker_services_unchanged": true,
+        "unrelated_service_names": [
+          "duckdns",
+          "nginx-proxy-manager",
+          "single-node-wazuh.dashboard-1",
+          "single-node-wazuh.indexer-1",
+          "single-node-wazuh.manager-1"
+        ],
+        "remaining_experiment_containers": [],
+        "lifecycle_sha256": "9eb1e5ac9328c45c0f07b101ab42edfe31a83bea256946883a3e865f0bb27043",
+        "services_before_sha256": "607a133d5fd64c58e1d879a83c17b54a2e96b8047b1777faef95c5b705f412bc",
+        "services_after_sha256": "607a133d5fd64c58e1d879a83c17b54a2e96b8047b1777faef95c5b705f412bc"
+      }
+    ],
+    "tests": {
+      "focused": {
+        "passed": 169,
+        "skipped": 2,
+        "failed": 0,
+        "exit_code": 0,
+        "seconds": 2.23,
+        "log_id": "aegis75b-finalization-focused.log",
+        "log_sha256": "2b1e4f4eec5111732b8e465227c44f7077040a9ade9392afa5d65c3a7f5988c2"
+      },
+      "regression": {
+        "passed": 2345,
+        "skipped": 2,
+        "failed": 0,
+        "exit_code": 0,
+        "seconds": 87.37,
+        "log_id": "aegis75b-finalization-regression.log",
+        "log_sha256": "651ebf1ec53e713b57455aa2a4bd4f48405de4ea12fd79523c5318e1f78b7711"
+      }
+    },
+    "outstanding_issues": [
+      "One of two final-source repeats captured only paused clock messages, with no poses or sensors and no unpause acknowledgement. Server exit was zero; physical execution was not verified. Cause remains unresolved.",
+      "Two-second ideal noise-free level drop does not validate hardware accuracy, general determinism, rotated dynamic motion or impact calibration.",
+      "GNSS message has no fix-validity flag and proto3 scalar presence is limited; pressure reference is world z=0, not a geoid model.",
+      "Pinned prebuilt image retains Phase 74B source rebuild provenance limitations; CI skips opt-in Gazebo runs."
+    ]
+  }
+}
