@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "profile_id": "gazebo-only-8.15.0-candidate",
+  "status": "prepared_unverified",
+  "expected_gazebo_version": "8.15.0",
+  "phase74a_gazebo_version": "8.3.0",
+  "phase74a_compatible": false,
+  "platform": "linux/amd64",
+  "base_image": "ubuntu:24.04@sha256:a2d43bffc46670d7108bb3c0468c67c5557c4c92e83e1e34cbff1322ad1b94dc",
+  "world_sha256": "65848e88edfc59c775168258ece22f359c2ed22ecf727e12e343a30cc7eab22b",
+  "minimum_available_memory_bytes": 2147483648,
+  "minimum_free_swap_bytes": 268435456,
+  "minimum_free_disk_bytes": 5368709120,
+  "build_minimum_available_memory_bytes": 3221225472,
+  "runtime_memory_limit_bytes": 1073741824,
+  "cpus": 1,
+  "pids_limit": 128,
+  "iterations": 2000,
+  "timeout_seconds": 30,
+  "step_ns": 1000000
+}

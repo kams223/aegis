@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "profile_id": "gazebo-prebuilt-8.15.0-experimental",
+  "image": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+  "platform": "linux/amd64",
+  "expected_gazebo_version": "8.15.0",
+  "image_os": "ubuntu-22.04",
+  "world_sha256": "b1a97a4bd9c0ac9908f7bc853ca439bbe3bc1921aa7be9f8dff1ee55788241e8",
+  "phase74a_compatible": false,
+  "memory_bytes": 1073741824,
+  "cpus": 1,
+  "pids": 128,
+  "iterations": 2000,
+  "step_ns": 1000000,
+  "timeout_seconds": 35,
+  "host_timeout_seconds": 55,
+  "minimum_available_memory_bytes": 2147483648
+}

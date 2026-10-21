@@ -1,0 +1,45 @@
+{
+  "name": "aegis-gazebo-only-smoke",
+  "services": {
+    "smoke": {
+      "image": "${AEGIS_GAZEBO_IMAGE:?set verified local sha256 image ID}",
+      "pull_policy": "never",
+      "platform": "linux/amd64",
+      "user": "10001:10001",
+      "read_only": true,
+      "network_mode": "none",
+      "cap_drop": [
+        "ALL"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "init": true,
+      "cpus": 1.0,
+      "mem_limit": "1g",
+      "memswap_limit": "1g",
+      "pids_limit": 128,
+      "shm_size": "64m",
+      "restart": "no",
+      "tmpfs": [
+        "/tmp:rw,noexec,nosuid,nodev,size=64m,mode=1777",
+        "/run:rw,noexec,nosuid,nodev,size=16m",
+        "/work:rw,noexec,nosuid,nodev,size=64m,uid=10001,gid=10001"
+      ],
+      "environment": {
+        "HOME": "/work",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "GZ_IP": "127.0.0.1",
+        "GZ_SIM_RESOURCE_PATH": "/opt/smoke"
+      },
+      "logging": {
+        "driver": "local",
+        "options": {
+          "max-size": "2m",
+          "max-file": "1",
+          "compress": "false"
+        }
+      }
+    }
+  }
+}

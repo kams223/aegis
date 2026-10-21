@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "profile_id": "gazebo-harmonic-px4-1.16-candidate",
+  "status": "candidate_unverified",
+  "platform": "linux/amd64",
+  "base_tag": "ubuntu:24.04",
+  "base_digest": null,
+  "runtime_image_digest": null,
+  "gazebo_version": "8.15.0",
+  "gazebo_package_version": "8.15.0-1~noble",
+  "px4_tag": "v1.16.0",
+  "px4_commit": "6ea3539157ca358c70a515878b77077af7d4611d",
+  "source_verification": "Prior read-only preflight: git ls-remote PX4/PX4-Autopilot refs/tags/v1.16.0^{}; not re-probed offline",
+  "verified_gazebo_version": null,
+  "verified_px4_commit": null,
+  "dependency_lock_sha256": null,
+  "minimum_available_memory_bytes": 3221225472,
+  "minimum_free_swap_bytes": 268435456,
+  "minimum_free_disk_bytes": 32212254720,
+  "compile_jobs": 1
+}
