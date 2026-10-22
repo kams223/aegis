@@ -11,12 +11,17 @@ function History({ rows, field, unit }: {rows: RecordRow[]; field: string; unit:
   const min = Math.min(...values), max = Math.max(...values), first = BigInt(points[0]!.time), span = BigInt(points.at(-1)!.time) - first;
   const xy = (p: typeof points[number]) => `${30 + (span ? Number(BigInt(p.time) - first) / Number(span) : 0.5) * 440},${120 - ((p.value! - min) / (max - min || 1)) * 90}`;
   const segments: string[][] = [[]];
-  for (const p of points) { if (p.value === null) segments.push([]); else segments.at(-1)!.push(xy(p)); }
-  return <article className="sensor-chart"><h4>{field} · {unit}</h4><svg viewBox="0 0 500 160" role="img" aria-label={`${field} history, acquisition ns; ${rows.length} records, ${rows.filter(r => r.values === null).length} missing`}>
+  let previousSegment = -1;
+  for (const p of points) {
+    if (p.segment !== previousSegment || p.value === null) segments.push([]);
+    previousSegment = p.segment;
+    if (p.value !== null) segments.at(-1)!.push(xy(p));
+  }
+  return <article className="sensor-chart"><h4>{field} · {unit}</h4><svg viewBox="0 0 500 160" role="img" aria-label={`${field} history, acquisition ns; ${rows.length} records, ${rows.filter(r => r.values === null).length} missing; ${rows[0]?.origin}; range ${min} to ${max} ${unit}; clock ${rows[0]?.acquisition.domain}`}>
     <path d="M30 20V130H480" className="chart-axis" />
     {segments.map((s, i) => <g key={i}><polyline points={s.join(' ')} />{s.map((p, j) => <circle key={j} cx={p.split(',')[0]} cy={p.split(',')[1]} r="2" />)}</g>)}
     <text x="32" y="15">{min} … {max} {unit}</text><text x="30" y="150">{points[0]!.time}</text><text x="475" y="150" textAnchor="end">{points.at(-1)!.time} ns</text>
-  </svg><small>Acquisition time · at most 256 points · gaps retained</small></article>;
+  </svg><small>Acquisition time · at most 256 points · extrema sampled · gaps retained</small></article>;
 }
 function Reading({record}: {record: RecordRow | null}) {
   if (!record) return <p>Unavailable: no matching observation.</p>;
@@ -75,7 +80,7 @@ export function SensorDashboard() {
       <label>Comparison inspection JSON<input type="file" accept=".json,application/json" disabled={busy || !loaded} onChange={e => {void file(e.target.files?.[0], true); e.target.value = '';}} /></label></div>
     {busy && <p role="status">Validating local file…</p>}{error && <p role="alert">{error}</p>}
     {!loaded ? <p>Select a bounded Phase 75D inspection output (8 MiB, 1024 records maximum) or explicitly load the synthetic example.</p> : <>
-      <section aria-label="Dataset overview"><h2>Overview</h2><p><strong>{loaded.name}</strong> · {loaded.doc.example_kind === 'synthetic_fixture' ? 'SYNTHETIC EXAMPLE — no evidence' : 'Recorded simulation output — provenance supplied by file'}</p>
+      <section aria-label="Dataset overview"><h2>Overview</h2><p role="status">Local dataset loaded: {loaded.name}</p><p><strong>{loaded.name}</strong> · {loaded.doc.example_kind === 'synthetic_fixture' ? 'SYNTHETIC EXAMPLE — no evidence' : 'Recorded simulation output — provenance supplied by file'}</p>
         {loaded.doc.evidence_attestation && <p>{loaded.doc.evidence_attestation}</p>}
         <dl><div><dt>Dataset SHA-256 (selected bytes)</dt><dd>{loaded.digest}</dd></div><div><dt>Input artifact SHA-256</dt><dd>{loaded.doc.input_sha256 ?? 'Not supplied (example)'}</dd></div>
           <div><dt>Simulation source / sessions</dt><dd>{[...new Set(rows.map(r => r.source.session_id))].join(', ') || 'No observations'}</dd></div>
@@ -92,13 +97,13 @@ export function SensorDashboard() {
         <label>Stale after (ns)<input value={threshold} onChange={e => setThreshold(e.target.value)} inputMode="numeric" /></label></div>
         <p>Age = evaluation − acquisition. Threshold equality is fresh. Future and pending deliveries are labeled separately. All history remains visible.</p>
         {clockError && <p role="alert">{clockError}</p>}
-        <label>Observation scrubber<input type="range" min="0" max={Math.max(0, rows.length - 1)} value={Math.min(index, Math.max(0, rows.length - 1))} disabled={!rows.length} onChange={e => setIndex(Number(e.target.value))} /></label>
-        {selected ? <><p>Observation {Math.min(index, rows.length - 1) + 1} / {rows.length} · {selected.observation_type} · <strong>{clockError ? 'freshness unavailable' : freshness(selected, clock, threshold).toUpperCase()}</strong></p>
+        <label>Observation scrubber<input type="range" min="0" max={Math.max(0, rows.length - 1)} value={Math.min(index, Math.max(0, rows.length - 1))} aria-valuetext={selected ? `${index + 1} of ${rows.length}, ${selected.observation_type}, acquisition ${selected.acquisition.value_ns} ns` : 'No observations'} disabled={!rows.length} onChange={e => setIndex(Number(e.target.value))} /></label>
+        {selected ? <><p role="status">Observation {Math.min(index, rows.length - 1) + 1} / {rows.length} · {selected.observation_type} · <strong>{clockError ? 'freshness unavailable' : freshness(selected, clock, threshold).toUpperCase()}</strong></p>
           <button type="button" onClick={() => setEvaluation(selected.acquisition.value_ns)}>Evaluate at selected acquisition</button><Reading record={selected} /></> : <p>No observations for this sensor. Missing stream; expected sample rate unknown.</p>}
       </section>
-      {SENSORS.filter(s => sensor === 'all' || s === sensor).map(s => { const history = rows.filter(r => r.observation_type === s && r.source.session_id === selected?.source.session_id && r.source_sha256 === selected?.source_sha256 && (r.origin === 'raw' || r.config_sha256 === selected?.config_sha256)); const fields = new Map(history.flatMap(r => r.values ?? []).map(f => [f.name, f.unit])); return <section key={s} aria-label={`${s} history`}><h2>{s === 'imu' ? 'IMU' : s === 'gnss' ? 'GNSS' : 'Barometer'}</h2>
+      {SENSORS.filter(s => sensor === 'all' || s === sensor).map(s => { const history = rows.filter(r => r.observation_type === s && r.source.session_id === selected?.source.session_id && r.source.vehicle_id === selected?.source.vehicle_id && r.source_sha256 === selected?.source_sha256 && (r.origin === 'raw' || r.config_sha256 === selected?.config_sha256)); const fields = new Map(history.flatMap(r => r.values ?? []).map(f => [f.name, f.unit])); return <section key={s} aria-label={`${s} history`}><h2>{s === 'imu' ? 'IMU' : s === 'gnss' ? 'GNSS' : 'Barometer'}</h2>
         <p>{s === 'imu' ? 'Body FLU sensor frame. Acceleration is specific force; orientation is quaternion xyzw relative to initial world alignment.' : s === 'gnss' ? 'WGS84 degrees; altitude relative to configured spherical origin. Simulated reference only; geographic elevation accuracy is not established.' : 'Scalar pressure at sensor origin. Derived altitude shown only when supplied; atmosphere/reference assumptions are not exported by Phase 75D and are not inferred.'}</p>
-        <p>Charts use the selected observation’s session, recording digest and impairment configuration.</p><p>Frame: {[...new Set(history.map(r => r.frame))].join(', ') || 'unavailable'} · Missing observations: {history.filter(r => r.values === null).length}</p>
+        <p>Charts use the selected observation’s session, vehicle, recording digest and impairment configuration.</p><p>Frame: {[...new Set(history.map(r => r.frame))].join(', ') || 'unavailable'} · Missing observations: {history.filter(r => r.values === null).length}</p>
         {history.length ? <div className="sensor-chart-grid">{[...fields].flatMap(([field, unit]) => (['raw', 'impaired'] as const).map(origin => {const series = history.filter(r => r.origin === origin); return series.length ? <div key={`${field}/${origin}`}><p>{origin}</p><History rows={series} field={field} unit={unit} /></div> : null;}))}</div> : <p>Missing stream; no measurements.</p>}
       </section>; })}
       <section aria-label="Data quality"><h2>Data quality</h2><p>Dropouts: {rows.filter(r => r.values === null).length}. Source STALE labels describe recorded latency; selected-time freshness is calculated separately. Missing expected samples cannot be inferred without a rate contract.</p>

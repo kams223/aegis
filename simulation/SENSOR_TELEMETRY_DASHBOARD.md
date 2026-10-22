@@ -82,12 +82,14 @@ geographic elevation attestation. Barometer plots retain pressure, variance and
 explicit derived altitude if present. No altitude is calculated; atmosphere and
 reference assumptions absent from Phase 75D remain unknown.
 
-Charts use the selected observation's session and source recording digest, and
+Charts use the selected observation's session, vehicle and source recording digest, and
 its impairment configuration for impaired series. This prevents joining unrelated
 runs or configurations. Select an impaired record to see its impaired histories.
 Each chart uses acquisition time and a deterministic maximum of 256 points.
-Buckets containing unavailable fields become gaps. Sampling can omit extrema;
-use the record inspector for exact values. No interpolation or zero fill occurs.
+Stable min/max buckets preserve extrema within the available point budget;
+segment boundaries prevent connections across omitted dropouts. See the Phase
+75F reliability note below for exact guarantees and limitations. No interpolation
+or zero fill occurs.
 
 For original/impaired comparison, load a second Phase 75D inspection. The source
 identity (including session and clock), original recording SHA-256 and acquisition
@@ -221,3 +223,159 @@ with 2 opt-in simulator skips, and `git diff --check`. Its logs and
 static build are `/tmp/aegis75e-final-review-*`, outside Git. Only the manifest's
 14 source, test, configuration and documentation files are intended for the PR;
 no generated build output, temporary recording or raw evidence is included.
+
+
+## Phase 75F reliability and browser validation
+
+Checkpoint: `codex/phase75f-dashboard-reliability`, parent
+`5215dab417af3c363120d433e8141b2adb4e8888`, verified with a clean working tree.
+The Phase 75E results above are historical; the results below supersede its
+sampling and unverified-browser status. Python contracts, schemas, baselines,
+evidence and dependency files remain unchanged.
+
+### Sampling invariants and limits
+
+The sampler sorts an independent projection by exact uint64 acquisition time;
+equal timestamps retain input order. Original timestamps and source arrays are
+unchanged. Invalid timestamps fail closed. Missing fields, dropouts and nonfinite
+or nonnumeric field values become unavailable, never zero. File validation still
+rejects malformed accepted records before the chart can receive them.
+
+For a series longer than the budget, reserve the first and last valid readings.
+Divide the time-ordered observation indices into equal buckets, using
+`floor((budget - reserved endpoints) / 2)` buckets. Keep each bucket's minimum
+and maximum available value, with earliest-index tie breaking. Fill unused slots
+in input order and return selected indices in time order. The default and maximum
+used by the UI is 256; the helper accepts integer budgets of at least two and
+never exceeds the requested budget. An entirely unavailable series renders no
+chart. No values or timestamps are interpolated.
+
+Every unavailable observation advances a segment ID **before sampling**. A change
+of source identity, recording digest, origin or impairment configuration also
+starts a new segment. SVG lines are split when those IDs change, even if the
+budget omits every gap marker. Histories additionally follow the selected
+vehicle/session/recording/configuration, and raw/impaired have separate labeled
+charts. This prevents a reduced point budget from reconnecting dropout gaps or
+joining different channels.
+
+A finite budget cannot preserve every local extremum or the endpoints of every
+available segment. With budgets two or three, only valid endpoints are guaranteed;
+with at least four, bucket extrema include the global minimum and maximum. Several
+spikes/troughs inside one bucket can still compete, and intermediate segments can
+be omitted entirely. Equal-time observations remain ordered but share the same
+horizontal chart coordinate. Use the observation inspector for exact values.
+
+### Accessibility and browser checks
+
+File inputs retain wrapping labels; native buttons, selects, range controls and
+provenance disclosures remain keyboard operable. Controls/disclosures have a
+44 px minimum height, explicit visible focus, bounded file-input width and chart
+grid minimum widths. Successful loading and selected observation/freshness have
+status announcements; rejection and invalid clocks retain alert announcements.
+The slider exposes its observation number, sensor and exact acquisition time.
+Chart accessible names include origin, units, sampled range and clock domain in
+addition to record/missing counts. Quality states and origins use text labels,
+not color alone. Freshness remains based solely on the selected simulation
+evaluation, independent of scrubbing and host time.
+
+No WSL Chromium/Firefox, Playwright or Puppeteer installation was found. Existing
+Windows Edge and Windows Node were available. WSL had about 2.4 GiB available RAM,
+1 GiB swap and 928 GiB free disk at the initial check. No packages or browser
+binaries were downloaded. The sandbox blocked Windows interop and existing CLI
+child processes; approved execution outside it was required. Edge rendered a
+blank page, but Windows denied a remote-debugging TCP port. A temporary CDP pipe
+harness using only existing Windows Node/Edge successfully exercised the local
+production build at `http://127.0.0.1:5183`.
+
+Browser checks passed for Sensor Lab → Sensor Telemetry navigation, explicit
+synthetic loading, local file selection, real 343-record multisensor rendering,
+visible SVG charts, keyboard End scrubbing, GNSS filtering, diagnostic-section visibility,
+comparison with unavailable mismatched recording bytes, matching synthetic
+raw/impaired comparison, and invalid-file alerts/clearing. Desktop was 1440×1000;
+narrow was 390×844 with document width equal to viewport width (no horizontal
+overflow) in the tested GNSS-filtered state. The browser fixture had no rejected
+records, so populated rejection/ordering diagnostics were covered by DOM tests,
+not asserted in Edge. Navigation used programmatic DOM clicks; the range End
+interaction used browser keyboard events. Full Tab-order traversal, file-picker
+dialog keyboard interaction and screen-reader announcements were not exercised
+in Edge. Screenshots were inspected; this is not a pixel-baseline regression
+suite or a screen-reader/device certification.
+
+Harness/logs and screenshots are outside Git:
+
+- `/tmp/aegis75f-browser.cjs`, `/tmp/aegis75f-browser.log`
+- `/tmp/aegis75f-desktop.png`, `/tmp/aegis75f-narrow.png`
+- `/tmp/aegis75f-invalid.png`, `/tmp/aegis75f-comparison.png`
+- `/tmp/aegis75f-charts.png` (desktop chart viewport)
+
+The temporary Edge profiles are `C:\Users\Public\aegis75f-browser` and
+`C:\Users\Public\aegis75f-pipe`. Only this phase's browser processes were
+closed; no existing browser sessions or Docker services were changed.
+
+### Final validation and performance
+
+Final results and peak RSS are recorded below. Measurements use `/usr/bin/time
+-v` on WSL; peak RSS is a process/child maximum, not the sum of simultaneously
+running workers or Windows browser memory. Checks ran alongside other validation
+work, so elapsed times are environment-dependent. Chart work is bounded by 1024
+input observations and 256 output points; no new timers, retained datasets,
+production dependencies or network behavior were added. Parsing remains bounded
+and synchronous, and the existing two-file memory limit remains.
+
+Remaining risks: extrema competition under small budgets, unavailable source
+values and expected rates, unverified screen-reader output and physical touch
+devices, and unmeasured Windows browser peak memory. The browser harness and
+screenshots are temporary review artifacts rather than committed infrastructure.
+
+
+| Check | Final result | Wall time | Peak RSS |
+| --- | --- | --- | --- |
+| Focused dashboard | 18 passed | 6.41 s | 266 MiB |
+| Full frontend, two workers | 384 passed, 18 files | 61.99 s | 332 MiB |
+| TypeScript | passed | 2.50 s | 277 MiB |
+| Production build | passed | 1.19 s (Vite 559 ms) | 231 MiB |
+| Full Python regression | 2446 passed, 2 opt-in simulator skips | 156.51 s | 395 MiB |
+| `git diff --check` | passed | — | — |
+
+The Python runner reported 163.14 s internally; the table records the external
+`time` measurement. Build output is `/tmp/aegis75f-dist`. Final JS is 468.72 kB
+(118.12 kB gzip) and CSS 36.15 kB (8.14 kB gzip); see the build log for exact sizes.
+Logs are `/tmp/aegis75f-{focused,frontend,typecheck,build,python-full}.log`.
+The initial Python collection attempt omitted `PYTHONPATH=src` and was corrected;
+a sandbox rerun stalled in existing API tests and was stopped before the successful
+unrestricted run. Existing frontend CLI tests likewise needed unrestricted child
+process execution. No production permissions were changed.
+
+Changed-file manifest for Phase 75F:
+
+- `web/monitoring-console/src/sensor/model.ts`: stable extrema sampling and segment IDs.
+- `web/monitoring-console/src/sensor/SensorDashboard.tsx`: gap-safe SVG paths,
+  selected-vehicle isolation, chart text alternatives and status/slider semantics.
+- `web/monitoring-console/src/sensor/sensor.css`: focus, control targets and width bounds.
+- `web/monitoring-console/tests/sensor-dashboard.test.tsx`: five new focused
+  regression cases plus corrected first-valid-reading expectation; existing tests
+  continue to cover selected-time freshness, provenance, malformed/oversized files,
+  invalid accepted records, raw/impaired distinction and unavailable comparisons.
+- `simulation/SENSOR_TELEMETRY_DASHBOARD.md`: reliability invariants, limitations,
+  browser environment, screenshots and measured results.
+
+No baseline, dependency manifest, lockfile, evidence or generated artifact appears
+in the diff. At the initial implementation checkpoint, no Gazebo run, commit, push or merge
+was performed; the changes were stopped for review.
+
+### Pre-PR audit
+
+The five-file diff was reviewed again against the Phase 75F parent. No confirmed
+implementation issue required a functionality change. Browser claims were narrowed
+to the interactions actually asserted by the retained Edge harness/log; this audit
+did not rerun Edge or expand the existing device/accessibility coverage.
+
+The pre-PR rerun passed 18 focused dashboard tests, 384 frontend tests across 18
+files, TypeScript checking, production build, 2446 Python regressions with two
+opt-in simulator skips, and `git diff --check`. Its logs are
+`/tmp/aegis75f-audit-{focused,frontend,typecheck,build,python}.log` and build output
+is `/tmp/aegis75f-audit-dist`. Peak RSS was about 212 MiB focused, 330 MiB full
+frontend, 274 MiB typecheck, 240 MiB build and 394 MiB Python. Only the five files
+listed above are intended for the commit; generated artifacts, dependencies,
+contracts, baselines and evidence remain outside the diff. GitHub Actions status
+will be reported on the PR; the existing workflow runs Python tests only.
