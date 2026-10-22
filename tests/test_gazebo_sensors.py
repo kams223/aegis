@@ -10,7 +10,7 @@ HERE=Path(__file__).resolve().parents[1]/'simulation/gazebo-smoke'
 
 @pytest.fixture
 def sensors(monkeypatch):
-    for name in ('smoke','launch','experimental','aircraft','sensor_checks','sensors'):
+    for name in ('smoke','launch','experimental','aircraft','sensor_checks','sensor_startup','sensors'):
         spec=importlib.util.spec_from_file_location(name,HERE/(name+'.py'))
         mod=importlib.util.module_from_spec(spec); monkeypatch.setitem(sys.modules,name,mod);spec.loader.exec_module(mod)
     return mod
@@ -268,3 +268,103 @@ def test_imu_inverse_rotation_and_supported_force_direction(sensors):
     result=sensors.analyze_sensors(s,p)
     assert not result['passed']
     assert result['comparisons']['imu']['settled_max_specific_force_vector_error_m_s2']==pytest.approx(19.62)
+
+
+@pytest.mark.parametrize('missing',['clock','pose','imu','gnss','barometer',None])
+def test_startup_needs_advancing_clock_and_every_observer(sensors,missing):
+    from sensor_startup import StartupTrace
+    trace=StartupTrace()
+    trace.mark('world_initialization_log_received')
+    trace.mark('first_clock',sim_time_ns=0,paused=True)
+    trace.mark('control_result',acknowledged=True)
+    assert not trace.verified()
+    names={'clock':'first_advancing_clock','pose':'first_pose','imu':'first_imu','gnss':'first_gnss','barometer':'first_barometer'}
+    for key,event in names.items():
+        if key!=missing:trace.mark(event,sim_time_ns=1000000)
+    assert trace.verified() is (missing is None)
+    before=trace.snapshot();trace.mark('first_clock',sim_time_ns=999)
+    assert trace.snapshot()['first_clock']==before['first_clock']
+
+
+@pytest.mark.parametrize('fault',[None,'publisher','subscriber','type','service'])
+def test_schema_discovery_conditions(sensors,fault):
+    from types import SimpleNamespace as N
+    from sensor_startup import discover,EXPECTED_TOPICS
+    class Node:
+        def topic_info(self,topic):
+            kind=EXPECTED_TOPICS[topic]
+            return ([] if fault=='publisher' else [N(msg_type_name='wrong' if fault=='type' else kind)],
+                    [] if fault=='subscriber' else [N(msg_type_name=kind)])
+        def service_info(self,service):
+            return [] if fault=='service' else [N(req_type_name='gz.msgs.WorldControl',rep_type_name='gz.msgs.Boolean')]
+    assert bool(discover(Node())) is (fault is not None)
+
+
+def test_discovery_deadline_does_not_retry_control(sensors,monkeypatch):
+    import sensor_startup
+    events=[]
+    monkeypatch.setattr(sensor_startup,'discover',lambda node:['service:missing'])
+    ticks=iter([0,11]);monkeypatch.setattr(sensor_startup.time,'monotonic',lambda:next(ticks))
+    with pytest.raises(ValueError,match='discovery timeout'):
+        sensor_startup.wait_discovery(object(),lambda event,**details:events.append((event,details)))
+    assert events==[('discovery_timeout',{'missing':['service:missing']})]
+
+
+@pytest.mark.parametrize('ok,data',[(True,True),(True,False),(False,False)])
+def test_control_only_process_sends_one_request_without_subscribing(sensors,monkeypatch,capsys,ok,data):
+    import sensor_startup,json,types
+    from types import SimpleNamespace as N
+    calls=[]
+    class Node:
+        def request(self,*args):
+            calls.append(args)
+            return ok,N(data=data)
+        def subscribe(self,*args):pytest.fail('Control process must not subscribe')
+    transport=types.ModuleType('gz.transport13');transport.Node=Node
+    control=types.ModuleType('gz.msgs10.world_control_pb2');control.WorldControl=lambda **kwargs:N(**kwargs)
+    boolean=types.ModuleType('gz.msgs10.boolean_pb2');boolean.Boolean=object
+    for key,value in [('gz.transport13',transport),('gz.msgs10.world_control_pb2',control),('gz.msgs10.boolean_pb2',boolean)]:monkeypatch.setitem(sys.modules,key,value)
+    monkeypatch.setattr(sensor_startup.os,'geteuid',lambda:10001)
+    monkeypatch.setenv('GZ_PARTITION','aegis-smoke-test')
+    monkeypatch.setattr(sensor_startup,'wait_discovery',lambda node,emit:emit('transport_discovered'))
+    assert sensor_startup.control_main()==(0 if ok and data else 2)
+    events=[json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert len(calls)==1 and calls[0][-1]==3000
+    assert events[-2]['event']=='control_request_sent' and events[-2]['attempt']==1
+    assert events[-1]['acknowledged'] is (ok and data)
+
+
+def test_controller_script_entrypoint_is_gated(sensors):
+    import subprocess,json,os
+    if os.geteuid()==10001:pytest.skip('Host guard test requires ordinary test UID')
+    result=subprocess.run([sys.executable,'-B',str(HERE/'sensor_startup.py')],capture_output=True,text=True,timeout=5)
+    assert result.returncode==2
+    assert json.loads(result.stdout)['event']=='control_failure'
+
+
+@pytest.mark.parametrize('mode,expected',[
+    ('not_sent','control_not_attempted_readiness_failed'),
+    ('rejected','control_rejected'),
+    ('paused','only_paused_observed_delivery_or_observer_state_unresolved'),
+    ('missing','simulation_advanced_required_observations_missing'),
+    ('unacknowledged','observed_running_unacknowledged'),
+    ('running','observed_running'),
+])
+def test_startup_classification_does_not_guess_delivery(sensors,mode,expected):
+    from sensor_startup import classify_startup
+    events={} if mode=='not_sent' else {'control_request_sent':{}}
+    control={'transport_result':mode!='paused','response_data':mode!='rejected','acknowledged':mode=='running'}
+    if mode in ('missing','unacknowledged','running'):events['first_advancing_clock']={}
+    if mode in ('unacknowledged','running'):
+        for name in ('pose','imu','gnss','barometer'):events['first_'+name]={}
+    assert classify_startup(events,control,[{'time_ns':0,'paused':True}])==expected
+
+
+def test_paused_startup_times_out_even_with_successful_control_ack(sensors,monkeypatch,tmp_path):
+    from types import SimpleNamespace as N
+    from sensor_startup import StartupTrace
+    report={'startup_verified':False,'timed_out':False}
+    monkeypatch.setattr(sensors.time,'monotonic',lambda:26)
+    with pytest.raises(ValueError,match='required observations startup timeout'):
+        sensors.monitor_server(N(poll=lambda:None),tmp_path/'unused',0,sensors.profile(),report,lambda:[],StartupTrace())
+    assert not report['startup_verified'] and report['timed_out']

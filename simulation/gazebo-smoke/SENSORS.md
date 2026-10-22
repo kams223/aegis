@@ -1,5 +1,9 @@
 # Phase 75B — real simulated sensor observations
 
+Phase 75B-R startup diagnosis, reliability changes and the ten-run validation are
+documented in [STARTUP-RELIABILITY.md](STARTUP-RELIABILITY.md). Historical results
+below remain preserved; use the new reliability report for the current harness.
+
 This separate passive experiment starts at commit
 `48c25f88ef8401d7c6c477256093bff7a1af4aa1`. Phase 75A files and the
 Phase 74A 8.3.0 simulation contract are unchanged. `sensor-aircraft.sdf`
@@ -123,14 +127,14 @@ simulation results, not a precision claim for physical instruments.
 
 The JSON summary records each run's memory peak, PID peak, exits, cleanup,
 configuration, rates, residuals and raw report SHA-256. To independently
-recheck a finalization report with the current validators, set
-`AEGIS_EVIDENCE_ROOT` to the external `aegis75b-finalization-reviewed` directory:
+recheck a current reliability-series report with the current validators, set
+`AEGIS_EVIDENCE_ROOT` to the external `aegis75br-20261022` directory:
 
 ```sh
 PYTHONPATH=simulation/gazebo-smoke python3 -B - <<'PY'
 import json, os, sensors
 from pathlib import Path
-r = json.loads((Path(os.environ['AEGIS_EVIDENCE_ROOT']) / 'repeat-1/report.json').read_text())
+r = json.loads((Path(os.environ['AEGIS_EVIDENCE_ROOT']) / 'run-01/report.json').read_text())
 e = r['evidence']
 assert r['success'] and r['cleanup_ok']
 for name, digest in r['harness_sha256'].items():
