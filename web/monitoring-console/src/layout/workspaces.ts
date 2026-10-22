@@ -3,7 +3,7 @@ export const WORKSPACES = [
     { id: 'Overview', label: 'Overview' }, { id: 'Devices', label: 'Devices' },
   ] },
   { id: 'sensors', label: 'Sensor Lab', context: 'Declared evidence references; clocks not aligned.', pages: [
-    { id: 'Observations', label: 'Observations' }, { id: 'Sensor Fusion', label: 'Sensor Fusion' }, { id: 'Evidence', label: 'Camera & Evidence' },
+    { id: 'Observations', label: 'Observations' }, { id: 'Sensor Telemetry', label: 'Sensor Telemetry' }, { id: 'Sensor Fusion', label: 'Sensor Fusion' }, { id: 'Evidence', label: 'Camera & Evidence' },
   ] },
   { id: 'training', label: 'Training Ground', context: 'Illustrative simulation; abstract scene units.', pages: [
     { id: 'Simulation', label: 'Simulation' },

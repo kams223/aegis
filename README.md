@@ -1599,6 +1599,12 @@ connectivity/evidence announcement; callers must retain the original ordered
 events and their results if they need a complete replay history. The API does not provide resumable cursors,
 live adapters, sensor decoding, tracking, localization, threat scoring or control.
 
+## Offline sensor telemetry dashboard (Phase 75E)
+
+The existing console includes **Sensor Lab → Sensor Telemetry** for local Phase 75D
+inspection JSON: sensor histories, selected-time freshness, quality diagnostics,
+and original/impaired comparison. See [launch instructions, bounds and limitations](simulation/SENSOR_TELEMETRY_DASHBOARD.md).
+
 ## Offline React monitoring console (Phase 63)
 
 `web/monitoring-console/` is an isolated React + TypeScript application for the

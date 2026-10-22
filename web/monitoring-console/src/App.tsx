@@ -9,6 +9,7 @@ import { INITIAL_PAGE } from './layout/workspaces';
 import type { PageId } from './layout/workspaces';
 import { FlightOperations } from './flight/FlightOperations';
 import { FusionReplay } from './fusion/FusionReplay';
+import { SensorDashboard } from './sensor/SensorDashboard';
 
 export default function App({ text = fixtureText }: { text?: string }) {
   const [panel, setPanel] = useState<PageId>(INITIAL_PAGE);
@@ -32,6 +33,7 @@ export default function App({ text = fixtureText }: { text?: string }) {
   const content = panel === 'Overview' ? <Overview session={session} onEventSelect={openEvent} />
     : panel === 'Devices' ? <Devices snapshot={snapshot} />
     : panel === 'Observations' ? <Observations snapshot={snapshot} />
+    : panel === 'Sensor Telemetry' ? <SensorDashboard />
     : panel === 'Sensor Fusion' ? <FusionReplay session={session} />
     : panel === 'Evidence' ? <><CameraPanel snapshot={snapshot} /><Evidence snapshot={snapshot} /></>
     : panel === 'Simulation' ? <SimulationPanel />

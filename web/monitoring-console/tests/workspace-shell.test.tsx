@@ -60,7 +60,7 @@ it('opens each workspace default and preserves the active page and filter state 
   expect(secondary().getByRole('button', { name: 'Devices' })).toHaveAttribute('aria-current', 'page');
   expect(screen.getByLabelText('Device category')).toHaveValue('third_party');
   fireEvent.click(primary().getByRole('button', { name: 'Sensor Lab' }));
-  expect(secondary().getAllByRole('button').map(b => b.textContent)).toEqual(['Observations', 'Sensor Fusion', 'Camera & Evidence']);
+  expect(secondary().getAllByRole('button').map(b => b.textContent)).toEqual(['Observations', 'Sensor Telemetry', 'Sensor Fusion', 'Camera & Evidence']);
   expect(secondary().queryByRole('button', { name: 'Devices' })).toBeNull();
 });
 
@@ -159,7 +159,7 @@ it('keeps secondary navigation horizontal and content-sized with compact, wrappi
     const nav = screen.getByRole('navigation', { name: 'Workspace pages' });
     const computed = getComputedStyle(nav);
     expect(computed.display).toBe('flex'); expect(computed.flexDirection).toBe('row'); expect(computed.flexWrap).toBe('wrap');
-    expect(within(nav).getAllByRole('button').map(b => b.textContent)).toEqual(['Observations', 'Sensor Fusion', 'Camera & Evidence']);
+    expect(within(nav).getAllByRole('button').map(b => b.textContent)).toEqual(['Observations', 'Sensor Telemetry', 'Sensor Fusion', 'Camera & Evidence']);
     for (const button of within(nav).getAllByRole('button')) {
       const rules = getComputedStyle(button);
       expect(rules.width).toBe('auto'); expect(rules.flexGrow).toBe('0'); expect(rules.minHeight).toBe('36px');
