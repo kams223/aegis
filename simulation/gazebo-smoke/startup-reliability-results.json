@@ -1,0 +1,4391 @@
+{
+  "schema_version": 1,
+  "artifact_kind": "measured_reliability_summary",
+  "phase": "75B-R",
+  "parent_commit": "c6d61cc97fcd2a069de2399a2c6f1bb37605a00a",
+  "generated_at_utc": "2026-10-22T02:29:33.076717+00:00",
+  "raw_artifacts_tracked": false,
+  "raw_root_id": "aegis75br-20261022",
+  "diagnosis": {
+    "confirmed_mechanism": "The pinned synchronous transport request retains the Python GIL. Subscription callbacks require it. A long request can cover the bounded simulation and leave an immediate observer snapshot empty while an independent process observes advancing simulation.",
+    "retrospective_limit": "Historical failures did not record receipt/control timestamps; their exact reply/dispatch interleaving cannot be recovered. This mechanism reproduces their paused-only snapshot signature; it does not prove packet loss or service rejection.",
+    "sources": [
+      "https://gazebosim.org/api/sim/8/pause_run_simulation.html",
+      "https://github.com/gazebosim/gz-sim/blob/gz-sim8_8.15.0/src/SimulationRunner.cc",
+      "https://github.com/gazebosim/gz-transport/blob/gz-transport13/python/src/transport/_gz_transport_pybind11.cc"
+    ]
+  },
+  "diagnostic_probes": [
+    {
+      "probe_id": "inspect_node.py",
+      "category": "diagnostic_not_independent_validation",
+      "log_sha256": "552b2362f6922a2b152c7249a40ed689339c8d506ea43779736058e42414cf65",
+      "source_sha256": "b3a848b4b9ec4ee52e782f7171c7ba947e986c03e4f35491f392f61e1f8f1d01"
+    },
+    {
+      "probe_id": "gil_probe.py",
+      "category": "diagnostic_not_independent_validation",
+      "log_sha256": "fafcf88ef0ad6a5157a8708a3dce5c6156a177c3011d3ff53706e75683cc2e8b",
+      "source_sha256": "e956c7b55e668a3326c81fd3e7db21d7b3ac8ec31db3d491cbdcd3782555de3f",
+      "measurement": {
+        "ok": false,
+        "request_seconds": 1.0045669099781662,
+        "heartbeat_ticks_during_request": 1,
+        "maximum_heartbeat_gap_seconds": 1.013815515965689,
+        "tick_count": 10
+      }
+    },
+    {
+      "probe_id": "api_probe.py",
+      "category": "diagnostic_not_independent_validation",
+      "log_sha256": "01a7c182860af1736c2d2ca53ea474cec1bc8a19af8f795d22e82508118c8764",
+      "source_sha256": "dc12ccdb10dff8db8396fa58242b18979f472907637e8768e19e5dc80922c360"
+    },
+    {
+      "probe_id": "blocking_observer.py",
+      "category": "diagnostic_not_independent_validation",
+      "log_sha256": "da377e991917af23191fb2fa8871ef28eb0b0de7b887a3263d097cd58e3861ec",
+      "source_sha256": "c1a1380d99eb99f3f75902b9fb71dad30e489fc113c8dc742b85ea8be594e431",
+      "blocking_request_seconds": 3.002742233,
+      "immediate_counts": null,
+      "immediate_server_exit": null,
+      "observer_final_counts": {
+        "clock": 64,
+        "pose": 200,
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "witness_counts": {
+        "clock": 64,
+        "pose": 200,
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "witness_control_output": "data: true",
+      "first_imu_receipt_seconds_from_block_start": {
+        "blocked_observer": 3.009187204,
+        "independent_witness": 2.732922019
+      },
+      "witness_max_clock_ns": 1938000000,
+      "witness_max_imu_ns": 2000000000,
+      "pose_timestamp_note": "Diagnostic Pose_V aggregate header was zero; use witness clock/sensor timestamps for progression, not the diagnostic aggregate pose header."
+    },
+    {
+      "probe_id": "blocking_observer8.py",
+      "category": "diagnostic_not_independent_validation",
+      "log_sha256": "aa062f56fe4e2e3e28be074745159d5fcfd5edb7269cb4ee922adf644b8ef9d7",
+      "source_sha256": "86647e0832633300c3af67eb609fdfdac8de0478b9194d681e47d272d0e68209",
+      "blocking_request_seconds": 8.002495006,
+      "immediate_counts": null,
+      "immediate_server_exit": null,
+      "observer_final_counts": {
+        "clock": 49,
+        "pose": 200,
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "witness_counts": {
+        "clock": 49,
+        "pose": 200,
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "witness_control_output": "data: true",
+      "first_imu_receipt_seconds_from_block_start": {
+        "blocked_observer": 8.009258497,
+        "independent_witness": 1.252218463
+      },
+      "witness_max_clock_ns": 1965000000,
+      "witness_max_imu_ns": 2000000000,
+      "pose_timestamp_note": "Diagnostic Pose_V aggregate header was zero; use witness clock/sensor timestamps for progression, not the diagnostic aggregate pose header."
+    },
+    {
+      "probe_id": "blocking_snapshot.py",
+      "category": "diagnostic_not_independent_validation",
+      "log_sha256": "8b4414873b0df0d276658c4e6e5ff1682358fc516ebb31915b773cfbe029c1d8",
+      "source_sha256": "b98535c1c8d23a4e7c84cfaa47724f404f6ef563d688c1cb40139c25090dcaf0",
+      "blocking_request_seconds": 8.001197573,
+      "immediate_counts": {
+        "clock": 2,
+        "pose": 0,
+        "imu": 0,
+        "gnss": 0,
+        "barometer": 0
+      },
+      "immediate_server_exit": 0,
+      "observer_final_counts": {
+        "clock": 59,
+        "pose": 200,
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "witness_counts": {
+        "clock": 59,
+        "pose": 200,
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "witness_control_output": "data: true",
+      "first_imu_receipt_seconds_from_block_start": {
+        "blocked_observer": 8.002398935,
+        "independent_witness": 1.588208787
+      },
+      "witness_max_clock_ns": 1968000000,
+      "witness_max_imu_ns": 2000000000,
+      "pose_timestamp_note": "Diagnostic Pose_V aggregate header was zero; use witness clock/sensor timestamps for progression, not the diagnostic aggregate pose header."
+    }
+  ],
+  "pilots": [
+    {
+      "run_id": "fix-pilot-1",
+      "category": "development_pilot_not_validation",
+      "retry_of": null,
+      "success": false,
+      "cleanup_ok": true,
+      "report_sha256": "13a883f66511f30cac9bac1bff4c664bffb037b2a6dde2269855cf718717a274",
+      "container_log_sha256": "b89297771d3d79551fbab4d9585eb8ad27a51d7b3e1d40a631c5a6ff3a6d434b",
+      "error": "Physics verification failed",
+      "runtime_error": "Advancing clock and required observations startup timeout",
+      "startup_classification": "control_not_attempted_readiness_failed",
+      "startup_verified": false,
+      "host_events": {
+        "container_create_requested": {
+          "monotonic_ns": 278589635948776,
+          "utc": "2026-10-22T02:21:13.362485+00:00"
+        },
+        "container_created": {
+          "monotonic_ns": 278589746189342,
+          "utc": "2026-10-22T02:21:13.472728+00:00"
+        },
+        "container_start_requested": {
+          "monotonic_ns": 278589746340150,
+          "utc": "2026-10-22T02:21:13.472876+00:00"
+        },
+        "container_exit_observed": {
+          "monotonic_ns": 278615777292298,
+          "utc": "2026-10-22T02:21:39.596617+00:00"
+        },
+        "container_removal_verified": {
+          "monotonic_ns": 278615919680054,
+          "utc": "2026-10-22T02:21:39.739004+00:00"
+        }
+      },
+      "container_started_at": "2026-10-22T02:21:13.53781187Z",
+      "container_finished_at": "2026-10-22T02:21:39.44813718Z",
+      "startup_events": {
+        "observer_initialized": {
+          "monotonic_ns": 278590474743322,
+          "utc": "2026-10-22T02:21:14.201336+00:00"
+        },
+        "subscriptions_registered": {
+          "monotonic_ns": 278590479236729,
+          "utc": "2026-10-22T02:21:14.205775+00:00",
+          "topics": [
+            "/aegis/aircraft/pose",
+            "/world/aegis_sensor_aircraft/stats",
+            "/world/aegis_sensor_aircraft/model/passive_aircraft/link/body/sensor/ground_contact/contact",
+            "/aegis/sensors/imu",
+            "/aegis/sensors/gnss",
+            "/aegis/sensors/barometer"
+          ]
+        },
+        "server_spawn_requested": {
+          "monotonic_ns": 278590479506872,
+          "utc": "2026-10-22T02:21:14.206042+00:00"
+        },
+        "server_process_created": {
+          "monotonic_ns": 278590480733969,
+          "utc": "2026-10-22T02:21:14.207272+00:00",
+          "pid": 15
+        },
+        "first_clock": {
+          "monotonic_ns": 278592777928968,
+          "utc": "2026-10-22T02:21:16.504481+00:00",
+          "sim_time_ns": 0,
+          "paused": true
+        },
+        "server_initialization_log_received": {
+          "monotonic_ns": 278592792673095,
+          "utc": "2026-10-22T02:21:16.519216+00:00"
+        },
+        "world_initialization_log_received": {
+          "monotonic_ns": 278592794897539,
+          "utc": "2026-10-22T02:21:16.521442+00:00"
+        },
+        "world_discovery_log_received": {
+          "monotonic_ns": 278592795299632,
+          "utc": "2026-10-22T02:21:16.521840+00:00"
+        },
+        "controller_spawn_requested": {
+          "monotonic_ns": 278592800748251,
+          "utc": "2026-10-22T02:21:16.527294+00:00"
+        }
+      },
+      "control_events": [],
+      "startup_seconds_from_server_spawn": {
+        "server_initialization_log_received": 2.313166223,
+        "world_initialization_log_received": 2.315390667,
+        "world_discovery_log_received": 2.31579276,
+        "first_clock": 2.298422096,
+        "controller_spawn_requested": 2.321241379,
+        "transport_discovered": null,
+        "control_request_sent": null,
+        "control_result": null,
+        "first_advancing_clock": null,
+        "first_pose": null,
+        "first_imu": null,
+        "first_gnss": null,
+        "first_barometer": null,
+        "startup_verified": null
+      },
+      "control_request_count": 0,
+      "unpause_acknowledged": null,
+      "control_roundtrip_seconds": null,
+      "peak_memory_bytes": 109113344,
+      "peak_pids": 23,
+      "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "pids_events": null,
+      "cpu_stat": "usage_usec 15171097\nuser_usec 6617275\nsystem_usec 8553821\nnice_usec 0\nnr_periods 257\nnr_throttled 14\nthrottled_usec 652542\nnr_bursts 0\nburst_usec 0\n",
+      "observer_monitor_max_gap_seconds": 0.1315650999895297,
+      "harness_wall_seconds": 25.096523403015453,
+      "host_wall_seconds": null,
+      "server_exit_code": 0,
+      "controller_exit_code": 0,
+      "container_exit_code": 2,
+      "attach_exit_code": 2,
+      "oom_killed": false,
+      "timed_out": true,
+      "clock_samples": 225,
+      "clock_time_range_ns": [
+        0,
+        0
+      ],
+      "advancing_clock_samples": 0,
+      "pose_samples": 0,
+      "sensor_samples": {
+        "imu": 0,
+        "gnss": 0,
+        "barometer": 0
+      },
+      "sensor_analysis": {
+        "passed": false,
+        "diagnostics": [
+          "ground_truth: Missing ground truth"
+        ],
+        "streams": {},
+        "comparisons": {}
+      },
+      "harness_sha256": {
+        "sensors.py": "71ed6047d4d4b267c9ff977405f130ec746c6631772c67e95d136111755da2d6",
+        "sensor_checks.py": "64a68d2d8c47d01b0290619dca381e70364a2555ef7221d070ef1c0d1599923f",
+        "sensor_startup.py": "6f71bd8ff7ecb82aac51e3248a2f81e75a2b8397e822a77986e2b52398a95e45",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "gazebo_version": "8.15.0",
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "purpose": "First draft helper had no script entrypoint; failure preserved"
+    },
+    {
+      "run_id": "fix-pilot-2",
+      "category": "development_pilot_not_validation",
+      "retry_of": null,
+      "success": true,
+      "cleanup_ok": true,
+      "report_sha256": "4dacf9c376e05b31b83dadbe740808c63b0ac9d82e74386ad94b7dfc719a39ff",
+      "container_log_sha256": "d49d21094be81df0ac6d8ca8614b79095e251c2a6138c0f59b8358681e1cd15b",
+      "error": null,
+      "runtime_error": null,
+      "startup_classification": "observed_running",
+      "startup_verified": true,
+      "host_events": {
+        "container_create_requested": {
+          "monotonic_ns": 278668626091320,
+          "utc": "2026-10-22T02:22:32.627195+00:00"
+        },
+        "container_created": {
+          "monotonic_ns": 278668747291052,
+          "utc": "2026-10-22T02:22:32.748395+00:00"
+        },
+        "container_start_requested": {
+          "monotonic_ns": 278668747481574,
+          "utc": "2026-10-22T02:22:32.748584+00:00"
+        },
+        "container_exit_observed": {
+          "monotonic_ns": 278680221515654,
+          "utc": "2026-10-22T02:22:44.222622+00:00"
+        },
+        "container_removal_verified": {
+          "monotonic_ns": 278680543787729,
+          "utc": "2026-10-22T02:22:44.544895+00:00"
+        }
+      },
+      "container_started_at": "2026-10-22T02:22:32.816028671Z",
+      "container_finished_at": "2026-10-22T02:22:44.082637802Z",
+      "startup_events": {
+        "observer_initialized": {
+          "monotonic_ns": 278669457742253,
+          "utc": "2026-10-22T02:22:33.458847+00:00"
+        },
+        "subscriptions_registered": {
+          "monotonic_ns": 278669463538315,
+          "utc": "2026-10-22T02:22:33.464643+00:00",
+          "topics": [
+            "/aegis/aircraft/pose",
+            "/world/aegis_sensor_aircraft/stats",
+            "/world/aegis_sensor_aircraft/model/passive_aircraft/link/body/sensor/ground_contact/contact",
+            "/aegis/sensors/imu",
+            "/aegis/sensors/gnss",
+            "/aegis/sensors/barometer"
+          ]
+        },
+        "server_spawn_requested": {
+          "monotonic_ns": 278669463861324,
+          "utc": "2026-10-22T02:22:33.464963+00:00"
+        },
+        "server_process_created": {
+          "monotonic_ns": 278669464848755,
+          "utc": "2026-10-22T02:22:33.466059+00:00",
+          "pid": 15
+        },
+        "first_clock": {
+          "monotonic_ns": 278671734621239,
+          "utc": "2026-10-22T02:22:35.735737+00:00",
+          "sim_time_ns": 0,
+          "paused": true
+        },
+        "controller_spawn_requested": {
+          "monotonic_ns": 278671735343319,
+          "utc": "2026-10-22T02:22:35.736477+00:00"
+        },
+        "server_initialization_log_received": {
+          "monotonic_ns": 278671765539002,
+          "utc": "2026-10-22T02:22:35.766654+00:00"
+        },
+        "world_initialization_log_received": {
+          "monotonic_ns": 278671767151905,
+          "utc": "2026-10-22T02:22:35.768261+00:00"
+        },
+        "world_discovery_log_received": {
+          "monotonic_ns": 278671767349568,
+          "utc": "2026-10-22T02:22:35.768454+00:00"
+        },
+        "controller_initialized": {
+          "monotonic_ns": 278672960419865,
+          "utc": "2026-10-22T02:22:36.961528+00:00",
+          "emitted": {
+            "event": "controller_initialized",
+            "monotonic_ns": 278672959462261,
+            "utc": "2026-10-22T02:22:36.960576+00:00"
+          }
+        },
+        "transport_discovered": {
+          "monotonic_ns": 278674975176495,
+          "utc": "2026-10-22T02:22:38.976283+00:00",
+          "emitted": {
+            "event": "transport_discovered",
+            "monotonic_ns": 278674974691667,
+            "utc": "2026-10-22T02:22:38.975799+00:00",
+            "topics": {
+              "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+              "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+              "/aegis/sensors/imu": "gz.msgs.IMU",
+              "/aegis/sensors/gnss": "gz.msgs.NavSat",
+              "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+            },
+            "service": "/world/aegis_sensor_aircraft/control"
+          }
+        },
+        "control_request_sent": {
+          "monotonic_ns": 278674975296510,
+          "utc": "2026-10-22T02:22:38.976399+00:00",
+          "emitted": {
+            "event": "control_request_sent",
+            "monotonic_ns": 278674974944206,
+            "utc": "2026-10-22T02:22:38.976048+00:00",
+            "service": "/world/aegis_sensor_aircraft/control",
+            "pause": false,
+            "timeout_ms": 3000,
+            "attempt": 1
+          }
+        },
+        "control_result": {
+          "monotonic_ns": 278675078765436,
+          "utc": "2026-10-22T02:22:39.079874+00:00",
+          "emitted": {
+            "event": "control_result",
+            "monotonic_ns": 278675078010511,
+            "utc": "2026-10-22T02:22:39.079122+00:00",
+            "transport_result": true,
+            "response_data": true,
+            "acknowledged": true
+          }
+        },
+        "first_gnss": {
+          "monotonic_ns": 278675082596630,
+          "utc": "2026-10-22T02:22:39.083710+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_imu": {
+          "monotonic_ns": 278675087390957,
+          "utc": "2026-10-22T02:22:39.088501+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_barometer": {
+          "monotonic_ns": 278675087869894,
+          "utc": "2026-10-22T02:22:39.088976+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_advancing_clock": {
+          "monotonic_ns": 278675088312905,
+          "utc": "2026-10-22T02:22:39.089419+00:00",
+          "sim_time_ns": 2000000
+        },
+        "first_pose": {
+          "monotonic_ns": 278675106082779,
+          "utc": "2026-10-22T02:22:39.107299+00:00",
+          "sim_time_ns": 10000000
+        },
+        "startup_verified": {
+          "monotonic_ns": 278675114226585,
+          "utc": "2026-10-22T02:22:39.115339+00:00"
+        },
+        "server_exit_observed": {
+          "monotonic_ns": 278679961575538,
+          "utc": "2026-10-22T02:22:43.962682+00:00",
+          "exit_code": 0
+        }
+      },
+      "control_events": [
+        {
+          "event": "controller_initialized",
+          "monotonic_ns": 278672959462261,
+          "utc": "2026-10-22T02:22:36.960576+00:00"
+        },
+        {
+          "event": "transport_discovered",
+          "monotonic_ns": 278674974691667,
+          "utc": "2026-10-22T02:22:38.975799+00:00",
+          "topics": {
+            "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+            "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+            "/aegis/sensors/imu": "gz.msgs.IMU",
+            "/aegis/sensors/gnss": "gz.msgs.NavSat",
+            "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+          },
+          "service": "/world/aegis_sensor_aircraft/control"
+        },
+        {
+          "event": "control_request_sent",
+          "monotonic_ns": 278674974944206,
+          "utc": "2026-10-22T02:22:38.976048+00:00",
+          "service": "/world/aegis_sensor_aircraft/control",
+          "pause": false,
+          "timeout_ms": 3000,
+          "attempt": 1
+        },
+        {
+          "event": "control_result",
+          "monotonic_ns": 278675078010511,
+          "utc": "2026-10-22T02:22:39.079122+00:00",
+          "transport_result": true,
+          "response_data": true,
+          "acknowledged": true
+        }
+      ],
+      "startup_seconds_from_server_spawn": {
+        "server_initialization_log_received": 2.301677678,
+        "world_initialization_log_received": 2.303290581,
+        "world_discovery_log_received": 2.303488244,
+        "first_clock": 2.270759915,
+        "controller_spawn_requested": 2.271481995,
+        "transport_discovered": 5.511315171,
+        "control_request_sent": 5.511435186,
+        "control_result": 5.614904112,
+        "first_advancing_clock": 5.624451581,
+        "first_pose": 5.642221455,
+        "first_imu": 5.623529633,
+        "first_gnss": 5.618735306,
+        "first_barometer": 5.62400857,
+        "startup_verified": 5.650365261
+      },
+      "control_request_count": 1,
+      "unpause_acknowledged": true,
+      "control_roundtrip_seconds": 0.103066305,
+      "peak_memory_bytes": 121044992,
+      "peak_pids": 29,
+      "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "pids_events": null,
+      "cpu_stat": "usage_usec 9310816\nuser_usec 5030127\nsystem_usec 4280689\nnice_usec 0\nnr_periods 110\nnr_throttled 67\nthrottled_usec 3862028\nnr_bursts 0\nburst_usec 0\n",
+      "observer_monitor_max_gap_seconds": 0.14312386803794652,
+      "harness_wall_seconds": 10.558845291030593,
+      "host_wall_seconds": null,
+      "server_exit_code": 0,
+      "controller_exit_code": 0,
+      "container_exit_code": 0,
+      "attach_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "clock_samples": 78,
+      "clock_time_range_ns": [
+        0,
+        1970000000
+      ],
+      "advancing_clock_samples": 46,
+      "pose_samples": 200,
+      "sensor_samples": {
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "sensor_analysis": {
+        "passed": true,
+        "diagnostics": [],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_specific_force_vector_error_m_s2": 8.449277583956987e-11,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "gnss": {
+            "max_position_residual_m": 0.0005297403793215194,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "71ed6047d4d4b267c9ff977405f130ec746c6631772c67e95d136111755da2d6",
+        "sensor_checks.py": "64a68d2d8c47d01b0290619dca381e70364a2555ef7221d070ef1c0d1599923f",
+        "sensor_startup.py": "73cf413ac01126055d5bc5cda9a18bfb2cdd808d528d44d89c257ab8d612dfb7",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "gazebo_version": "8.15.0",
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "purpose": "Corrected helper entrypoint; pilot before final log/wait refinements"
+    }
+  ],
+  "independent_sensor_runs": [
+    {
+      "run_id": "run-01",
+      "category": "independent_sensor_validation",
+      "retry_of": null,
+      "success": true,
+      "cleanup_ok": true,
+      "report_sha256": "444f104edfecb19ae8fc7e7ed036886b493cd7064034a1bad5f39c8d19110965",
+      "container_log_sha256": "848654b5512bbdad220a13f5ac1c2a743f5e0d3dca93c9a614892b727514951f",
+      "error": null,
+      "runtime_error": null,
+      "startup_classification": "observed_running",
+      "startup_verified": true,
+      "host_events": {
+        "container_create_requested": {
+          "monotonic_ns": 278763183967474,
+          "utc": "2026-10-22T02:24:07.408694+00:00"
+        },
+        "container_created": {
+          "monotonic_ns": 278763292490202,
+          "utc": "2026-10-22T02:24:07.517218+00:00"
+        },
+        "container_start_requested": {
+          "monotonic_ns": 278763292751408,
+          "utc": "2026-10-22T02:24:07.517477+00:00"
+        },
+        "container_exit_observed": {
+          "monotonic_ns": 278777173717358,
+          "utc": "2026-10-22T02:24:21.480740+00:00"
+        },
+        "container_removal_verified": {
+          "monotonic_ns": 278777515920488,
+          "utc": "2026-10-22T02:24:21.822940+00:00"
+        }
+      },
+      "container_started_at": "2026-10-22T02:24:07.584054994Z",
+      "container_finished_at": "2026-10-22T02:24:21.2820925Z",
+      "startup_events": {
+        "observer_initialized": {
+          "monotonic_ns": 278764017524314,
+          "utc": "2026-10-22T02:24:08.242253+00:00"
+        },
+        "subscriptions_registered": {
+          "monotonic_ns": 278764022419577,
+          "utc": "2026-10-22T02:24:08.247148+00:00",
+          "topics": [
+            "/aegis/aircraft/pose",
+            "/world/aegis_sensor_aircraft/stats",
+            "/world/aegis_sensor_aircraft/model/passive_aircraft/link/body/sensor/ground_contact/contact",
+            "/aegis/sensors/imu",
+            "/aegis/sensors/gnss",
+            "/aegis/sensors/barometer"
+          ]
+        },
+        "server_spawn_requested": {
+          "monotonic_ns": 278764022789192,
+          "utc": "2026-10-22T02:24:08.247516+00:00"
+        },
+        "server_process_created": {
+          "monotonic_ns": 278764023767987,
+          "utc": "2026-10-22T02:24:08.248496+00:00",
+          "pid": 15
+        },
+        "first_clock": {
+          "monotonic_ns": 278766287228972,
+          "utc": "2026-10-22T02:24:10.511959+00:00",
+          "sim_time_ns": 0,
+          "paused": true
+        },
+        "server_initialization_log_received": {
+          "monotonic_ns": 278766289758627,
+          "utc": "2026-10-22T02:24:10.514487+00:00"
+        },
+        "world_initialization_log_received": {
+          "monotonic_ns": 278766290065564,
+          "utc": "2026-10-22T02:24:10.514792+00:00"
+        },
+        "world_discovery_log_received": {
+          "monotonic_ns": 278766290105517,
+          "utc": "2026-10-22T02:24:10.514831+00:00"
+        },
+        "controller_spawn_requested": {
+          "monotonic_ns": 278766296861508,
+          "utc": "2026-10-22T02:24:10.521593+00:00"
+        },
+        "controller_initialized": {
+          "monotonic_ns": 278767705399389,
+          "utc": "2026-10-22T02:24:11.930130+00:00",
+          "emitted": {
+            "event": "controller_initialized",
+            "monotonic_ns": 278767704958224,
+            "utc": "2026-10-22T02:24:11.929687+00:00"
+          }
+        },
+        "transport_discovered": {
+          "monotonic_ns": 278769711875964,
+          "utc": "2026-10-22T02:24:13.936605+00:00",
+          "emitted": {
+            "event": "transport_discovered",
+            "monotonic_ns": 278769711573384,
+            "utc": "2026-10-22T02:24:13.936303+00:00",
+            "topics": {
+              "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+              "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+              "/aegis/sensors/imu": "gz.msgs.IMU",
+              "/aegis/sensors/gnss": "gz.msgs.NavSat",
+              "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+            },
+            "service": "/world/aegis_sensor_aircraft/control"
+          }
+        },
+        "control_request_sent": {
+          "monotonic_ns": 278769712027848,
+          "utc": "2026-10-22T02:24:13.936754+00:00",
+          "emitted": {
+            "event": "control_request_sent",
+            "monotonic_ns": 278769711731411,
+            "utc": "2026-10-22T02:24:13.936458+00:00",
+            "service": "/world/aegis_sensor_aircraft/control",
+            "pause": false,
+            "timeout_ms": 3000,
+            "attempt": 1
+          }
+        },
+        "control_result": {
+          "monotonic_ns": 278769817943643,
+          "utc": "2026-10-22T02:24:14.042682+00:00",
+          "emitted": {
+            "event": "control_result",
+            "monotonic_ns": 278769816892315,
+            "utc": "2026-10-22T02:24:14.041633+00:00",
+            "transport_result": true,
+            "response_data": true,
+            "acknowledged": true
+          }
+        },
+        "first_gnss": {
+          "monotonic_ns": 278769831676380,
+          "utc": "2026-10-22T02:24:14.056418+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_barometer": {
+          "monotonic_ns": 278769834699801,
+          "utc": "2026-10-22T02:24:14.059442+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_imu": {
+          "monotonic_ns": 278769835729929,
+          "utc": "2026-10-22T02:24:14.060465+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_advancing_clock": {
+          "monotonic_ns": 278769836622859,
+          "utc": "2026-10-22T02:24:14.061358+00:00",
+          "sim_time_ns": 2000000
+        },
+        "first_pose": {
+          "monotonic_ns": 278769887419424,
+          "utc": "2026-10-22T02:24:14.112154+00:00",
+          "sim_time_ns": 10000000
+        },
+        "startup_verified": {
+          "monotonic_ns": 278769917478793,
+          "utc": "2026-10-22T02:24:14.142211+00:00"
+        },
+        "server_exit_observed": {
+          "monotonic_ns": 278776789273569,
+          "utc": "2026-10-22T02:24:21.096297+00:00",
+          "exit_code": 0
+        }
+      },
+      "control_events": [
+        {
+          "event": "controller_initialized",
+          "monotonic_ns": 278767704958224,
+          "utc": "2026-10-22T02:24:11.929687+00:00"
+        },
+        {
+          "event": "transport_discovered",
+          "monotonic_ns": 278769711573384,
+          "utc": "2026-10-22T02:24:13.936303+00:00",
+          "topics": {
+            "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+            "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+            "/aegis/sensors/imu": "gz.msgs.IMU",
+            "/aegis/sensors/gnss": "gz.msgs.NavSat",
+            "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+          },
+          "service": "/world/aegis_sensor_aircraft/control"
+        },
+        {
+          "event": "control_request_sent",
+          "monotonic_ns": 278769711731411,
+          "utc": "2026-10-22T02:24:13.936458+00:00",
+          "service": "/world/aegis_sensor_aircraft/control",
+          "pause": false,
+          "timeout_ms": 3000,
+          "attempt": 1
+        },
+        {
+          "event": "control_result",
+          "monotonic_ns": 278769816892315,
+          "utc": "2026-10-22T02:24:14.041633+00:00",
+          "transport_result": true,
+          "response_data": true,
+          "acknowledged": true
+        }
+      ],
+      "startup_seconds_from_server_spawn": {
+        "server_initialization_log_received": 2.266969435,
+        "world_initialization_log_received": 2.267276372,
+        "world_discovery_log_received": 2.267316325,
+        "first_clock": 2.26443978,
+        "controller_spawn_requested": 2.274072316,
+        "transport_discovered": 5.689086772,
+        "control_request_sent": 5.689238656,
+        "control_result": 5.795154451,
+        "first_advancing_clock": 5.813833667,
+        "first_pose": 5.864630232,
+        "first_imu": 5.812940737,
+        "first_gnss": 5.808887188,
+        "first_barometer": 5.811910609,
+        "startup_verified": 5.894689601
+      },
+      "control_request_count": 1,
+      "unpause_acknowledged": true,
+      "control_roundtrip_seconds": 0.105160904,
+      "peak_memory_bytes": 121442304,
+      "peak_pids": 29,
+      "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "pids_events": "max 0\n",
+      "cpu_stat": "usage_usec 11340288\nuser_usec 5902544\nsystem_usec 5437744\nnice_usec 0\nnr_periods 134\nnr_throttled 92\nthrottled_usec 6140517\nnr_bursts 0\nburst_usec 0\n",
+      "observer_monitor_max_gap_seconds": 0.14797386404825374,
+      "harness_wall_seconds": 12.850107202015352,
+      "host_wall_seconds": 14.540996459021699,
+      "server_exit_code": 0,
+      "controller_exit_code": 0,
+      "container_exit_code": 0,
+      "attach_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "clock_samples": 101,
+      "clock_time_range_ns": [
+        0,
+        1979000000
+      ],
+      "advancing_clock_samples": 67,
+      "pose_samples": 200,
+      "sensor_samples": {
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "sensor_analysis": {
+        "passed": true,
+        "diagnostics": [],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_specific_force_vector_error_m_s2": 8.449277583956987e-11,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "gnss": {
+            "max_position_residual_m": 0.0005297403793215194,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "85ace1c584977fb609d8b661e776a7c9a190b014c06b6c36f64fa7bb886bcd9b",
+        "sensor_checks.py": "64a68d2d8c47d01b0290619dca381e70364a2555ef7221d070ef1c0d1599923f",
+        "sensor_startup.py": "73cf413ac01126055d5bc5cda9a18bfb2cdd808d528d44d89c257ab8d612dfb7",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "gazebo_version": "8.15.0",
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "attempt_sha256": "046e92743f34602cb2be30b00395eb306d14ac4d3f214125ac7149269153d89a",
+      "launcher_log_sha256": "5dc4bee89259a0ebed12c20c697e7f6e1d8cf8394b050122dfa6829af701d29e",
+      "host_resources_before": [
+        2883919872,
+        748089344,
+        225182834688,
+        4
+      ],
+      "remaining_owned_containers": []
+    },
+    {
+      "run_id": "run-02",
+      "category": "independent_sensor_validation",
+      "retry_of": null,
+      "success": true,
+      "cleanup_ok": true,
+      "report_sha256": "6dc2f775ae6058a3732aa9ac4a7146baf1c891d5be4e4359eaed4c2588653b77",
+      "container_log_sha256": "d521319f1ceedf7cf063498cf57d61ac776180b28a6233dd7c329c886670a7cb",
+      "error": null,
+      "runtime_error": null,
+      "startup_classification": "observed_running",
+      "startup_verified": true,
+      "host_events": {
+        "container_create_requested": {
+          "monotonic_ns": 278777903743096,
+          "utc": "2026-10-22T02:24:22.210761+00:00"
+        },
+        "container_created": {
+          "monotonic_ns": 278778096935884,
+          "utc": "2026-10-22T02:24:22.403959+00:00"
+        },
+        "container_start_requested": {
+          "monotonic_ns": 278778097305559,
+          "utc": "2026-10-22T02:24:22.404324+00:00"
+        },
+        "container_exit_observed": {
+          "monotonic_ns": 278791287005391,
+          "utc": "2026-10-22T02:24:35.594025+00:00"
+        },
+        "container_removal_verified": {
+          "monotonic_ns": 278791450503501,
+          "utc": "2026-10-22T02:24:35.757523+00:00"
+        }
+      },
+      "container_started_at": "2026-10-22T02:24:22.488073983Z",
+      "container_finished_at": "2026-10-22T02:24:35.442165523Z",
+      "startup_events": {
+        "observer_initialized": {
+          "monotonic_ns": 278778908945730,
+          "utc": "2026-10-22T02:24:23.215967+00:00"
+        },
+        "subscriptions_registered": {
+          "monotonic_ns": 278778913159199,
+          "utc": "2026-10-22T02:24:23.220179+00:00",
+          "topics": [
+            "/aegis/aircraft/pose",
+            "/world/aegis_sensor_aircraft/stats",
+            "/world/aegis_sensor_aircraft/model/passive_aircraft/link/body/sensor/ground_contact/contact",
+            "/aegis/sensors/imu",
+            "/aegis/sensors/gnss",
+            "/aegis/sensors/barometer"
+          ]
+        },
+        "server_spawn_requested": {
+          "monotonic_ns": 278778913422218,
+          "utc": "2026-10-22T02:24:23.220439+00:00"
+        },
+        "server_process_created": {
+          "monotonic_ns": 278778914687260,
+          "utc": "2026-10-22T02:24:23.221707+00:00",
+          "pid": 15
+        },
+        "first_clock": {
+          "monotonic_ns": 278781369082926,
+          "utc": "2026-10-22T02:24:25.676111+00:00",
+          "sim_time_ns": 0,
+          "paused": true
+        },
+        "server_initialization_log_received": {
+          "monotonic_ns": 278781379418725,
+          "utc": "2026-10-22T02:24:25.686442+00:00"
+        },
+        "world_initialization_log_received": {
+          "monotonic_ns": 278781380504701,
+          "utc": "2026-10-22T02:24:25.687526+00:00"
+        },
+        "world_discovery_log_received": {
+          "monotonic_ns": 278781380695326,
+          "utc": "2026-10-22T02:24:25.687714+00:00"
+        },
+        "controller_spawn_requested": {
+          "monotonic_ns": 278781385960953,
+          "utc": "2026-10-22T02:24:25.692987+00:00"
+        },
+        "controller_initialized": {
+          "monotonic_ns": 278783181554016,
+          "utc": "2026-10-22T02:24:27.488576+00:00",
+          "emitted": {
+            "event": "controller_initialized",
+            "monotonic_ns": 278783181006123,
+            "utc": "2026-10-22T02:24:27.488027+00:00"
+          }
+        },
+        "transport_discovered": {
+          "monotonic_ns": 278785186153395,
+          "utc": "2026-10-22T02:24:29.493173+00:00",
+          "emitted": {
+            "event": "transport_discovered",
+            "monotonic_ns": 278785185835036,
+            "utc": "2026-10-22T02:24:29.492856+00:00",
+            "topics": {
+              "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+              "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+              "/aegis/sensors/imu": "gz.msgs.IMU",
+              "/aegis/sensors/gnss": "gz.msgs.NavSat",
+              "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+            },
+            "service": "/world/aegis_sensor_aircraft/control"
+          }
+        },
+        "control_request_sent": {
+          "monotonic_ns": 278785186429360,
+          "utc": "2026-10-22T02:24:29.493449+00:00",
+          "emitted": {
+            "event": "control_request_sent",
+            "monotonic_ns": 278785185977817,
+            "utc": "2026-10-22T02:24:29.492995+00:00",
+            "service": "/world/aegis_sensor_aircraft/control",
+            "pause": false,
+            "timeout_ms": 3000,
+            "attempt": 1
+          }
+        },
+        "control_result": {
+          "monotonic_ns": 278785288961192,
+          "utc": "2026-10-22T02:24:29.595983+00:00",
+          "emitted": {
+            "event": "control_result",
+            "monotonic_ns": 278785288517148,
+            "utc": "2026-10-22T02:24:29.595538+00:00",
+            "transport_result": true,
+            "response_data": true,
+            "acknowledged": true
+          }
+        },
+        "first_barometer": {
+          "monotonic_ns": 278785289997759,
+          "utc": "2026-10-22T02:24:29.597019+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_gnss": {
+          "monotonic_ns": 278785290200034,
+          "utc": "2026-10-22T02:24:29.597218+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_imu": {
+          "monotonic_ns": 278785293561305,
+          "utc": "2026-10-22T02:24:29.600584+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_advancing_clock": {
+          "monotonic_ns": 278785293749581,
+          "utc": "2026-10-22T02:24:29.600768+00:00",
+          "sim_time_ns": 2000000
+        },
+        "first_pose": {
+          "monotonic_ns": 278785305223419,
+          "utc": "2026-10-22T02:24:29.612245+00:00",
+          "sim_time_ns": 10000000
+        },
+        "startup_verified": {
+          "monotonic_ns": 278785365495737,
+          "utc": "2026-10-22T02:24:29.672518+00:00"
+        },
+        "server_exit_observed": {
+          "monotonic_ns": 278790977761358,
+          "utc": "2026-10-22T02:24:35.284782+00:00",
+          "exit_code": 0
+        }
+      },
+      "control_events": [
+        {
+          "event": "controller_initialized",
+          "monotonic_ns": 278783181006123,
+          "utc": "2026-10-22T02:24:27.488027+00:00"
+        },
+        {
+          "event": "transport_discovered",
+          "monotonic_ns": 278785185835036,
+          "utc": "2026-10-22T02:24:29.492856+00:00",
+          "topics": {
+            "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+            "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+            "/aegis/sensors/imu": "gz.msgs.IMU",
+            "/aegis/sensors/gnss": "gz.msgs.NavSat",
+            "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+          },
+          "service": "/world/aegis_sensor_aircraft/control"
+        },
+        {
+          "event": "control_request_sent",
+          "monotonic_ns": 278785185977817,
+          "utc": "2026-10-22T02:24:29.492995+00:00",
+          "service": "/world/aegis_sensor_aircraft/control",
+          "pause": false,
+          "timeout_ms": 3000,
+          "attempt": 1
+        },
+        {
+          "event": "control_result",
+          "monotonic_ns": 278785288517148,
+          "utc": "2026-10-22T02:24:29.595538+00:00",
+          "transport_result": true,
+          "response_data": true,
+          "acknowledged": true
+        }
+      ],
+      "startup_seconds_from_server_spawn": {
+        "server_initialization_log_received": 2.465996507,
+        "world_initialization_log_received": 2.467082483,
+        "world_discovery_log_received": 2.467273108,
+        "first_clock": 2.455660708,
+        "controller_spawn_requested": 2.472538735,
+        "transport_discovered": 6.272731177,
+        "control_request_sent": 6.273007142,
+        "control_result": 6.375538974,
+        "first_advancing_clock": 6.380327363,
+        "first_pose": 6.391801201,
+        "first_imu": 6.380139087,
+        "first_gnss": 6.376777816,
+        "first_barometer": 6.376575541,
+        "startup_verified": 6.452073519
+      },
+      "control_request_count": 1,
+      "unpause_acknowledged": true,
+      "control_roundtrip_seconds": 0.102539331,
+      "peak_memory_bytes": 121614336,
+      "peak_pids": 29,
+      "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "pids_events": "max 0\n",
+      "cpu_stat": "usage_usec 10983819\nuser_usec 5103083\nsystem_usec 5880736\nnice_usec 0\nnr_periods 127\nnr_throttled 85\nthrottled_usec 5159783\nnr_bursts 0\nburst_usec 0\n",
+      "observer_monitor_max_gap_seconds": 0.12582185899373144,
+      "harness_wall_seconds": 12.145425652968697,
+      "host_wall_seconds": 13.81206273601856,
+      "server_exit_code": 0,
+      "controller_exit_code": 0,
+      "container_exit_code": 0,
+      "attach_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "clock_samples": 92,
+      "clock_time_range_ns": [
+        0,
+        1978000000
+      ],
+      "advancing_clock_samples": 54,
+      "pose_samples": 200,
+      "sensor_samples": {
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "sensor_analysis": {
+        "passed": true,
+        "diagnostics": [],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_specific_force_vector_error_m_s2": 8.449277583956987e-11,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "gnss": {
+            "max_position_residual_m": 0.0005297403793215194,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "85ace1c584977fb609d8b661e776a7c9a190b014c06b6c36f64fa7bb886bcd9b",
+        "sensor_checks.py": "64a68d2d8c47d01b0290619dca381e70364a2555ef7221d070ef1c0d1599923f",
+        "sensor_startup.py": "73cf413ac01126055d5bc5cda9a18bfb2cdd808d528d44d89c257ab8d612dfb7",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "gazebo_version": "8.15.0",
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "attempt_sha256": "e4bb9e7bcc82e40ea5a1686ca9943ede75df3ed684f685e7548316f6ec3f099c",
+      "launcher_log_sha256": "b9dc3c042e823d17ec742c972acb443abb6105868be080356844ddeb977bf2a5",
+      "host_resources_before": [
+        2766581760,
+        748093440,
+        225182769152,
+        4
+      ],
+      "remaining_owned_containers": []
+    },
+    {
+      "run_id": "run-03",
+      "category": "independent_sensor_validation",
+      "retry_of": null,
+      "success": true,
+      "cleanup_ok": true,
+      "report_sha256": "5d7dd8ae2acb7b5c886a15f7ea5623affe1ac4b458492494fda3c71b5d14bbe5",
+      "container_log_sha256": "28540e47fb9480559dd9cf80dca4da1ffe54c631a44428b023fb1e17e4715235",
+      "error": null,
+      "runtime_error": null,
+      "startup_classification": "observed_running",
+      "startup_verified": true,
+      "host_events": {
+        "container_create_requested": {
+          "monotonic_ns": 278791698884529,
+          "utc": "2026-10-22T02:24:36.005902+00:00"
+        },
+        "container_created": {
+          "monotonic_ns": 278791807197576,
+          "utc": "2026-10-22T02:24:36.114217+00:00"
+        },
+        "container_start_requested": {
+          "monotonic_ns": 278791807424025,
+          "utc": "2026-10-22T02:24:36.114441+00:00"
+        },
+        "container_exit_observed": {
+          "monotonic_ns": 278804435857971,
+          "utc": "2026-10-22T02:24:48.742878+00:00"
+        },
+        "container_removal_verified": {
+          "monotonic_ns": 278804624179589,
+          "utc": "2026-10-22T02:24:48.931200+00:00"
+        }
+      },
+      "container_started_at": "2026-10-22T02:24:36.188441524Z",
+      "container_finished_at": "2026-10-22T02:24:48.496882889Z",
+      "startup_events": {
+        "observer_initialized": {
+          "monotonic_ns": 278792511184854,
+          "utc": "2026-10-22T02:24:36.818205+00:00"
+        },
+        "subscriptions_registered": {
+          "monotonic_ns": 278792514926032,
+          "utc": "2026-10-22T02:24:36.821945+00:00",
+          "topics": [
+            "/aegis/aircraft/pose",
+            "/world/aegis_sensor_aircraft/stats",
+            "/world/aegis_sensor_aircraft/model/passive_aircraft/link/body/sensor/ground_contact/contact",
+            "/aegis/sensors/imu",
+            "/aegis/sensors/gnss",
+            "/aegis/sensors/barometer"
+          ]
+        },
+        "server_spawn_requested": {
+          "monotonic_ns": 278792515464717,
+          "utc": "2026-10-22T02:24:36.822483+00:00"
+        },
+        "server_process_created": {
+          "monotonic_ns": 278792516610680,
+          "utc": "2026-10-22T02:24:36.823630+00:00",
+          "pid": 15
+        },
+        "first_clock": {
+          "monotonic_ns": 278794782062391,
+          "utc": "2026-10-22T02:24:39.089092+00:00",
+          "sim_time_ns": 0,
+          "paused": true
+        },
+        "controller_spawn_requested": {
+          "monotonic_ns": 278794788574548,
+          "utc": "2026-10-22T02:24:39.095605+00:00"
+        },
+        "server_initialization_log_received": {
+          "monotonic_ns": 278794801736770,
+          "utc": "2026-10-22T02:24:39.108766+00:00"
+        },
+        "world_initialization_log_received": {
+          "monotonic_ns": 278794803178400,
+          "utc": "2026-10-22T02:24:39.110202+00:00"
+        },
+        "world_discovery_log_received": {
+          "monotonic_ns": 278794803431778,
+          "utc": "2026-10-22T02:24:39.110452+00:00"
+        },
+        "controller_initialized": {
+          "monotonic_ns": 278795782784204,
+          "utc": "2026-10-22T02:24:40.089804+00:00",
+          "emitted": {
+            "event": "controller_initialized",
+            "monotonic_ns": 278795782378219,
+            "utc": "2026-10-22T02:24:40.089401+00:00"
+          }
+        },
+        "transport_discovered": {
+          "monotonic_ns": 278797881082421,
+          "utc": "2026-10-22T02:24:42.188102+00:00",
+          "emitted": {
+            "event": "transport_discovered",
+            "monotonic_ns": 278797880790014,
+            "utc": "2026-10-22T02:24:42.187812+00:00",
+            "topics": {
+              "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+              "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+              "/aegis/sensors/imu": "gz.msgs.IMU",
+              "/aegis/sensors/gnss": "gz.msgs.NavSat",
+              "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+            },
+            "service": "/world/aegis_sensor_aircraft/control"
+          }
+        },
+        "control_request_sent": {
+          "monotonic_ns": 278797881152845,
+          "utc": "2026-10-22T02:24:42.188170+00:00",
+          "emitted": {
+            "event": "control_request_sent",
+            "monotonic_ns": 278797880945641,
+            "utc": "2026-10-22T02:24:42.187964+00:00",
+            "service": "/world/aegis_sensor_aircraft/control",
+            "pause": false,
+            "timeout_ms": 3000,
+            "attempt": 1
+          }
+        },
+        "control_result": {
+          "monotonic_ns": 278797983112315,
+          "utc": "2026-10-22T02:24:42.290133+00:00",
+          "emitted": {
+            "event": "control_result",
+            "monotonic_ns": 278797982769322,
+            "utc": "2026-10-22T02:24:42.289791+00:00",
+            "transport_result": true,
+            "response_data": true,
+            "acknowledged": true
+          }
+        },
+        "first_advancing_clock": {
+          "monotonic_ns": 278797983765965,
+          "utc": "2026-10-22T02:24:42.290787+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_barometer": {
+          "monotonic_ns": 278797989320104,
+          "utc": "2026-10-22T02:24:42.296341+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_gnss": {
+          "monotonic_ns": 278797989438932,
+          "utc": "2026-10-22T02:24:42.296456+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_imu": {
+          "monotonic_ns": 278797989562322,
+          "utc": "2026-10-22T02:24:42.296579+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_pose": {
+          "monotonic_ns": 278797997934794,
+          "utc": "2026-10-22T02:24:42.304956+00:00",
+          "sim_time_ns": 10000000
+        },
+        "startup_verified": {
+          "monotonic_ns": 278798030107661,
+          "utc": "2026-10-22T02:24:42.337128+00:00"
+        },
+        "server_exit_observed": {
+          "monotonic_ns": 278803902219576,
+          "utc": "2026-10-22T02:24:48.209241+00:00",
+          "exit_code": 0
+        }
+      },
+      "control_events": [
+        {
+          "event": "controller_initialized",
+          "monotonic_ns": 278795782378219,
+          "utc": "2026-10-22T02:24:40.089401+00:00"
+        },
+        {
+          "event": "transport_discovered",
+          "monotonic_ns": 278797880790014,
+          "utc": "2026-10-22T02:24:42.187812+00:00",
+          "topics": {
+            "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+            "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+            "/aegis/sensors/imu": "gz.msgs.IMU",
+            "/aegis/sensors/gnss": "gz.msgs.NavSat",
+            "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+          },
+          "service": "/world/aegis_sensor_aircraft/control"
+        },
+        {
+          "event": "control_request_sent",
+          "monotonic_ns": 278797880945641,
+          "utc": "2026-10-22T02:24:42.187964+00:00",
+          "service": "/world/aegis_sensor_aircraft/control",
+          "pause": false,
+          "timeout_ms": 3000,
+          "attempt": 1
+        },
+        {
+          "event": "control_result",
+          "monotonic_ns": 278797982769322,
+          "utc": "2026-10-22T02:24:42.289791+00:00",
+          "transport_result": true,
+          "response_data": true,
+          "acknowledged": true
+        }
+      ],
+      "startup_seconds_from_server_spawn": {
+        "server_initialization_log_received": 2.286272053,
+        "world_initialization_log_received": 2.287713683,
+        "world_discovery_log_received": 2.287967061,
+        "first_clock": 2.266597674,
+        "controller_spawn_requested": 2.273109831,
+        "transport_discovered": 5.365617704,
+        "control_request_sent": 5.365688128,
+        "control_result": 5.467647598,
+        "first_advancing_clock": 5.468301248,
+        "first_pose": 5.482470077,
+        "first_imu": 5.474097605,
+        "first_gnss": 5.473974215,
+        "first_barometer": 5.473855387,
+        "startup_verified": 5.514642944
+      },
+      "control_request_count": 1,
+      "unpause_acknowledged": true,
+      "control_roundtrip_seconds": 0.101823681,
+      "peak_memory_bytes": 121565184,
+      "peak_pids": 29,
+      "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "pids_events": "max 0\n",
+      "cpu_stat": "usage_usec 9623850\nuser_usec 5191977\nsystem_usec 4431872\nnice_usec 0\nnr_periods 121\nnr_throttled 74\nthrottled_usec 4826823\nnr_bursts 0\nburst_usec 0\n",
+      "observer_monitor_max_gap_seconds": 0.1468567179981619,
+      "harness_wall_seconds": 11.533955139981117,
+      "host_wall_seconds": 13.148745368001983,
+      "server_exit_code": 0,
+      "controller_exit_code": 0,
+      "container_exit_code": 0,
+      "attach_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "clock_samples": 88,
+      "clock_time_range_ns": [
+        0,
+        1975000000
+      ],
+      "advancing_clock_samples": 57,
+      "pose_samples": 200,
+      "sensor_samples": {
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "sensor_analysis": {
+        "passed": true,
+        "diagnostics": [],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_specific_force_vector_error_m_s2": 8.449277583956987e-11,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "gnss": {
+            "max_position_residual_m": 0.0005297403793215194,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "85ace1c584977fb609d8b661e776a7c9a190b014c06b6c36f64fa7bb886bcd9b",
+        "sensor_checks.py": "64a68d2d8c47d01b0290619dca381e70364a2555ef7221d070ef1c0d1599923f",
+        "sensor_startup.py": "73cf413ac01126055d5bc5cda9a18bfb2cdd808d528d44d89c257ab8d612dfb7",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "gazebo_version": "8.15.0",
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "attempt_sha256": "c024a6528d81e2a16fdd00ad2f1db3c1b1faca471b3a5e8b97df6006948a9619",
+      "launcher_log_sha256": "b526b8bc298c92b9d4db35fc473550f93d804d153512bb726e10553e75630900",
+      "host_resources_before": [
+        2758180864,
+        748097536,
+        225182756864,
+        4
+      ],
+      "remaining_owned_containers": []
+    },
+    {
+      "run_id": "run-04",
+      "category": "independent_sensor_validation",
+      "retry_of": null,
+      "success": true,
+      "cleanup_ok": true,
+      "report_sha256": "0597a86e4758f817da0359ba8069b41a73496d1c761b485f1139f4651ae18320",
+      "container_log_sha256": "091c6ed10f13656b3910e25a69f828d805d1c4e22fad74fb4e4316e3fa0eb651",
+      "error": null,
+      "runtime_error": null,
+      "startup_classification": "observed_running",
+      "startup_verified": true,
+      "host_events": {
+        "container_create_requested": {
+          "monotonic_ns": 278804962583274,
+          "utc": "2026-10-22T02:24:49.269601+00:00"
+        },
+        "container_created": {
+          "monotonic_ns": 278805061373335,
+          "utc": "2026-10-22T02:24:49.368394+00:00"
+        },
+        "container_start_requested": {
+          "monotonic_ns": 278805061634871,
+          "utc": "2026-10-22T02:24:49.368653+00:00"
+        },
+        "container_exit_observed": {
+          "monotonic_ns": 278816758615770,
+          "utc": "2026-10-22T02:25:01.148156+00:00"
+        },
+        "container_removal_verified": {
+          "monotonic_ns": 278816946589863,
+          "utc": "2026-10-22T02:25:01.336131+00:00"
+        }
+      },
+      "container_started_at": "2026-10-22T02:24:49.427879695Z",
+      "container_finished_at": "2026-10-22T02:25:00.90807922Z",
+      "startup_events": {
+        "observer_initialized": {
+          "monotonic_ns": 278805825646397,
+          "utc": "2026-10-22T02:24:50.215192+00:00"
+        },
+        "subscriptions_registered": {
+          "monotonic_ns": 278805836788933,
+          "utc": "2026-10-22T02:24:50.226331+00:00",
+          "topics": [
+            "/aegis/aircraft/pose",
+            "/world/aegis_sensor_aircraft/stats",
+            "/world/aegis_sensor_aircraft/model/passive_aircraft/link/body/sensor/ground_contact/contact",
+            "/aegis/sensors/imu",
+            "/aegis/sensors/gnss",
+            "/aegis/sensors/barometer"
+          ]
+        },
+        "server_spawn_requested": {
+          "monotonic_ns": 278805837221439,
+          "utc": "2026-10-22T02:24:50.226762+00:00"
+        },
+        "server_process_created": {
+          "monotonic_ns": 278805838912340,
+          "utc": "2026-10-22T02:24:50.228456+00:00",
+          "pid": 15
+        },
+        "first_clock": {
+          "monotonic_ns": 278808233063134,
+          "utc": "2026-10-22T02:24:52.622606+00:00",
+          "sim_time_ns": 0,
+          "paused": true
+        },
+        "server_initialization_log_received": {
+          "monotonic_ns": 278808234830718,
+          "utc": "2026-10-22T02:24:52.624373+00:00"
+        },
+        "world_initialization_log_received": {
+          "monotonic_ns": 278808235370819,
+          "utc": "2026-10-22T02:24:52.624913+00:00"
+        },
+        "world_discovery_log_received": {
+          "monotonic_ns": 278808235445469,
+          "utc": "2026-10-22T02:24:52.624984+00:00"
+        },
+        "controller_spawn_requested": {
+          "monotonic_ns": 278808258492770,
+          "utc": "2026-10-22T02:24:52.648034+00:00"
+        },
+        "controller_initialized": {
+          "monotonic_ns": 278808728259102,
+          "utc": "2026-10-22T02:24:53.117800+00:00",
+          "emitted": {
+            "event": "controller_initialized",
+            "monotonic_ns": 278808727915590,
+            "utc": "2026-10-22T02:24:53.117458+00:00"
+          }
+        },
+        "transport_discovered": {
+          "monotonic_ns": 278810735126394,
+          "utc": "2026-10-22T02:24:55.124668+00:00",
+          "emitted": {
+            "event": "transport_discovered",
+            "monotonic_ns": 278810734441041,
+            "utc": "2026-10-22T02:24:55.123984+00:00",
+            "topics": {
+              "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+              "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+              "/aegis/sensors/imu": "gz.msgs.IMU",
+              "/aegis/sensors/gnss": "gz.msgs.NavSat",
+              "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+            },
+            "service": "/world/aegis_sensor_aircraft/control"
+          }
+        },
+        "control_request_sent": {
+          "monotonic_ns": 278810735251032,
+          "utc": "2026-10-22T02:24:55.124790+00:00",
+          "emitted": {
+            "event": "control_request_sent",
+            "monotonic_ns": 278810734580819,
+            "utc": "2026-10-22T02:24:55.124121+00:00",
+            "service": "/world/aegis_sensor_aircraft/control",
+            "pause": false,
+            "timeout_ms": 3000,
+            "attempt": 1
+          }
+        },
+        "first_advancing_clock": {
+          "monotonic_ns": 278810839456538,
+          "utc": "2026-10-22T02:24:55.229002+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_imu": {
+          "monotonic_ns": 278810844679463,
+          "utc": "2026-10-22T02:24:55.234225+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_barometer": {
+          "monotonic_ns": 278810845224136,
+          "utc": "2026-10-22T02:24:55.234766+00:00",
+          "sim_time_ns": 1000000
+        },
+        "control_result": {
+          "monotonic_ns": 278810846289718,
+          "utc": "2026-10-22T02:24:55.235834+00:00",
+          "emitted": {
+            "event": "control_result",
+            "monotonic_ns": 278810838390054,
+            "utc": "2026-10-22T02:24:55.227943+00:00",
+            "transport_result": true,
+            "response_data": true,
+            "acknowledged": true
+          }
+        },
+        "first_gnss": {
+          "monotonic_ns": 278810847557647,
+          "utc": "2026-10-22T02:24:55.237102+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_pose": {
+          "monotonic_ns": 278810858310927,
+          "utc": "2026-10-22T02:24:55.247855+00:00",
+          "sim_time_ns": 10000000
+        },
+        "startup_verified": {
+          "monotonic_ns": 278810897745973,
+          "utc": "2026-10-22T02:24:55.287290+00:00"
+        },
+        "server_exit_observed": {
+          "monotonic_ns": 278816402896757,
+          "utc": "2026-10-22T02:25:00.792439+00:00",
+          "exit_code": 0
+        }
+      },
+      "control_events": [
+        {
+          "event": "controller_initialized",
+          "monotonic_ns": 278808727915590,
+          "utc": "2026-10-22T02:24:53.117458+00:00"
+        },
+        {
+          "event": "transport_discovered",
+          "monotonic_ns": 278810734441041,
+          "utc": "2026-10-22T02:24:55.123984+00:00",
+          "topics": {
+            "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+            "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+            "/aegis/sensors/imu": "gz.msgs.IMU",
+            "/aegis/sensors/gnss": "gz.msgs.NavSat",
+            "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+          },
+          "service": "/world/aegis_sensor_aircraft/control"
+        },
+        {
+          "event": "control_request_sent",
+          "monotonic_ns": 278810734580819,
+          "utc": "2026-10-22T02:24:55.124121+00:00",
+          "service": "/world/aegis_sensor_aircraft/control",
+          "pause": false,
+          "timeout_ms": 3000,
+          "attempt": 1
+        },
+        {
+          "event": "control_result",
+          "monotonic_ns": 278810838390054,
+          "utc": "2026-10-22T02:24:55.227943+00:00",
+          "transport_result": true,
+          "response_data": true,
+          "acknowledged": true
+        }
+      ],
+      "startup_seconds_from_server_spawn": {
+        "server_initialization_log_received": 2.397609279,
+        "world_initialization_log_received": 2.39814938,
+        "world_discovery_log_received": 2.39822403,
+        "first_clock": 2.395841695,
+        "controller_spawn_requested": 2.421271331,
+        "transport_discovered": 4.897904955,
+        "control_request_sent": 4.898029593,
+        "control_result": 5.009068279,
+        "first_advancing_clock": 5.002235099,
+        "first_pose": 5.021089488,
+        "first_imu": 5.007458024,
+        "first_gnss": 5.010336208,
+        "first_barometer": 5.008002697,
+        "startup_verified": 5.060524534
+      },
+      "control_request_count": 1,
+      "unpause_acknowledged": true,
+      "control_roundtrip_seconds": 0.103809235,
+      "peak_memory_bytes": 121491456,
+      "peak_pids": 29,
+      "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "pids_events": "max 0\n",
+      "cpu_stat": "usage_usec 9050715\nuser_usec 4999403\nsystem_usec 4051312\nnice_usec 0\nnr_periods 112\nnr_throttled 68\nthrottled_usec 3373424\nnr_bursts 0\nburst_usec 0\n",
+      "observer_monitor_max_gap_seconds": 0.10115684196352959,
+      "harness_wall_seconds": 10.610303330002353,
+      "host_wall_seconds": 12.226502594014164,
+      "server_exit_code": 0,
+      "controller_exit_code": 0,
+      "container_exit_code": 0,
+      "attach_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "clock_samples": 79,
+      "clock_time_range_ns": [
+        0,
+        1978000000
+      ],
+      "advancing_clock_samples": 54,
+      "pose_samples": 200,
+      "sensor_samples": {
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "sensor_analysis": {
+        "passed": true,
+        "diagnostics": [],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_specific_force_vector_error_m_s2": 8.449277583956987e-11,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "gnss": {
+            "max_position_residual_m": 0.0005297403793215194,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "85ace1c584977fb609d8b661e776a7c9a190b014c06b6c36f64fa7bb886bcd9b",
+        "sensor_checks.py": "64a68d2d8c47d01b0290619dca381e70364a2555ef7221d070ef1c0d1599923f",
+        "sensor_startup.py": "73cf413ac01126055d5bc5cda9a18bfb2cdd808d528d44d89c257ab8d612dfb7",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "gazebo_version": "8.15.0",
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "attempt_sha256": "cbb498ada3166b211ad5ec62a9b37ef48d3acd67ee003567830a3af19fab40d6",
+      "launcher_log_sha256": "c56c8f48c6f1c49f631cdd665381debb11a1ab01668e9a58c1f14600e95dc1ce",
+      "host_resources_before": [
+        2700500992,
+        748097536,
+        225182662656,
+        4
+      ],
+      "remaining_owned_containers": []
+    },
+    {
+      "run_id": "run-05",
+      "category": "independent_sensor_validation",
+      "retry_of": null,
+      "success": true,
+      "cleanup_ok": true,
+      "report_sha256": "eebdea3b1596e630c580f742b4f7542fe2054ca1fadd119a5b1852eca111f4a1",
+      "container_log_sha256": "655eef6e9e71e1e241baf1463737614b50fc1e0759217a8ba821cffcb06b7b8e",
+      "error": null,
+      "runtime_error": null,
+      "startup_classification": "observed_running",
+      "startup_verified": true,
+      "host_events": {
+        "container_create_requested": {
+          "monotonic_ns": 278817263721999,
+          "utc": "2026-10-22T02:25:01.653262+00:00"
+        },
+        "container_created": {
+          "monotonic_ns": 278817440383081,
+          "utc": "2026-10-22T02:25:01.829925+00:00"
+        },
+        "container_start_requested": {
+          "monotonic_ns": 278817440581270,
+          "utc": "2026-10-22T02:25:01.830178+00:00"
+        },
+        "container_exit_observed": {
+          "monotonic_ns": 278829498013945,
+          "utc": "2026-10-22T02:25:13.887554+00:00"
+        },
+        "container_removal_verified": {
+          "monotonic_ns": 278829687114131,
+          "utc": "2026-10-22T02:25:14.076655+00:00"
+        }
+      },
+      "container_started_at": "2026-10-22T02:25:01.930596492Z",
+      "container_finished_at": "2026-10-22T02:25:13.66779258Z",
+      "startup_events": {
+        "observer_initialized": {
+          "monotonic_ns": 278818558038190,
+          "utc": "2026-10-22T02:25:02.947581+00:00"
+        },
+        "subscriptions_registered": {
+          "monotonic_ns": 278818568477002,
+          "utc": "2026-10-22T02:25:02.958019+00:00",
+          "topics": [
+            "/aegis/aircraft/pose",
+            "/world/aegis_sensor_aircraft/stats",
+            "/world/aegis_sensor_aircraft/model/passive_aircraft/link/body/sensor/ground_contact/contact",
+            "/aegis/sensors/imu",
+            "/aegis/sensors/gnss",
+            "/aegis/sensors/barometer"
+          ]
+        },
+        "server_spawn_requested": {
+          "monotonic_ns": 278818568880470,
+          "utc": "2026-10-22T02:25:02.958421+00:00"
+        },
+        "server_process_created": {
+          "monotonic_ns": 278818576559199,
+          "utc": "2026-10-22T02:25:02.966106+00:00",
+          "pid": 15
+        },
+        "first_clock": {
+          "monotonic_ns": 278820968493080,
+          "utc": "2026-10-22T02:25:05.358036+00:00",
+          "sim_time_ns": 0,
+          "paused": true
+        },
+        "server_initialization_log_received": {
+          "monotonic_ns": 278820970747309,
+          "utc": "2026-10-22T02:25:05.360289+00:00"
+        },
+        "world_initialization_log_received": {
+          "monotonic_ns": 278820971103622,
+          "utc": "2026-10-22T02:25:05.360644+00:00"
+        },
+        "world_discovery_log_received": {
+          "monotonic_ns": 278820971162445,
+          "utc": "2026-10-22T02:25:05.360701+00:00"
+        },
+        "controller_spawn_requested": {
+          "monotonic_ns": 278820986031295,
+          "utc": "2026-10-22T02:25:05.375575+00:00"
+        },
+        "controller_initialized": {
+          "monotonic_ns": 278821472938129,
+          "utc": "2026-10-22T02:25:05.862482+00:00",
+          "emitted": {
+            "event": "controller_initialized",
+            "monotonic_ns": 278821472367592,
+            "utc": "2026-10-22T02:25:05.861914+00:00"
+          }
+        },
+        "transport_discovered": {
+          "monotonic_ns": 278823484801666,
+          "utc": "2026-10-22T02:25:07.874343+00:00",
+          "emitted": {
+            "event": "transport_discovered",
+            "monotonic_ns": 278823484531309,
+            "utc": "2026-10-22T02:25:07.874075+00:00",
+            "topics": {
+              "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+              "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+              "/aegis/sensors/imu": "gz.msgs.IMU",
+              "/aegis/sensors/gnss": "gz.msgs.NavSat",
+              "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+            },
+            "service": "/world/aegis_sensor_aircraft/control"
+          }
+        },
+        "control_request_sent": {
+          "monotonic_ns": 278823484871365,
+          "utc": "2026-10-22T02:25:07.874410+00:00",
+          "emitted": {
+            "event": "control_request_sent",
+            "monotonic_ns": 278823484689174,
+            "utc": "2026-10-22T02:25:07.874229+00:00",
+            "service": "/world/aegis_sensor_aircraft/control",
+            "pause": false,
+            "timeout_ms": 3000,
+            "attempt": 1
+          }
+        },
+        "control_result": {
+          "monotonic_ns": 278823586418717,
+          "utc": "2026-10-22T02:25:07.975960+00:00",
+          "emitted": {
+            "event": "control_result",
+            "monotonic_ns": 278823586129397,
+            "utc": "2026-10-22T02:25:07.975672+00:00",
+            "transport_result": true,
+            "response_data": true,
+            "acknowledged": true
+          }
+        },
+        "first_advancing_clock": {
+          "monotonic_ns": 278823586847335,
+          "utc": "2026-10-22T02:25:07.976389+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_imu": {
+          "monotonic_ns": 278823587861147,
+          "utc": "2026-10-22T02:25:07.977404+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_gnss": {
+          "monotonic_ns": 278823588088611,
+          "utc": "2026-10-22T02:25:07.977630+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_barometer": {
+          "monotonic_ns": 278823588231584,
+          "utc": "2026-10-22T02:25:07.977771+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_pose": {
+          "monotonic_ns": 278823597310314,
+          "utc": "2026-10-22T02:25:07.986853+00:00",
+          "sim_time_ns": 10000000
+        },
+        "startup_verified": {
+          "monotonic_ns": 278823617617873,
+          "utc": "2026-10-22T02:25:08.007165+00:00"
+        },
+        "server_exit_observed": {
+          "monotonic_ns": 278829042103552,
+          "utc": "2026-10-22T02:25:13.431650+00:00",
+          "exit_code": 0
+        }
+      },
+      "control_events": [
+        {
+          "event": "controller_initialized",
+          "monotonic_ns": 278821472367592,
+          "utc": "2026-10-22T02:25:05.861914+00:00"
+        },
+        {
+          "event": "transport_discovered",
+          "monotonic_ns": 278823484531309,
+          "utc": "2026-10-22T02:25:07.874075+00:00",
+          "topics": {
+            "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+            "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+            "/aegis/sensors/imu": "gz.msgs.IMU",
+            "/aegis/sensors/gnss": "gz.msgs.NavSat",
+            "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+          },
+          "service": "/world/aegis_sensor_aircraft/control"
+        },
+        {
+          "event": "control_request_sent",
+          "monotonic_ns": 278823484689174,
+          "utc": "2026-10-22T02:25:07.874229+00:00",
+          "service": "/world/aegis_sensor_aircraft/control",
+          "pause": false,
+          "timeout_ms": 3000,
+          "attempt": 1
+        },
+        {
+          "event": "control_result",
+          "monotonic_ns": 278823586129397,
+          "utc": "2026-10-22T02:25:07.975672+00:00",
+          "transport_result": true,
+          "response_data": true,
+          "acknowledged": true
+        }
+      ],
+      "startup_seconds_from_server_spawn": {
+        "server_initialization_log_received": 2.401866839,
+        "world_initialization_log_received": 2.402223152,
+        "world_discovery_log_received": 2.402281975,
+        "first_clock": 2.39961261,
+        "controller_spawn_requested": 2.417150825,
+        "transport_discovered": 4.915921196,
+        "control_request_sent": 4.915990895,
+        "control_result": 5.017538247,
+        "first_advancing_clock": 5.017966865,
+        "first_pose": 5.028429844,
+        "first_imu": 5.018980677,
+        "first_gnss": 5.019208141,
+        "first_barometer": 5.019351114,
+        "startup_verified": 5.048737403
+      },
+      "control_request_count": 1,
+      "unpause_acknowledged": true,
+      "control_roundtrip_seconds": 0.101440223,
+      "peak_memory_bytes": 121630720,
+      "peak_pids": 29,
+      "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "pids_events": "max 0\n",
+      "cpu_stat": "usage_usec 9549980\nuser_usec 5361541\nsystem_usec 4188439\nnice_usec 0\nnr_periods 115\nnr_throttled 65\nthrottled_usec 3624140\nnr_bursts 0\nburst_usec 0\n",
+      "observer_monitor_max_gap_seconds": 0.100056883005891,
+      "harness_wall_seconds": 10.611872156965546,
+      "host_wall_seconds": 12.64937626500614,
+      "server_exit_code": 0,
+      "controller_exit_code": 0,
+      "container_exit_code": 0,
+      "attach_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "clock_samples": 77,
+      "clock_time_range_ns": [
+        0,
+        1942000000
+      ],
+      "advancing_clock_samples": 52,
+      "pose_samples": 200,
+      "sensor_samples": {
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "sensor_analysis": {
+        "passed": true,
+        "diagnostics": [],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_specific_force_vector_error_m_s2": 8.449277583956987e-11,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "gnss": {
+            "max_position_residual_m": 0.0005297403793215194,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "85ace1c584977fb609d8b661e776a7c9a190b014c06b6c36f64fa7bb886bcd9b",
+        "sensor_checks.py": "64a68d2d8c47d01b0290619dca381e70364a2555ef7221d070ef1c0d1599923f",
+        "sensor_startup.py": "73cf413ac01126055d5bc5cda9a18bfb2cdd808d528d44d89c257ab8d612dfb7",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "gazebo_version": "8.15.0",
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "attempt_sha256": "494aab37092dfad75aa5297db54a499e9a549af454be556812e05dc5947a5220",
+      "launcher_log_sha256": "a486c4029d7fe27f042bc15792fe8563857c8dadf563344af9fb0fc0b9cc4fbf",
+      "host_resources_before": [
+        2710106112,
+        748097536,
+        225183170560,
+        4
+      ],
+      "remaining_owned_containers": []
+    },
+    {
+      "run_id": "run-06",
+      "category": "independent_sensor_validation",
+      "retry_of": null,
+      "success": true,
+      "cleanup_ok": true,
+      "report_sha256": "f3ad8326bd977992e4b03d9bf0b90bfedaafc536d6b235080fa7504bc00b1335",
+      "container_log_sha256": "ba0831cd9265b6683461884ff28c56c2011a6b17a6db2d3fbbfb99d4ef160b43",
+      "error": null,
+      "runtime_error": null,
+      "startup_classification": "observed_running",
+      "startup_verified": true,
+      "host_events": {
+        "container_create_requested": {
+          "monotonic_ns": 278829907086758,
+          "utc": "2026-10-22T02:25:14.296627+00:00"
+        },
+        "container_created": {
+          "monotonic_ns": 278830008947671,
+          "utc": "2026-10-22T02:25:14.398489+00:00"
+        },
+        "container_start_requested": {
+          "monotonic_ns": 278830009087851,
+          "utc": "2026-10-22T02:25:14.398627+00:00"
+        },
+        "container_exit_observed": {
+          "monotonic_ns": 278841272232205,
+          "utc": "2026-10-22T02:25:25.787944+00:00"
+        },
+        "container_removal_verified": {
+          "monotonic_ns": 278841433929558,
+          "utc": "2026-10-22T02:25:25.949640+00:00"
+        }
+      },
+      "container_started_at": "2026-10-22T02:25:14.456108628Z",
+      "container_finished_at": "2026-10-22T02:25:25.664563274Z",
+      "startup_events": {
+        "observer_initialized": {
+          "monotonic_ns": 278830677813735,
+          "utc": "2026-10-22T02:25:15.067356+00:00"
+        },
+        "subscriptions_registered": {
+          "monotonic_ns": 278830681552937,
+          "utc": "2026-10-22T02:25:15.071094+00:00",
+          "topics": [
+            "/aegis/aircraft/pose",
+            "/world/aegis_sensor_aircraft/stats",
+            "/world/aegis_sensor_aircraft/model/passive_aircraft/link/body/sensor/ground_contact/contact",
+            "/aegis/sensors/imu",
+            "/aegis/sensors/gnss",
+            "/aegis/sensors/barometer"
+          ]
+        },
+        "server_spawn_requested": {
+          "monotonic_ns": 278830681810762,
+          "utc": "2026-10-22T02:25:15.071350+00:00"
+        },
+        "server_process_created": {
+          "monotonic_ns": 278830682674836,
+          "utc": "2026-10-22T02:25:15.072215+00:00",
+          "pid": 15
+        },
+        "first_clock": {
+          "monotonic_ns": 278832920222544,
+          "utc": "2026-10-22T02:25:17.309775+00:00",
+          "sim_time_ns": 0,
+          "paused": true
+        },
+        "server_initialization_log_received": {
+          "monotonic_ns": 278832937161218,
+          "utc": "2026-10-22T02:25:17.326709+00:00"
+        },
+        "world_initialization_log_received": {
+          "monotonic_ns": 278832938562368,
+          "utc": "2026-10-22T02:25:17.328107+00:00"
+        },
+        "world_discovery_log_received": {
+          "monotonic_ns": 278832938750965,
+          "utc": "2026-10-22T02:25:17.328291+00:00"
+        },
+        "controller_spawn_requested": {
+          "monotonic_ns": 278832954728516,
+          "utc": "2026-10-22T02:25:17.344280+00:00"
+        },
+        "controller_initialized": {
+          "monotonic_ns": 278833922553359,
+          "utc": "2026-10-22T02:25:18.312097+00:00",
+          "emitted": {
+            "event": "controller_initialized",
+            "monotonic_ns": 278833922005451,
+            "utc": "2026-10-22T02:25:18.311549+00:00"
+          }
+        },
+        "transport_discovered": {
+          "monotonic_ns": 278836020781540,
+          "utc": "2026-10-22T02:25:20.536491+00:00",
+          "emitted": {
+            "event": "transport_discovered",
+            "monotonic_ns": 278836020468109,
+            "utc": "2026-10-22T02:25:20.536179+00:00",
+            "topics": {
+              "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+              "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+              "/aegis/sensors/imu": "gz.msgs.IMU",
+              "/aegis/sensors/gnss": "gz.msgs.NavSat",
+              "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+            },
+            "service": "/world/aegis_sensor_aircraft/control"
+          }
+        },
+        "control_request_sent": {
+          "monotonic_ns": 278836020837744,
+          "utc": "2026-10-22T02:25:20.536546+00:00",
+          "emitted": {
+            "event": "control_request_sent",
+            "monotonic_ns": 278836020583093,
+            "utc": "2026-10-22T02:25:20.536291+00:00",
+            "service": "/world/aegis_sensor_aircraft/control",
+            "pause": false,
+            "timeout_ms": 3000,
+            "attempt": 1
+          }
+        },
+        "control_result": {
+          "monotonic_ns": 278836123644527,
+          "utc": "2026-10-22T02:25:20.639358+00:00",
+          "emitted": {
+            "event": "control_result",
+            "monotonic_ns": 278836123224338,
+            "utc": "2026-10-22T02:25:20.638938+00:00",
+            "transport_result": true,
+            "response_data": true,
+            "acknowledged": true
+          }
+        },
+        "first_advancing_clock": {
+          "monotonic_ns": 278836123934466,
+          "utc": "2026-10-22T02:25:20.639648+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_barometer": {
+          "monotonic_ns": 278836126446972,
+          "utc": "2026-10-22T02:25:20.642161+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_imu": {
+          "monotonic_ns": 278836126883516,
+          "utc": "2026-10-22T02:25:20.642595+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_gnss": {
+          "monotonic_ns": 278836127133310,
+          "utc": "2026-10-22T02:25:20.642843+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_pose": {
+          "monotonic_ns": 278836150938731,
+          "utc": "2026-10-22T02:25:20.666653+00:00",
+          "sim_time_ns": 10000000
+        },
+        "startup_verified": {
+          "monotonic_ns": 278836200443543,
+          "utc": "2026-10-22T02:25:20.716159+00:00"
+        },
+        "server_exit_observed": {
+          "monotonic_ns": 278840914655663,
+          "utc": "2026-10-22T02:25:25.430369+00:00",
+          "exit_code": 0
+        }
+      },
+      "control_events": [
+        {
+          "event": "controller_initialized",
+          "monotonic_ns": 278833922005451,
+          "utc": "2026-10-22T02:25:18.311549+00:00"
+        },
+        {
+          "event": "transport_discovered",
+          "monotonic_ns": 278836020468109,
+          "utc": "2026-10-22T02:25:20.536179+00:00",
+          "topics": {
+            "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+            "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+            "/aegis/sensors/imu": "gz.msgs.IMU",
+            "/aegis/sensors/gnss": "gz.msgs.NavSat",
+            "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+          },
+          "service": "/world/aegis_sensor_aircraft/control"
+        },
+        {
+          "event": "control_request_sent",
+          "monotonic_ns": 278836020583093,
+          "utc": "2026-10-22T02:25:20.536291+00:00",
+          "service": "/world/aegis_sensor_aircraft/control",
+          "pause": false,
+          "timeout_ms": 3000,
+          "attempt": 1
+        },
+        {
+          "event": "control_result",
+          "monotonic_ns": 278836123224338,
+          "utc": "2026-10-22T02:25:20.638938+00:00",
+          "transport_result": true,
+          "response_data": true,
+          "acknowledged": true
+        }
+      ],
+      "startup_seconds_from_server_spawn": {
+        "server_initialization_log_received": 2.255350456,
+        "world_initialization_log_received": 2.256751606,
+        "world_discovery_log_received": 2.256940203,
+        "first_clock": 2.238411782,
+        "controller_spawn_requested": 2.272917754,
+        "transport_discovered": 5.338970778,
+        "control_request_sent": 5.339026982,
+        "control_result": 5.441833765,
+        "first_advancing_clock": 5.442123704,
+        "first_pose": 5.469127969,
+        "first_imu": 5.445072754,
+        "first_gnss": 5.445322548,
+        "first_barometer": 5.44463621,
+        "startup_verified": 5.518632781
+      },
+      "control_request_count": 1,
+      "unpause_acknowledged": true,
+      "control_roundtrip_seconds": 0.102641245,
+      "peak_memory_bytes": 121475072,
+      "peak_pids": 29,
+      "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "pids_events": "max 0\n",
+      "cpu_stat": "usage_usec 8542265\nuser_usec 4728678\nsystem_usec 3813587\nnice_usec 0\nnr_periods 109\nnr_throttled 64\nthrottled_usec 3327013\nnr_bursts 0\nburst_usec 0\n",
+      "observer_monitor_max_gap_seconds": 0.09910904598655179,
+      "harness_wall_seconds": 10.353267594007775,
+      "host_wall_seconds": 11.71115261799423,
+      "server_exit_code": 0,
+      "controller_exit_code": 0,
+      "container_exit_code": 0,
+      "attach_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "clock_samples": 77,
+      "clock_time_range_ns": [
+        0,
+        1989000000
+      ],
+      "advancing_clock_samples": 46,
+      "pose_samples": 200,
+      "sensor_samples": {
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "sensor_analysis": {
+        "passed": true,
+        "diagnostics": [],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_specific_force_vector_error_m_s2": 8.449277583956987e-11,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "gnss": {
+            "max_position_residual_m": 0.0005297403793215194,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "85ace1c584977fb609d8b661e776a7c9a190b014c06b6c36f64fa7bb886bcd9b",
+        "sensor_checks.py": "64a68d2d8c47d01b0290619dca381e70364a2555ef7221d070ef1c0d1599923f",
+        "sensor_startup.py": "73cf413ac01126055d5bc5cda9a18bfb2cdd808d528d44d89c257ab8d612dfb7",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "gazebo_version": "8.15.0",
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "attempt_sha256": "80ac742c7a0431718ae6484345f460585e8e69ea38c7ebf6f47a0e3da6fde340",
+      "launcher_log_sha256": "75eab699c9ab38f6df2004446bf19945d0765298a8cd61ec70a55f56780c73fb",
+      "host_resources_before": [
+        2765414400,
+        748101632,
+        225183080448,
+        4
+      ],
+      "remaining_owned_containers": []
+    },
+    {
+      "run_id": "run-07",
+      "category": "independent_sensor_validation",
+      "retry_of": null,
+      "success": true,
+      "cleanup_ok": true,
+      "report_sha256": "cfb914621eb06cd4510d1de9432b9cadf2b6bc0a6f569ff9bfa6319d3218ef87",
+      "container_log_sha256": "aa46fd52abed3cf08fe9b0e4f3db4535c6c62f56f6ab26103bfcab17ac40d12e",
+      "error": null,
+      "runtime_error": null,
+      "startup_classification": "observed_running",
+      "startup_verified": true,
+      "host_events": {
+        "container_create_requested": {
+          "monotonic_ns": 278841688660255,
+          "utc": "2026-10-22T02:25:26.204370+00:00"
+        },
+        "container_created": {
+          "monotonic_ns": 278841803084980,
+          "utc": "2026-10-22T02:25:26.318796+00:00"
+        },
+        "container_start_requested": {
+          "monotonic_ns": 278841803242432,
+          "utc": "2026-10-22T02:25:26.318951+00:00"
+        },
+        "container_exit_observed": {
+          "monotonic_ns": 278853299235067,
+          "utc": "2026-10-22T02:25:37.815037+00:00"
+        },
+        "container_removal_verified": {
+          "monotonic_ns": 278853564492618,
+          "utc": "2026-10-22T02:25:38.080203+00:00"
+        }
+      },
+      "container_started_at": "2026-10-22T02:25:26.389602386Z",
+      "container_finished_at": "2026-10-22T02:25:37.617861248Z",
+      "startup_events": {
+        "observer_initialized": {
+          "monotonic_ns": 278842565067145,
+          "utc": "2026-10-22T02:25:27.080779+00:00"
+        },
+        "subscriptions_registered": {
+          "monotonic_ns": 278842568763296,
+          "utc": "2026-10-22T02:25:27.084474+00:00",
+          "topics": [
+            "/aegis/aircraft/pose",
+            "/world/aegis_sensor_aircraft/stats",
+            "/world/aegis_sensor_aircraft/model/passive_aircraft/link/body/sensor/ground_contact/contact",
+            "/aegis/sensors/imu",
+            "/aegis/sensors/gnss",
+            "/aegis/sensors/barometer"
+          ]
+        },
+        "server_spawn_requested": {
+          "monotonic_ns": 278842569024567,
+          "utc": "2026-10-22T02:25:27.084733+00:00"
+        },
+        "server_process_created": {
+          "monotonic_ns": 278842569973916,
+          "utc": "2026-10-22T02:25:27.085684+00:00",
+          "pid": 15
+        },
+        "first_clock": {
+          "monotonic_ns": 278844801272246,
+          "utc": "2026-10-22T02:25:29.316987+00:00",
+          "sim_time_ns": 0,
+          "paused": true
+        },
+        "server_initialization_log_received": {
+          "monotonic_ns": 278844808183824,
+          "utc": "2026-10-22T02:25:29.323899+00:00"
+        },
+        "world_initialization_log_received": {
+          "monotonic_ns": 278844809105068,
+          "utc": "2026-10-22T02:25:29.324816+00:00"
+        },
+        "world_discovery_log_received": {
+          "monotonic_ns": 278844809216768,
+          "utc": "2026-10-22T02:25:29.324926+00:00"
+        },
+        "controller_spawn_requested": {
+          "monotonic_ns": 278844839698684,
+          "utc": "2026-10-22T02:25:29.355418+00:00"
+        },
+        "controller_initialized": {
+          "monotonic_ns": 278845470748738,
+          "utc": "2026-10-22T02:25:29.986460+00:00",
+          "emitted": {
+            "event": "controller_initialized",
+            "monotonic_ns": 278845470375508,
+            "utc": "2026-10-22T02:25:29.986087+00:00"
+          }
+        },
+        "transport_discovered": {
+          "monotonic_ns": 278847475922294,
+          "utc": "2026-10-22T02:25:31.991634+00:00",
+          "emitted": {
+            "event": "transport_discovered",
+            "monotonic_ns": 278847475082645,
+            "utc": "2026-10-22T02:25:31.990899+00:00",
+            "topics": {
+              "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+              "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+              "/aegis/sensors/imu": "gz.msgs.IMU",
+              "/aegis/sensors/gnss": "gz.msgs.NavSat",
+              "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+            },
+            "service": "/world/aegis_sensor_aircraft/control"
+          }
+        },
+        "control_request_sent": {
+          "monotonic_ns": 278847476114695,
+          "utc": "2026-10-22T02:25:31.991824+00:00",
+          "emitted": {
+            "event": "control_request_sent",
+            "monotonic_ns": 278847475569277,
+            "utc": "2026-10-22T02:25:31.991279+00:00",
+            "service": "/world/aegis_sensor_aircraft/control",
+            "pause": false,
+            "timeout_ms": 3000,
+            "attempt": 1
+          }
+        },
+        "control_result": {
+          "monotonic_ns": 278847578540228,
+          "utc": "2026-10-22T02:25:32.094254+00:00",
+          "emitted": {
+            "event": "control_result",
+            "monotonic_ns": 278847577991435,
+            "utc": "2026-10-22T02:25:32.093747+00:00",
+            "transport_result": true,
+            "response_data": true,
+            "acknowledged": true
+          }
+        },
+        "first_advancing_clock": {
+          "monotonic_ns": 278847578752199,
+          "utc": "2026-10-22T02:25:32.094463+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_imu": {
+          "monotonic_ns": 278847581254824,
+          "utc": "2026-10-22T02:25:32.096967+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_gnss": {
+          "monotonic_ns": 278847581531510,
+          "utc": "2026-10-22T02:25:32.097243+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_barometer": {
+          "monotonic_ns": 278847581700867,
+          "utc": "2026-10-22T02:25:32.097410+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_pose": {
+          "monotonic_ns": 278847593047906,
+          "utc": "2026-10-22T02:25:32.108760+00:00",
+          "sim_time_ns": 10000000
+        },
+        "startup_verified": {
+          "monotonic_ns": 278847614582467,
+          "utc": "2026-10-22T02:25:32.130295+00:00"
+        },
+        "server_exit_observed": {
+          "monotonic_ns": 278852933535354,
+          "utc": "2026-10-22T02:25:37.449276+00:00",
+          "exit_code": 0
+        }
+      },
+      "control_events": [
+        {
+          "event": "controller_initialized",
+          "monotonic_ns": 278845470375508,
+          "utc": "2026-10-22T02:25:29.986087+00:00"
+        },
+        {
+          "event": "transport_discovered",
+          "monotonic_ns": 278847475082645,
+          "utc": "2026-10-22T02:25:31.990899+00:00",
+          "topics": {
+            "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+            "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+            "/aegis/sensors/imu": "gz.msgs.IMU",
+            "/aegis/sensors/gnss": "gz.msgs.NavSat",
+            "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+          },
+          "service": "/world/aegis_sensor_aircraft/control"
+        },
+        {
+          "event": "control_request_sent",
+          "monotonic_ns": 278847475569277,
+          "utc": "2026-10-22T02:25:31.991279+00:00",
+          "service": "/world/aegis_sensor_aircraft/control",
+          "pause": false,
+          "timeout_ms": 3000,
+          "attempt": 1
+        },
+        {
+          "event": "control_result",
+          "monotonic_ns": 278847577991435,
+          "utc": "2026-10-22T02:25:32.093747+00:00",
+          "transport_result": true,
+          "response_data": true,
+          "acknowledged": true
+        }
+      ],
+      "startup_seconds_from_server_spawn": {
+        "server_initialization_log_received": 2.239159257,
+        "world_initialization_log_received": 2.240080501,
+        "world_discovery_log_received": 2.240192201,
+        "first_clock": 2.232247679,
+        "controller_spawn_requested": 2.270674117,
+        "transport_discovered": 4.906897727,
+        "control_request_sent": 4.907090128,
+        "control_result": 5.009515661,
+        "first_advancing_clock": 5.009727632,
+        "first_pose": 5.024023339,
+        "first_imu": 5.012230257,
+        "first_gnss": 5.012506943,
+        "first_barometer": 5.0126763,
+        "startup_verified": 5.0455579
+      },
+      "control_request_count": 1,
+      "unpause_acknowledged": true,
+      "control_roundtrip_seconds": 0.102422158,
+      "peak_memory_bytes": 121303040,
+      "peak_pids": 29,
+      "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "pids_events": "max 0\n",
+      "cpu_stat": "usage_usec 8690303\nuser_usec 4819476\nsystem_usec 3870827\nnice_usec 0\nnr_periods 111\nnr_throttled 63\nthrottled_usec 3303811\nnr_bursts 0\nburst_usec 0\n",
+      "observer_monitor_max_gap_seconds": 0.0987318970146589,
+      "harness_wall_seconds": 10.471092785010114,
+      "host_wall_seconds": 12.097099227947183,
+      "server_exit_code": 0,
+      "controller_exit_code": 0,
+      "container_exit_code": 0,
+      "attach_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "clock_samples": 77,
+      "clock_time_range_ns": [
+        0,
+        1955000000
+      ],
+      "advancing_clock_samples": 50,
+      "pose_samples": 200,
+      "sensor_samples": {
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "sensor_analysis": {
+        "passed": true,
+        "diagnostics": [],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_specific_force_vector_error_m_s2": 8.449277583956987e-11,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "gnss": {
+            "max_position_residual_m": 0.0005297403793215194,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "85ace1c584977fb609d8b661e776a7c9a190b014c06b6c36f64fa7bb886bcd9b",
+        "sensor_checks.py": "64a68d2d8c47d01b0290619dca381e70364a2555ef7221d070ef1c0d1599923f",
+        "sensor_startup.py": "73cf413ac01126055d5bc5cda9a18bfb2cdd808d528d44d89c257ab8d612dfb7",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "gazebo_version": "8.15.0",
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "attempt_sha256": "73cdd53dc1f4d9c0b1b2b4598f2e354a402f5906bf8ad78be6e8f2b33ef335a6",
+      "launcher_log_sha256": "2b184dd6f12c35167cf025e971c6555d55b05f14c6b82619b7762de6ed77b3eb",
+      "host_resources_before": [
+        2778669056,
+        748105728,
+        225183907840,
+        4
+      ],
+      "remaining_owned_containers": []
+    },
+    {
+      "run_id": "run-08",
+      "category": "independent_sensor_validation",
+      "retry_of": null,
+      "success": true,
+      "cleanup_ok": true,
+      "report_sha256": "c411d92185bacfed21fcb92abaa6e6d5c937d7f6291e22395e5d191d9ddcdaef",
+      "container_log_sha256": "b019799ad1f4ff32f30d3100b6ccece23404eaed15304e241766f4ff1fdd6d6d",
+      "error": null,
+      "runtime_error": null,
+      "startup_classification": "observed_running",
+      "startup_verified": true,
+      "host_events": {
+        "container_create_requested": {
+          "monotonic_ns": 278853954017800,
+          "utc": "2026-10-22T02:25:38.469727+00:00"
+        },
+        "container_created": {
+          "monotonic_ns": 278854062792765,
+          "utc": "2026-10-22T02:25:38.578504+00:00"
+        },
+        "container_start_requested": {
+          "monotonic_ns": 278854063083898,
+          "utc": "2026-10-22T02:25:38.578793+00:00"
+        },
+        "container_exit_observed": {
+          "monotonic_ns": 278866472895707,
+          "utc": "2026-10-22T02:25:51.097394+00:00"
+        },
+        "container_removal_verified": {
+          "monotonic_ns": 278866641480317,
+          "utc": "2026-10-22T02:25:51.265978+00:00"
+        }
+      },
+      "container_started_at": "2026-10-22T02:25:38.653680079Z",
+      "container_finished_at": "2026-10-22T02:25:50.948843008Z",
+      "startup_events": {
+        "observer_initialized": {
+          "monotonic_ns": 278854795557198,
+          "utc": "2026-10-22T02:25:39.311269+00:00"
+        },
+        "subscriptions_registered": {
+          "monotonic_ns": 278854799207740,
+          "utc": "2026-10-22T02:25:39.314919+00:00",
+          "topics": [
+            "/aegis/aircraft/pose",
+            "/world/aegis_sensor_aircraft/stats",
+            "/world/aegis_sensor_aircraft/model/passive_aircraft/link/body/sensor/ground_contact/contact",
+            "/aegis/sensors/imu",
+            "/aegis/sensors/gnss",
+            "/aegis/sensors/barometer"
+          ]
+        },
+        "server_spawn_requested": {
+          "monotonic_ns": 278854799465843,
+          "utc": "2026-10-22T02:25:39.315174+00:00"
+        },
+        "server_process_created": {
+          "monotonic_ns": 278854800511846,
+          "utc": "2026-10-22T02:25:39.316222+00:00",
+          "pid": 15
+        },
+        "first_clock": {
+          "monotonic_ns": 278857038671611,
+          "utc": "2026-10-22T02:25:41.554392+00:00",
+          "sim_time_ns": 0,
+          "paused": true
+        },
+        "server_initialization_log_received": {
+          "monotonic_ns": 278857054445908,
+          "utc": "2026-10-22T02:25:41.570163+00:00"
+        },
+        "world_initialization_log_received": {
+          "monotonic_ns": 278857056340419,
+          "utc": "2026-10-22T02:25:41.572057+00:00"
+        },
+        "world_discovery_log_received": {
+          "monotonic_ns": 278857056737352,
+          "utc": "2026-10-22T02:25:41.572449+00:00"
+        },
+        "controller_spawn_requested": {
+          "monotonic_ns": 278857068520492,
+          "utc": "2026-10-22T02:25:41.584240+00:00"
+        },
+        "controller_initialized": {
+          "monotonic_ns": 278857899676491,
+          "utc": "2026-10-22T02:25:42.415394+00:00",
+          "emitted": {
+            "event": "controller_initialized",
+            "monotonic_ns": 278857898061503,
+            "utc": "2026-10-22T02:25:42.413785+00:00"
+          }
+        },
+        "transport_discovered": {
+          "monotonic_ns": 278859935734137,
+          "utc": "2026-10-22T02:25:44.451445+00:00",
+          "emitted": {
+            "event": "transport_discovered",
+            "monotonic_ns": 278859935471592,
+            "utc": "2026-10-22T02:25:44.451183+00:00",
+            "topics": {
+              "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+              "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+              "/aegis/sensors/imu": "gz.msgs.IMU",
+              "/aegis/sensors/gnss": "gz.msgs.NavSat",
+              "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+            },
+            "service": "/world/aegis_sensor_aircraft/control"
+          }
+        },
+        "control_request_sent": {
+          "monotonic_ns": 278859935842407,
+          "utc": "2026-10-22T02:25:44.451551+00:00",
+          "emitted": {
+            "event": "control_request_sent",
+            "monotonic_ns": 278859935598700,
+            "utc": "2026-10-22T02:25:44.451307+00:00",
+            "service": "/world/aegis_sensor_aircraft/control",
+            "pause": false,
+            "timeout_ms": 3000,
+            "attempt": 1
+          }
+        },
+        "control_result": {
+          "monotonic_ns": 278860047830383,
+          "utc": "2026-10-22T02:25:44.563549+00:00",
+          "emitted": {
+            "event": "control_result",
+            "monotonic_ns": 278860046652899,
+            "utc": "2026-10-22T02:25:44.562377+00:00",
+            "transport_result": true,
+            "response_data": true,
+            "acknowledged": true
+          }
+        },
+        "first_advancing_clock": {
+          "monotonic_ns": 278860058246207,
+          "utc": "2026-10-22T02:25:44.573962+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_gnss": {
+          "monotonic_ns": 278860061439476,
+          "utc": "2026-10-22T02:25:44.577156+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_barometer": {
+          "monotonic_ns": 278860061900813,
+          "utc": "2026-10-22T02:25:44.577613+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_imu": {
+          "monotonic_ns": 278860062461298,
+          "utc": "2026-10-22T02:25:44.578175+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_pose": {
+          "monotonic_ns": 278860097507437,
+          "utc": "2026-10-22T02:25:44.613221+00:00",
+          "sim_time_ns": 10000000
+        },
+        "startup_verified": {
+          "monotonic_ns": 278860123169192,
+          "utc": "2026-10-22T02:25:44.638883+00:00"
+        },
+        "server_exit_observed": {
+          "monotonic_ns": 278866160097202,
+          "utc": "2026-10-22T02:25:50.784599+00:00",
+          "exit_code": 0
+        }
+      },
+      "control_events": [
+        {
+          "event": "controller_initialized",
+          "monotonic_ns": 278857898061503,
+          "utc": "2026-10-22T02:25:42.413785+00:00"
+        },
+        {
+          "event": "transport_discovered",
+          "monotonic_ns": 278859935471592,
+          "utc": "2026-10-22T02:25:44.451183+00:00",
+          "topics": {
+            "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+            "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+            "/aegis/sensors/imu": "gz.msgs.IMU",
+            "/aegis/sensors/gnss": "gz.msgs.NavSat",
+            "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+          },
+          "service": "/world/aegis_sensor_aircraft/control"
+        },
+        {
+          "event": "control_request_sent",
+          "monotonic_ns": 278859935598700,
+          "utc": "2026-10-22T02:25:44.451307+00:00",
+          "service": "/world/aegis_sensor_aircraft/control",
+          "pause": false,
+          "timeout_ms": 3000,
+          "attempt": 1
+        },
+        {
+          "event": "control_result",
+          "monotonic_ns": 278860046652899,
+          "utc": "2026-10-22T02:25:44.562377+00:00",
+          "transport_result": true,
+          "response_data": true,
+          "acknowledged": true
+        }
+      ],
+      "startup_seconds_from_server_spawn": {
+        "server_initialization_log_received": 2.254980065,
+        "world_initialization_log_received": 2.256874576,
+        "world_discovery_log_received": 2.257271509,
+        "first_clock": 2.239205768,
+        "controller_spawn_requested": 2.269054649,
+        "transport_discovered": 5.136268294,
+        "control_request_sent": 5.136376564,
+        "control_result": 5.24836454,
+        "first_advancing_clock": 5.258780364,
+        "first_pose": 5.298041594,
+        "first_imu": 5.262995455,
+        "first_gnss": 5.261973633,
+        "first_barometer": 5.26243497,
+        "startup_verified": 5.323703349
+      },
+      "control_request_count": 1,
+      "unpause_acknowledged": true,
+      "control_roundtrip_seconds": 0.111054199,
+      "peak_memory_bytes": 121720832,
+      "peak_pids": 29,
+      "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "pids_events": "max 0\n",
+      "cpu_stat": "usage_usec 9805723\nuser_usec 5500666\nsystem_usec 4305056\nnice_usec 0\nnr_periods 120\nnr_throttled 82\nthrottled_usec 4353643\nnr_bursts 0\nburst_usec 0\n",
+      "observer_monitor_max_gap_seconds": 0.09918910200940445,
+      "harness_wall_seconds": 11.431399578985292,
+      "host_wall_seconds": 12.928425889986102,
+      "server_exit_code": 0,
+      "controller_exit_code": 0,
+      "container_exit_code": 0,
+      "attach_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "clock_samples": 89,
+      "clock_time_range_ns": [
+        0,
+        1998000000
+      ],
+      "advancing_clock_samples": 60,
+      "pose_samples": 200,
+      "sensor_samples": {
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "sensor_analysis": {
+        "passed": true,
+        "diagnostics": [],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_specific_force_vector_error_m_s2": 8.449277583956987e-11,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "gnss": {
+            "max_position_residual_m": 0.0005297403793215194,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "85ace1c584977fb609d8b661e776a7c9a190b014c06b6c36f64fa7bb886bcd9b",
+        "sensor_checks.py": "64a68d2d8c47d01b0290619dca381e70364a2555ef7221d070ef1c0d1599923f",
+        "sensor_startup.py": "73cf413ac01126055d5bc5cda9a18bfb2cdd808d528d44d89c257ab8d612dfb7",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "gazebo_version": "8.15.0",
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "attempt_sha256": "3ef402c968b5d8a08719a4c031f17f053cbb6e362ce313b8b8431ff6f3722f43",
+      "launcher_log_sha256": "55dd5d2e42d351745ef75003f82c8d5a9d0259f4c7660a5d0ad3897dae33cb92",
+      "host_resources_before": [
+        2800607232,
+        748113920,
+        225183793152,
+        4
+      ],
+      "remaining_owned_containers": []
+    },
+    {
+      "run_id": "run-09",
+      "category": "independent_sensor_validation",
+      "retry_of": null,
+      "success": true,
+      "cleanup_ok": true,
+      "report_sha256": "3b6c04117c605bda9fbf3c3bceeab339c27c8e37fd97023fac57a62f5ccc05bb",
+      "container_log_sha256": "1445fd8c587371ed7784be5bfba4c2025ffd1b9a81b232661d818a0979339264",
+      "error": null,
+      "runtime_error": null,
+      "startup_classification": "observed_running",
+      "startup_verified": true,
+      "host_events": {
+        "container_create_requested": {
+          "monotonic_ns": 278866870280055,
+          "utc": "2026-10-22T02:25:51.494777+00:00"
+        },
+        "container_created": {
+          "monotonic_ns": 278866972815143,
+          "utc": "2026-10-22T02:25:51.597314+00:00"
+        },
+        "container_start_requested": {
+          "monotonic_ns": 278866972974099,
+          "utc": "2026-10-22T02:25:51.597470+00:00"
+        },
+        "container_exit_observed": {
+          "monotonic_ns": 278878268162880,
+          "utc": "2026-10-22T02:26:02.892661+00:00"
+        },
+        "container_removal_verified": {
+          "monotonic_ns": 278878427261076,
+          "utc": "2026-10-22T02:26:03.051760+00:00"
+        }
+      },
+      "container_started_at": "2026-10-22T02:25:51.655685931Z",
+      "container_finished_at": "2026-10-22T02:26:02.711560122Z",
+      "startup_events": {
+        "observer_initialized": {
+          "monotonic_ns": 278867684044154,
+          "utc": "2026-10-22T02:25:52.308543+00:00"
+        },
+        "subscriptions_registered": {
+          "monotonic_ns": 278867689656142,
+          "utc": "2026-10-22T02:25:52.314156+00:00",
+          "topics": [
+            "/aegis/aircraft/pose",
+            "/world/aegis_sensor_aircraft/stats",
+            "/world/aegis_sensor_aircraft/model/passive_aircraft/link/body/sensor/ground_contact/contact",
+            "/aegis/sensors/imu",
+            "/aegis/sensors/gnss",
+            "/aegis/sensors/barometer"
+          ]
+        },
+        "server_spawn_requested": {
+          "monotonic_ns": 278867689948988,
+          "utc": "2026-10-22T02:25:52.314445+00:00"
+        },
+        "server_process_created": {
+          "monotonic_ns": 278867690931197,
+          "utc": "2026-10-22T02:25:52.315429+00:00",
+          "pid": 15
+        },
+        "first_clock": {
+          "monotonic_ns": 278869995089153,
+          "utc": "2026-10-22T02:25:54.619592+00:00",
+          "sim_time_ns": 0,
+          "paused": true
+        },
+        "server_initialization_log_received": {
+          "monotonic_ns": 278870002540151,
+          "utc": "2026-10-22T02:25:54.627040+00:00"
+        },
+        "world_initialization_log_received": {
+          "monotonic_ns": 278870003667432,
+          "utc": "2026-10-22T02:25:54.628167+00:00"
+        },
+        "world_discovery_log_received": {
+          "monotonic_ns": 278870003816545,
+          "utc": "2026-10-22T02:25:54.628313+00:00"
+        },
+        "controller_spawn_requested": {
+          "monotonic_ns": 278870016248234,
+          "utc": "2026-10-22T02:25:54.640750+00:00"
+        },
+        "controller_initialized": {
+          "monotonic_ns": 278870860669268,
+          "utc": "2026-10-22T02:25:55.485171+00:00",
+          "emitted": {
+            "event": "controller_initialized",
+            "monotonic_ns": 278870856921158,
+            "utc": "2026-10-22T02:25:55.481424+00:00"
+          }
+        },
+        "transport_discovered": {
+          "monotonic_ns": 278872867826763,
+          "utc": "2026-10-22T02:25:57.492336+00:00",
+          "emitted": {
+            "event": "transport_discovered",
+            "monotonic_ns": 278872867428168,
+            "utc": "2026-10-22T02:25:57.491928+00:00",
+            "topics": {
+              "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+              "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+              "/aegis/sensors/imu": "gz.msgs.IMU",
+              "/aegis/sensors/gnss": "gz.msgs.NavSat",
+              "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+            },
+            "service": "/world/aegis_sensor_aircraft/control"
+          }
+        },
+        "control_request_sent": {
+          "monotonic_ns": 278872867962103,
+          "utc": "2026-10-22T02:25:57.492458+00:00",
+          "emitted": {
+            "event": "control_request_sent",
+            "monotonic_ns": 278872867612266,
+            "utc": "2026-10-22T02:25:57.492109+00:00",
+            "service": "/world/aegis_sensor_aircraft/control",
+            "pause": false,
+            "timeout_ms": 3000,
+            "attempt": 1
+          }
+        },
+        "control_result": {
+          "monotonic_ns": 278872972540702,
+          "utc": "2026-10-22T02:25:57.597042+00:00",
+          "emitted": {
+            "event": "control_result",
+            "monotonic_ns": 278872971377623,
+            "utc": "2026-10-22T02:25:57.595880+00:00",
+            "transport_result": true,
+            "response_data": true,
+            "acknowledged": true
+          }
+        },
+        "first_gnss": {
+          "monotonic_ns": 278872973944664,
+          "utc": "2026-10-22T02:25:57.598446+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_imu": {
+          "monotonic_ns": 278872974316071,
+          "utc": "2026-10-22T02:25:57.598815+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_barometer": {
+          "monotonic_ns": 278872974554646,
+          "utc": "2026-10-22T02:25:57.599053+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_advancing_clock": {
+          "monotonic_ns": 278872974853718,
+          "utc": "2026-10-22T02:25:57.599354+00:00",
+          "sim_time_ns": 2000000
+        },
+        "first_pose": {
+          "monotonic_ns": 278872984348569,
+          "utc": "2026-10-22T02:25:57.608850+00:00",
+          "sim_time_ns": 10000000
+        },
+        "startup_verified": {
+          "monotonic_ns": 278873027395538,
+          "utc": "2026-10-22T02:25:57.651896+00:00"
+        },
+        "server_exit_observed": {
+          "monotonic_ns": 278877883392947,
+          "utc": "2026-10-22T02:26:02.507892+00:00",
+          "exit_code": 0
+        }
+      },
+      "control_events": [
+        {
+          "event": "controller_initialized",
+          "monotonic_ns": 278870856921158,
+          "utc": "2026-10-22T02:25:55.481424+00:00"
+        },
+        {
+          "event": "transport_discovered",
+          "monotonic_ns": 278872867428168,
+          "utc": "2026-10-22T02:25:57.491928+00:00",
+          "topics": {
+            "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+            "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+            "/aegis/sensors/imu": "gz.msgs.IMU",
+            "/aegis/sensors/gnss": "gz.msgs.NavSat",
+            "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+          },
+          "service": "/world/aegis_sensor_aircraft/control"
+        },
+        {
+          "event": "control_request_sent",
+          "monotonic_ns": 278872867612266,
+          "utc": "2026-10-22T02:25:57.492109+00:00",
+          "service": "/world/aegis_sensor_aircraft/control",
+          "pause": false,
+          "timeout_ms": 3000,
+          "attempt": 1
+        },
+        {
+          "event": "control_result",
+          "monotonic_ns": 278872971377623,
+          "utc": "2026-10-22T02:25:57.595880+00:00",
+          "transport_result": true,
+          "response_data": true,
+          "acknowledged": true
+        }
+      ],
+      "startup_seconds_from_server_spawn": {
+        "server_initialization_log_received": 2.312591163,
+        "world_initialization_log_received": 2.313718444,
+        "world_discovery_log_received": 2.313867557,
+        "first_clock": 2.305140165,
+        "controller_spawn_requested": 2.326299246,
+        "transport_discovered": 5.177877775,
+        "control_request_sent": 5.178013115,
+        "control_result": 5.282591714,
+        "first_advancing_clock": 5.28490473,
+        "first_pose": 5.294399581,
+        "first_imu": 5.284367083,
+        "first_gnss": 5.283995676,
+        "first_barometer": 5.284605658,
+        "startup_verified": 5.33744655
+      },
+      "control_request_count": 1,
+      "unpause_acknowledged": true,
+      "control_roundtrip_seconds": 0.103765357,
+      "peak_memory_bytes": 121438208,
+      "peak_pids": 29,
+      "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "pids_events": "max 0\n",
+      "cpu_stat": "usage_usec 9100109\nuser_usec 4889858\nsystem_usec 4210250\nnice_usec 0\nnr_periods 108\nnr_throttled 63\nthrottled_usec 3126319\nnr_bursts 0\nburst_usec 0\n",
+      "observer_monitor_max_gap_seconds": 0.1001679070177488,
+      "harness_wall_seconds": 10.318803091999143,
+      "host_wall_seconds": 11.774368052952923,
+      "server_exit_code": 0,
+      "controller_exit_code": 0,
+      "container_exit_code": 0,
+      "attach_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "clock_samples": 76,
+      "clock_time_range_ns": [
+        0,
+        1973000000
+      ],
+      "advancing_clock_samples": 47,
+      "pose_samples": 200,
+      "sensor_samples": {
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "sensor_analysis": {
+        "passed": true,
+        "diagnostics": [],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_specific_force_vector_error_m_s2": 8.449277583956987e-11,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "gnss": {
+            "max_position_residual_m": 0.0005297403793215194,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "85ace1c584977fb609d8b661e776a7c9a190b014c06b6c36f64fa7bb886bcd9b",
+        "sensor_checks.py": "64a68d2d8c47d01b0290619dca381e70364a2555ef7221d070ef1c0d1599923f",
+        "sensor_startup.py": "73cf413ac01126055d5bc5cda9a18bfb2cdd808d528d44d89c257ab8d612dfb7",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "gazebo_version": "8.15.0",
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "attempt_sha256": "aa0788e1e2a4d6bef9f7603bc6d6cfa2aaa5804b3fd51c79843054ea601733c5",
+      "launcher_log_sha256": "64f20153011ad0d469ba0d19ca6874652ea140600852d7587cfe0cd75a64c0c8",
+      "host_resources_before": [
+        2732470272,
+        748113920,
+        225183793152,
+        4
+      ],
+      "remaining_owned_containers": []
+    },
+    {
+      "run_id": "run-10",
+      "category": "independent_sensor_validation",
+      "retry_of": null,
+      "success": true,
+      "cleanup_ok": true,
+      "report_sha256": "b05ccdf6947d65fae0f49f8f628112927e153c3bb6422121f007ebee969a69b9",
+      "container_log_sha256": "5f6ba378a51869c42e804273106fc5606f1a4656f094e195fbbf09cd053691a5",
+      "error": null,
+      "runtime_error": null,
+      "startup_classification": "observed_running",
+      "startup_verified": true,
+      "host_events": {
+        "container_create_requested": {
+          "monotonic_ns": 278878694687277,
+          "utc": "2026-10-22T02:26:03.319183+00:00"
+        },
+        "container_created": {
+          "monotonic_ns": 278878791018778,
+          "utc": "2026-10-22T02:26:03.415516+00:00"
+        },
+        "container_start_requested": {
+          "monotonic_ns": 278878791246501,
+          "utc": "2026-10-22T02:26:03.415742+00:00"
+        },
+        "container_exit_observed": {
+          "monotonic_ns": 278889486104014,
+          "utc": "2026-10-22T02:26:14.110604+00:00"
+        },
+        "container_removal_verified": {
+          "monotonic_ns": 278889798645550,
+          "utc": "2026-10-22T02:26:14.423144+00:00"
+        }
+      },
+      "container_started_at": "2026-10-22T02:26:03.481404688Z",
+      "container_finished_at": "2026-10-22T02:26:13.929349087Z",
+      "startup_events": {
+        "observer_initialized": {
+          "monotonic_ns": 278879663055397,
+          "utc": "2026-10-22T02:26:04.287556+00:00"
+        },
+        "subscriptions_registered": {
+          "monotonic_ns": 278879670033989,
+          "utc": "2026-10-22T02:26:04.294533+00:00",
+          "topics": [
+            "/aegis/aircraft/pose",
+            "/world/aegis_sensor_aircraft/stats",
+            "/world/aegis_sensor_aircraft/model/passive_aircraft/link/body/sensor/ground_contact/contact",
+            "/aegis/sensors/imu",
+            "/aegis/sensors/gnss",
+            "/aegis/sensors/barometer"
+          ]
+        },
+        "server_spawn_requested": {
+          "monotonic_ns": 278879670437246,
+          "utc": "2026-10-22T02:26:04.294934+00:00"
+        },
+        "server_process_created": {
+          "monotonic_ns": 278879671500982,
+          "utc": "2026-10-22T02:26:04.295999+00:00",
+          "pid": 15
+        },
+        "first_clock": {
+          "monotonic_ns": 278882017617662,
+          "utc": "2026-10-22T02:26:06.642119+00:00",
+          "sim_time_ns": 0,
+          "paused": true
+        },
+        "server_initialization_log_received": {
+          "monotonic_ns": 278882019340733,
+          "utc": "2026-10-22T02:26:06.643839+00:00"
+        },
+        "world_initialization_log_received": {
+          "monotonic_ns": 278882019701653,
+          "utc": "2026-10-22T02:26:06.644200+00:00"
+        },
+        "world_discovery_log_received": {
+          "monotonic_ns": 278882019760514,
+          "utc": "2026-10-22T02:26:06.644256+00:00"
+        },
+        "controller_spawn_requested": {
+          "monotonic_ns": 278882031496190,
+          "utc": "2026-10-22T02:26:06.655997+00:00"
+        },
+        "controller_initialized": {
+          "monotonic_ns": 278882568447241,
+          "utc": "2026-10-22T02:26:07.192946+00:00",
+          "emitted": {
+            "event": "controller_initialized",
+            "monotonic_ns": 278882564115510,
+            "utc": "2026-10-22T02:26:07.188616+00:00"
+          }
+        },
+        "transport_discovered": {
+          "monotonic_ns": 278884571578185,
+          "utc": "2026-10-22T02:26:09.196076+00:00",
+          "emitted": {
+            "event": "transport_discovered",
+            "monotonic_ns": 278884571268182,
+            "utc": "2026-10-22T02:26:09.195769+00:00",
+            "topics": {
+              "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+              "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+              "/aegis/sensors/imu": "gz.msgs.IMU",
+              "/aegis/sensors/gnss": "gz.msgs.NavSat",
+              "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+            },
+            "service": "/world/aegis_sensor_aircraft/control"
+          }
+        },
+        "control_request_sent": {
+          "monotonic_ns": 278884571654346,
+          "utc": "2026-10-22T02:26:09.196150+00:00",
+          "emitted": {
+            "event": "control_request_sent",
+            "monotonic_ns": 278884571415836,
+            "utc": "2026-10-22T02:26:09.195913+00:00",
+            "service": "/world/aegis_sensor_aircraft/control",
+            "pause": false,
+            "timeout_ms": 3000,
+            "attempt": 1
+          }
+        },
+        "control_result": {
+          "monotonic_ns": 278884673315481,
+          "utc": "2026-10-22T02:26:09.297814+00:00",
+          "emitted": {
+            "event": "control_result",
+            "monotonic_ns": 278884673032983,
+            "utc": "2026-10-22T02:26:09.297534+00:00",
+            "transport_result": true,
+            "response_data": true,
+            "acknowledged": true
+          }
+        },
+        "first_advancing_clock": {
+          "monotonic_ns": 278884673548629,
+          "utc": "2026-10-22T02:26:09.298047+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_imu": {
+          "monotonic_ns": 278884674689942,
+          "utc": "2026-10-22T02:26:09.299190+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_gnss": {
+          "monotonic_ns": 278884674849213,
+          "utc": "2026-10-22T02:26:09.299346+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_barometer": {
+          "monotonic_ns": 278884674943644,
+          "utc": "2026-10-22T02:26:09.299439+00:00",
+          "sim_time_ns": 1000000
+        },
+        "first_pose": {
+          "monotonic_ns": 278884683296158,
+          "utc": "2026-10-22T02:26:09.307796+00:00",
+          "sim_time_ns": 10000000
+        },
+        "startup_verified": {
+          "monotonic_ns": 278884716465522,
+          "utc": "2026-10-22T02:26:09.340965+00:00"
+        },
+        "server_exit_observed": {
+          "monotonic_ns": 278889148633086,
+          "utc": "2026-10-22T02:26:13.773137+00:00",
+          "exit_code": 0
+        }
+      },
+      "control_events": [
+        {
+          "event": "controller_initialized",
+          "monotonic_ns": 278882564115510,
+          "utc": "2026-10-22T02:26:07.188616+00:00"
+        },
+        {
+          "event": "transport_discovered",
+          "monotonic_ns": 278884571268182,
+          "utc": "2026-10-22T02:26:09.195769+00:00",
+          "topics": {
+            "/world/aegis_sensor_aircraft/stats": "gz.msgs.WorldStatistics",
+            "/aegis/aircraft/pose": "gz.msgs.Pose_V",
+            "/aegis/sensors/imu": "gz.msgs.IMU",
+            "/aegis/sensors/gnss": "gz.msgs.NavSat",
+            "/aegis/sensors/barometer": "gz.msgs.FluidPressure"
+          },
+          "service": "/world/aegis_sensor_aircraft/control"
+        },
+        {
+          "event": "control_request_sent",
+          "monotonic_ns": 278884571415836,
+          "utc": "2026-10-22T02:26:09.195913+00:00",
+          "service": "/world/aegis_sensor_aircraft/control",
+          "pause": false,
+          "timeout_ms": 3000,
+          "attempt": 1
+        },
+        {
+          "event": "control_result",
+          "monotonic_ns": 278884673032983,
+          "utc": "2026-10-22T02:26:09.297534+00:00",
+          "transport_result": true,
+          "response_data": true,
+          "acknowledged": true
+        }
+      ],
+      "startup_seconds_from_server_spawn": {
+        "server_initialization_log_received": 2.348903487,
+        "world_initialization_log_received": 2.349264407,
+        "world_discovery_log_received": 2.349323268,
+        "first_clock": 2.347180416,
+        "controller_spawn_requested": 2.361058944,
+        "transport_discovered": 4.901140939,
+        "control_request_sent": 4.9012171,
+        "control_result": 5.002878235,
+        "first_advancing_clock": 5.003111383,
+        "first_pose": 5.012858912,
+        "first_imu": 5.004252696,
+        "first_gnss": 5.004411967,
+        "first_barometer": 5.004506398,
+        "startup_verified": 5.046028276
+      },
+      "control_request_count": 1,
+      "unpause_acknowledged": true,
+      "control_roundtrip_seconds": 0.101617147,
+      "peak_memory_bytes": 121212928,
+      "peak_pids": 29,
+      "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "pids_events": "max 0\n",
+      "cpu_stat": "usage_usec 8017159\nuser_usec 4573434\nsystem_usec 3443725\nnice_usec 0\nnr_periods 103\nnr_throttled 57\nthrottled_usec 2629248\nnr_bursts 0\nburst_usec 0\n",
+      "observer_monitor_max_gap_seconds": 0.0990222209948115,
+      "harness_wall_seconds": 9.567977274011355,
+      "host_wall_seconds": 11.316443283983972,
+      "server_exit_code": 0,
+      "controller_exit_code": 0,
+      "container_exit_code": 0,
+      "attach_exit_code": 0,
+      "oom_killed": false,
+      "timed_out": false,
+      "clock_samples": 69,
+      "clock_time_range_ns": [
+        0,
+        1997000000
+      ],
+      "advancing_clock_samples": 43,
+      "pose_samples": 200,
+      "sensor_samples": {
+        "imu": 201,
+        "gnss": 41,
+        "barometer": 101
+      },
+      "sensor_analysis": {
+        "passed": true,
+        "diagnostics": [],
+        "streams": {
+          "imu": {
+            "samples": 201,
+            "expected_rate_hz": 100,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 100.05002501250625,
+            "minimum_interval_ns": 9000000,
+            "maximum_interval_ns": 10000000
+          },
+          "gnss": {
+            "samples": 41,
+            "expected_rate_hz": 20,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 20.010005002501252,
+            "minimum_interval_ns": 49000000,
+            "maximum_interval_ns": 50000000
+          },
+          "barometer": {
+            "samples": 101,
+            "expected_rate_hz": 50,
+            "first_time_ns": 1000000,
+            "last_time_ns": 2000000000,
+            "mean_rate_hz": 50.02501250625313,
+            "minimum_interval_ns": 19000000,
+            "maximum_interval_ns": 20000000
+          }
+        },
+        "comparisons": {
+          "imu": {
+            "free_fall_max_specific_force_m_s2": 0.0,
+            "settled_max_force_magnitude_error_m_s2": 8.881784197001252e-15,
+            "settled_max_specific_force_vector_error_m_s2": 8.449277583956987e-11,
+            "settled_max_angular_speed_rad_s": 8.61281118926659e-09,
+            "max_orientation_quaternion_distance": 4.306405682965364e-12
+          },
+          "gnss": {
+            "max_position_residual_m": 0.0005297403793215194,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          },
+          "barometer": {
+            "max_position_residual_m": 0.0005297400074809611,
+            "matching": "nearest actual pose <=11 ms; no interpolation",
+            "tolerance_m": 0.05
+          }
+        }
+      },
+      "harness_sha256": {
+        "sensors.py": "85ace1c584977fb609d8b661e776a7c9a190b014c06b6c36f64fa7bb886bcd9b",
+        "sensor_checks.py": "64a68d2d8c47d01b0290619dca381e70364a2555ef7221d070ef1c0d1599923f",
+        "sensor_startup.py": "73cf413ac01126055d5bc5cda9a18bfb2cdd808d528d44d89c257ab8d612dfb7",
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c",
+        "sensor-aircraft.sdf": "f678b817f6e03dcce142ae81c59440dfe86dc3344855657846d9ed15a04bf4a9",
+        "sensor-aircraft-world.sdf": "138378cf8fbd70fe2c7e2f53c823782a37cd6d9a56869485fe952077436e866c"
+      },
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "gazebo_version": "8.15.0",
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "attempt_sha256": "8306aa05143269301034d2f74e13b6510c42fcb82da7675adba9a1a8944f0f40",
+      "launcher_log_sha256": "01f5bec31697de891ca7d70e56aaf3d8a4a9b0085eabe51f2e3b4d8ad646e3e1",
+      "host_resources_before": [
+        2676391936,
+        748113920,
+        225186177024,
+        4
+      ],
+      "remaining_owned_containers": []
+    }
+  ],
+  "baselines": [
+    {
+      "run_id": "baseline-74b",
+      "category": "unchanged_baseline",
+      "retry_of": null,
+      "success": true,
+      "cleanup_ok": true,
+      "report_sha256": "4be3319eab8304d6de93e4be48ac6046ccaa9f11f68f4c80d0d090473b0cb940",
+      "container_log_sha256": "f4d861d360eb1572d948ca57602866d272ac14de93070f39a75f8af0671a9d4f",
+      "error": null,
+      "runtime_error": null,
+      "startup_classification": null,
+      "startup_verified": null,
+      "host_events": null,
+      "container_started_at": "2026-10-22T02:26:14.862275011Z",
+      "container_finished_at": "2026-10-22T02:26:22.369735465Z",
+      "startup_events": {},
+      "control_events": [],
+      "startup_seconds_from_server_spawn": {
+        "server_initialization_log_received": null,
+        "world_initialization_log_received": null,
+        "world_discovery_log_received": null,
+        "first_clock": null,
+        "controller_spawn_requested": null,
+        "transport_discovered": null,
+        "control_request_sent": null,
+        "control_result": null,
+        "first_advancing_clock": null,
+        "first_pose": null,
+        "first_imu": null,
+        "first_gnss": null,
+        "first_barometer": null,
+        "startup_verified": null
+      },
+      "control_request_count": 0,
+      "unpause_acknowledged": null,
+      "control_roundtrip_seconds": null,
+      "peak_memory_bytes": 82292736,
+      "peak_pids": null,
+      "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "pids_events": null,
+      "cpu_stat": "usage_usec 5374544\nuser_usec 3308072\nsystem_usec 2066471\nnice_usec 0\nnr_periods 72\nnr_throttled 42\nthrottled_usec 2063062\nnr_bursts 0\nburst_usec 0\n",
+      "observer_monitor_max_gap_seconds": null,
+      "harness_wall_seconds": 6.7440562740084715,
+      "host_wall_seconds": 8.185159113956615,
+      "server_exit_code": 0,
+      "controller_exit_code": null,
+      "container_exit_code": 0,
+      "attach_exit_code": null,
+      "oom_killed": false,
+      "timed_out": false,
+      "clock_samples": 43,
+      "clock_time_range_ns": [
+        0,
+        1987000000
+      ],
+      "advancing_clock_samples": 37,
+      "pose_samples": 200,
+      "sensor_samples": {},
+      "sensor_analysis": null,
+      "harness_sha256": null,
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "gazebo_version": "8.15.0",
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "attempt_sha256": "98a1ae0dc907d4cf17aec0c664393e013c284bda4fb1fecf6ef250e1d5b5ef48",
+      "launcher_log_sha256": "19ca82b164a4149477961da2c00fb6297dbcfc333538dd104b52bb72e2f99ebe",
+      "host_resources_before": [
+        2746007552,
+        748113920,
+        225185628160,
+        4
+      ],
+      "remaining_owned_containers": []
+    },
+    {
+      "run_id": "baseline-75a",
+      "category": "unchanged_baseline",
+      "retry_of": null,
+      "success": true,
+      "cleanup_ok": true,
+      "report_sha256": "1928bab2010efbdab6be31c426d21447e8b515eec3762c793c3d9b9b8cf21728",
+      "container_log_sha256": "2a42f06add62b82c8da66cc6a58c7d6ac0c75098f9a3979b20b5fa81f5194aa4",
+      "error": null,
+      "runtime_error": null,
+      "startup_classification": null,
+      "startup_verified": null,
+      "host_events": null,
+      "container_started_at": "2026-10-22T02:26:23.190765322Z",
+      "container_finished_at": "2026-10-22T02:26:30.855292871Z",
+      "startup_events": {},
+      "control_events": [],
+      "startup_seconds_from_server_spawn": {
+        "server_initialization_log_received": null,
+        "world_initialization_log_received": null,
+        "world_discovery_log_received": null,
+        "first_clock": null,
+        "controller_spawn_requested": null,
+        "transport_discovered": null,
+        "control_request_sent": null,
+        "control_result": null,
+        "first_advancing_clock": null,
+        "first_pose": null,
+        "first_imu": null,
+        "first_gnss": null,
+        "first_barometer": null,
+        "startup_verified": null
+      },
+      "control_request_count": 0,
+      "unpause_acknowledged": true,
+      "control_roundtrip_seconds": null,
+      "peak_memory_bytes": 102313984,
+      "peak_pids": 17,
+      "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n",
+      "pids_events": null,
+      "cpu_stat": "usage_usec 5768052\nuser_usec 3389640\nsystem_usec 2378411\nnice_usec 0\nnr_periods 75\nnr_throttled 45\nthrottled_usec 2281532\nnr_bursts 0\nburst_usec 0\n",
+      "observer_monitor_max_gap_seconds": null,
+      "harness_wall_seconds": 6.974277753964998,
+      "host_wall_seconds": 8.544393300020602,
+      "server_exit_code": 0,
+      "controller_exit_code": null,
+      "container_exit_code": 0,
+      "attach_exit_code": null,
+      "oom_killed": false,
+      "timed_out": false,
+      "clock_samples": 46,
+      "clock_time_range_ns": [
+        0,
+        1957000000
+      ],
+      "advancing_clock_samples": 40,
+      "pose_samples": 200,
+      "sensor_samples": {},
+      "sensor_analysis": null,
+      "harness_sha256": {
+        "aircraft.py": "9263a231ac9cae4df0cf5b97c62b28c727a7e9507ea6638ae9c6a6e7fe44fac2",
+        "experimental.py": "284c34080d2c4c8e9467e9d605d279b996602e8fc360167210af500df4805ee2",
+        "smoke.py": "8d737c372afa418c3364534c5663f0427d5af7bbce51e6d2dc47cfff4e2d361d",
+        "launch.py": "0828dcf8e9515b7a3c160e80e6f67ee2057125daf2549ee049b0d84fa7a7186c"
+      },
+      "image_digest": "ghcr.io/openrobotics/gazebo@sha256:e8a4787b76fb6c5a8165e81ce86e48f9dddc75937e1301ad75edd96b099ad7c6",
+      "gazebo_version": "8.15.0",
+      "container_policy": {
+        "NetworkMode": "none",
+        "Memory": 1073741824,
+        "MemorySwap": 1073741824,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Privileged": false,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges:true"
+        ],
+        "Devices": [],
+        "PortBindings": {}
+      },
+      "attempt_sha256": "b63210c3194d7d58472f611469dba66d77e3e73bd34bd60e8d8f00da149d2a92",
+      "launcher_log_sha256": "08ab83877c89f4d9d654e954cf63efd910c05941b68eb93c37f29de3548a6a06",
+      "host_resources_before": [
+        2745810944,
+        748113920,
+        225185669120,
+        4
+      ],
+      "remaining_owned_containers": []
+    }
+  ],
+  "tests": {
+    "focused": {
+      "passed": 192,
+      "skipped": 2,
+      "failed": 0,
+      "seconds": 2.65,
+      "log_id": "aegis75br-focused.log",
+      "sha256": "b676900eb9d6463ee35040b9e0ce1ee93ae90f5515fffc7508f15a92b55eee2d"
+    },
+    "regression": {
+      "passed": 2368,
+      "skipped": 2,
+      "failed": 0,
+      "seconds": 89.45,
+      "log_id": "aegis75br-regression.log",
+      "sha256": "d1f83156fb9f986ca23a7ad500ea89c93ae3728eff179a94e0ee42216b4fbd2f"
+    }
+  },
+  "limitations": [
+    "Ten sequential runs are a bounded reliability observation, not a statistical or general determinism guarantee.",
+    "First-event wall timestamps are observer receipt times. Server log receipt is not the internal server event time. Host and container monotonic domains must not be mixed.",
+    "No delivery inference is made from a missing acknowledgement alone.",
+    "Ideal noise-free passive two-second scenario; Phase 74A and original 74B/75A assets unchanged."
+  ],
+  "diagnostic_support_source_sha256": {
+    "witness.py": "6450a39ab73f5a9ca3c92a4b80704d95a63de96bd4da265b83670b58582cca78"
+  },
+  "historical_failure": {
+    "run_id": "aegis75b-finalization-reviewed/repeat-2",
+    "report_sha256": "8680a538f6abb2aa91728021f7a2a8002086369b10e344e99273d2aa2dcd4e76",
+    "container_started_at": "2026-10-21T20:29:13.223319118Z",
+    "container_finished_at": "2026-10-21T20:29:19.754443498Z",
+    "receipt_timestamp_detail": "unavailable in historical report",
+    "unpause_acknowledged": false,
+    "server_exit_code": 0,
+    "poses": 0,
+    "sensor_samples": 0,
+    "clock_samples": 6,
+    "memory_events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\n"
+  },
+  "independent_attempts": 10,
+  "independent_passes": 10,
+  "aggregate": {
+    "peak_memory_bytes": {
+      "min": 121212928,
+      "max": 121720832,
+      "median": 121483264.0
+    },
+    "peak_pids": {
+      "min": 29,
+      "max": 29,
+      "median": 29.0
+    },
+    "harness_wall_seconds": {
+      "min": 9.567977274011355,
+      "max": 12.850107202015352,
+      "median": 10.61108774348395
+    },
+    "observer_monitor_max_gap_seconds": {
+      "min": 0.0987318970146589,
+      "max": 0.14797386404825374,
+      "median": 0.1001123950118199
+    },
+    "control_roundtrip_seconds": {
+      "min": 0.101440223,
+      "max": 0.111054199,
+      "median": 0.102590288
+    },
+    "first_advancing_clock_seconds_from_server_spawn": {
+      "min": 5.002235099,
+      "max": 6.380327363,
+      "median": 5.271842547
+    },
+    "first_pose_seconds_from_server_spawn": {
+      "min": 5.012858912,
+      "max": 6.391801201,
+      "median": 5.296220587500001
+    },
+    "first_imu_seconds_from_server_spawn": {
+      "min": 5.004252696,
+      "max": 6.380139087,
+      "median": 5.273681269000001
+    },
+    "first_gnss_seconds_from_server_spawn": {
+      "min": 5.004411967,
+      "max": 6.376777816,
+      "median": 5.2729846545
+    },
+    "first_barometer_seconds_from_server_spawn": {
+      "min": 5.004506398,
+      "max": 6.376575541,
+      "median": 5.273520314000001
+    },
+    "startup_verified_seconds_from_server_spawn": {
+      "min": 5.0455579,
+      "max": 6.452073519,
+      "median": 5.3305749495
+    }
+  },
+  "unrelated_docker_services": {
+    "unchanged": true,
+    "names": [
+      "duckdns",
+      "nginx-proxy-manager",
+      "single-node-wazuh.dashboard-1",
+      "single-node-wazuh.indexer-1",
+      "single-node-wazuh.manager-1"
+    ],
+    "before_sha256": "607a133d5fd64c58e1d879a83c17b54a2e96b8047b1777faef95c5b705f412bc",
+    "after_sha256": "607a133d5fd64c58e1d879a83c17b54a2e96b8047b1777faef95c5b705f412bc"
+  }
+}
