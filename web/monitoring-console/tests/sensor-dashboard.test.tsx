@@ -65,7 +65,7 @@ it('filters sensors, sorts uint64 times and deterministically downsamples with g
   const d = fixture(), r = d.observations[0]!.record;
   expect(filterRecords(d, 'gnss')).toEqual([]);
   const rows: RecordRow[] = Array.from({length: 1024}, (_,i) => ({...r, acquisition: {...r.acquisition, value_ns: String(18446744073709550000n + BigInt(i))}, values: i === 1 ? null : r.values}));
-  const p = chartData(rows, 'pressure'); expect(p.length).toBe(256); expect(p[0]!.value).toBeNull(); expect(p).toEqual(chartData(rows, 'pressure')); expect(p.at(-1)!.time).toBe(rows.at(-1)!.acquisition.value_ns);
+  const p = chartData(rows, 'pressure'); expect(p.length).toBe(256); expect(p[0]!.value).toBe(r.values![0]!.value); expect(p).toEqual(chartData(rows, 'pressure')); expect(p.at(-1)!.time).toBe(rows.at(-1)!.acquisition.value_ns);
   d.observations = rows.slice(0,2).reverse().map(record => ({record, freshness: 'future'})); expect(filterRecords(d, 'all')[0]!.acquisition.value_ns).toBe(rows[0]!.acquisition.value_ns);
 });
 it('requires explicit loading, then supports evaluation controls and sensor filtering', async () => {
@@ -133,4 +133,56 @@ it('validates without network or implicit wall clock and preserves unknown rejec
     expect(loaded.rejected[0]!.sensor).toBe('unrecognized_sensor');
     expect(fetch).not.toHaveBeenCalled(); expect(now).not.toHaveBeenCalled();
   } finally {fetch.mockRestore(); now.mockRestore();}
+});
+
+it('preserves narrow extrema, stable duplicates, endpoints and budgets without mutation', () => {
+  const r = fixture().observations[0]!.record;
+  const rows = Array.from({length: 1000}, (_, i) => ({...r, acquisition: {...r.acquisition, value_ns: String(i)}, values: [{...r.values![0]!, value: i === 321 ? 900 : i === 654 ? -800 : 1}]}));
+  const before = JSON.stringify(rows);
+  expect(chartData(rows, 'pressure', 32).map(p => p.value)).toEqual(expect.arrayContaining([900, -800]));
+  for (const budget of [2, 3, 4, 17, 32, 256]) {
+    const p = chartData(rows, 'pressure', budget);
+    expect(p.length).toBeLessThanOrEqual(budget); expect(p[0]!.time).toBe('0'); expect(p.at(-1)!.time).toBe('999');
+    expect(p).toEqual(chartData(rows, 'pressure', budget));
+  }
+  expect(JSON.stringify(rows)).toBe(before);
+  expect(chartData([rows[2]!, {...rows[1]!, values: [{...r.values![0]!, value: 7}]}, rows[1]!], 'pressure').map(p => [p.time, p.value])).toEqual([['1', 7], ['1', 1], ['2', 1]]);
+  expect(() => chartData([{...r, acquisition: {...r.acquisition, value_ns: 'bad'}}], 'pressure')).toThrow();
+});
+it('retains omitted dropout boundaries, unavailable values and channel separation', () => {
+  const r = fixture().observations[0]!.record;
+  const rows = Array.from({length: 100}, (_, i) => ({...r, acquisition: {...r.acquisition, value_ns: String(i)}, values: i === 50 ? null : r.values}));
+  const p = chartData(rows, 'pressure', 2);
+  expect(p).toHaveLength(2); expect(p[0]!.segment).not.toBe(p[1]!.segment);
+  for (const value of [NaN, Infinity, 'bad']) {
+    expect(chartData([{...r, values: [{...r.values![0]!, value}]} as RecordRow], 'pressure')[0]!.value).toBeNull();
+  }
+  expect(chartData([r], 'absent')[0]!.value).toBeNull();
+  const channels = chartData([r, {...r, origin: 'impaired'}], 'pressure');
+  expect(channels[0]!.segment).not.toBe(channels[1]!.segment);
+});
+it('announces loaded data and selected observation with accessible controls', async () => {
+  render(<SensorDashboard />);
+  expect(screen.getByLabelText('Load Phase 75D inspection JSON')).toHaveAttribute('type', 'file');
+  expect(screen.getByLabelText('Comparison inspection JSON')).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', {name: 'Load synthetic example'}));
+  await screen.findByText(/Local dataset loaded:/);
+  expect(screen.getByRole('slider', {name: 'Observation scrubber'})).toHaveAttribute('aria-valuetext', expect.stringContaining('acquisition 0 ns'));
+  expect(screen.getByRole('img', {name: /pressure history/})).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Evaluation time (ns)'), {target: {value: '0'}});
+  expect(screen.getByText('FRESH')).toBeInTheDocument();
+});
+it('never invents an original for impaired-only data', async () => {
+  render(<SensorDashboard />); upload(await impaired()); await screen.findByText('STALE');
+  expect(within(screen.getByRole('region', {name: 'Original versus impaired comparison'})).getByText('Unavailable: no matching observation.')).toBeInTheDocument();
+});
+
+it('preserves first and last valid observations beside unavailable boundaries', () => {
+  const r = fixture().observations[0]!.record;
+  const rows = Array.from({length: 100}, (_, i) => ({...r, acquisition: {...r.acquisition, value_ns: String(i)}, values: i === 0 || i === 99 ? null : r.values}));
+  const p = chartData(rows, 'pressure', 2);
+  expect(p.map(p => p.time)).toEqual(['1', '98']);
+  const empty = chartData(rows.map(r => ({...r, values: null})), 'pressure', 4);
+  expect(empty).toHaveLength(4); expect(empty.every(p => p.value === null)).toBe(true);
+  for (const budget of [0, 1, 2.5, NaN]) expect(() => chartData(rows, 'pressure', budget)).toThrow('chart limit');
 });

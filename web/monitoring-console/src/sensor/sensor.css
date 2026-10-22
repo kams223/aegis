@@ -17,3 +17,8 @@
 .sensor-chart .chart-axis { fill: none; stroke: #71889b; }
 .sensor-chart text { fill: #c3d0db; font-size: 10px; }
 .sensor-comparison article { min-width: 0; }
+
+.sensor-dashboard input, .sensor-dashboard select, .sensor-dashboard button, .sensor-dashboard summary { min-height: 44px; box-sizing: border-box; }
+.sensor-dashboard :focus-visible { outline: 3px solid #ffd782; outline-offset: 3px; }
+.sensor-dashboard input[type=file] { max-width: 100%; }
+.sensor-chart-grid > div, .sensor-chart { min-width: 0; }

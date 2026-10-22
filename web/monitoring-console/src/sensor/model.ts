@@ -133,13 +133,42 @@ export function compareTime(a: string, b: string) { return BigInt(a) < BigInt(b)
 export function filterRecords(doc: Inspection, sensor: Sensor | 'all') { return doc.observations.map(x => x.record).filter(r => sensor === 'all' || r.observation_type === sensor).sort((a, b) => compareTime(a.acquisition.value_ns, b.acquisition.value_ns)); }
 export function chartData(rows: readonly RecordRow[], field: string, limit = 256) {
   requireValue(Number.isInteger(limit) && limit >= 2, 'Invalid chart limit');
-  const points = rows.map(r => ({time: r.acquisition.value_ns, value: r.values?.find(f => f.name === field)?.value ?? null}));
+  // Stable acquisition ordering; equal timestamps retain input order. Invalid
+  // timestamps fail closed, while unavailable/nonfinite fields break the line.
+  let segment = 0, previousChannel = '';
+  const points = rows.map((r, index) => ({r, index, time: uint64(r.acquisition.value_ns)}))
+    .sort((a, b) => a.time < b.time ? -1 : a.time > b.time ? 1 : a.index - b.index)
+    .map(({r}) => {
+      const channel = canonical([r.source, r.source_sha256, r.origin, r.config_sha256]);
+      if (channel !== previousChannel) segment++;
+      previousChannel = channel;
+      const value = r.values?.find(f => f.name === field)?.value;
+      const valid = typeof value === 'number' && Number.isFinite(value);
+      if (!valid) segment++;
+      return {time: r.acquisition.value_ns, value: valid ? value : null, segment};
+    });
   if (points.length <= limit) return points;
-  // Retain null gaps in each bucket; downsampling must never bridge a dropout.
-  return Array.from({length: limit}, (_, i) => {
-    const start = Math.floor(i * points.length / limit), end = Math.floor((i + 1) * points.length / limit);
-    return points.slice(start, end).find(p => p.value === null) ?? points[i === limit - 1 ? points.length - 1 : start]!;
-  });
+  const valid = points.flatMap((p, i) => p.value === null ? [] : [i]);
+  if (!valid.length) return points.slice(0, limit - 1).concat(points.at(-1)!);
+  const chosen = new Set<number>([valid[0]!, valid.at(-1)!]);
+  // Reserve endpoints, then retain each time bucket's min and max. Ties use
+  // earliest input order. Segment IDs survive sampling even if gaps do not.
+  const buckets = Math.floor((limit - chosen.size) / 2);
+  for (let bucket = 0; bucket < buckets; bucket++) {
+    const start = Math.floor(bucket * points.length / buckets);
+    const end = Math.floor((bucket + 1) * points.length / buckets);
+    let min = -1, max = -1;
+    for (let i = start; i < end; i++) {
+      if (points[i]!.value === null) continue;
+      if (min < 0 || points[i]!.value! < points[min]!.value!) min = i;
+      if (max < 0 || points[i]!.value! > points[max]!.value!) max = i;
+    }
+    if (min >= 0) chosen.add(min);
+    if (max >= 0) chosen.add(max);
+  }
+  // Fill spare capacity deterministically, including explicit gap markers.
+  for (let i = 0; i < points.length && chosen.size < limit; i++) chosen.add(i);
+  return [...chosen].sort((a, b) => a - b).map(i => points[i]!);
 }
 export function matchOriginal(r: RecordRow, originals: readonly RecordRow[]) {
   return originals.find(o => o.origin === 'raw' && o.source_sha256 === r.source_sha256 && canonical(o.source) === canonical(r.source) && canonical(o.acquisition) === canonical(r.acquisition)) ?? null;
