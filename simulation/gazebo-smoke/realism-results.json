@@ -1,0 +1,914 @@
+{
+  "alternate_seed_check": {
+    "changed": {
+      "delivery": 201,
+      "dropout": 20,
+      "noise": 101
+    },
+    "default_identity_verified": true,
+    "original_evidence_unchanged": true,
+    "original_ground_truth_statistics_unchanged": true,
+    "seed": 76,
+    "unaffected_fields_unchanged": true
+  },
+  "artifact_kind": "offline_derived_sensor_replay",
+  "config": {
+    "policies": [
+      {
+        "dropout_probability": 0.05,
+        "jitter_ns": 20000000,
+        "latency_ns": 20000000,
+        "schema_version": 1,
+        "sensor": "imu"
+      }
+    ],
+    "reference_ns": 1000000,
+    "rules": [
+      {
+        "bias": 0.3,
+        "drift_per_second": -0.1,
+        "field": "pressure",
+        "noise_std": 0.2,
+        "schema_version": 1,
+        "sensor": "barometer",
+        "unit": "Pa"
+      }
+    ],
+    "schema_version": 1,
+    "seed": 75,
+    "stale_after_ns": 30000000
+  },
+  "ground_truth": {
+    "impaired": {
+      "barometer.altitude_error_m": {
+        "count": 101,
+        "maximum": 0.025842594306530395,
+        "mean": -0.01626186481124866,
+        "minimum": -0.07040206630367513,
+        "rmse": 0.023809045686154162
+      },
+      "gnss.altitude_error_m": {
+        "count": 41,
+        "maximum": 0.0005297403793215194,
+        "mean": 1.2920479062651612e-05,
+        "minimum": -4.4452828917851406e-10,
+        "rmse": 8.273154786332702e-05
+      },
+      "gnss.east_error_m": {
+        "count": 41,
+        "maximum": 0.0,
+        "mean": -8.111520417884811e-18,
+        "minimum": -1.715330391951624e-17,
+        "rmse": 9.838880837170112e-18
+      },
+      "gnss.north_error_m": {
+        "count": 41,
+        "maximum": 0.0,
+        "mean": -4.853173561362226e-26,
+        "minimum": -6.421908455636568e-26,
+        "rmse": 5.494130545224102e-26
+      },
+      "imu.settled_force_x_error_m_s2": {
+        "count": 49,
+        "maximum": -8.449016654329382e-11,
+        "mean": -8.449170445853431e-11,
+        "minimum": -8.449277580017693e-11,
+        "rmse": 8.449170446038597e-11
+      },
+      "imu.settled_force_y_error_m_s2": {
+        "count": 49,
+        "maximum": 2.9883967514565717e-15,
+        "mean": -5.014537208200277e-16,
+        "minimum": -4.9673469464976614e-15,
+        "rmse": 2.0882415477590437e-15
+      },
+      "imu.settled_force_z_error_m_s2": {
+        "count": 49,
+        "maximum": 8.881784197001252e-15,
+        "mean": 1.3775828550450921e-15,
+        "minimum": -5.329070518200751e-15,
+        "rmse": 3.694877998116814e-15
+      }
+    },
+    "matching": "nearest native pose <=11 ms; equatorial sub-metre local tangent; IMU settled window only",
+    "original": {
+      "barometer.altitude_error_m": {
+        "count": 101,
+        "maximum": 0.0005297400074809611,
+        "mean": 6.027038400349765e-06,
+        "minimum": -6.6863736769562365e-12,
+        "rmse": 5.271851810200011e-05
+      },
+      "gnss.altitude_error_m": {
+        "count": 41,
+        "maximum": 0.0005297403793215194,
+        "mean": 1.2920479062651612e-05,
+        "minimum": -4.4452828917851406e-10,
+        "rmse": 8.273154786332702e-05
+      },
+      "gnss.east_error_m": {
+        "count": 41,
+        "maximum": 0.0,
+        "mean": -8.111520417884811e-18,
+        "minimum": -1.715330391951624e-17,
+        "rmse": 9.838880837170112e-18
+      },
+      "gnss.north_error_m": {
+        "count": 41,
+        "maximum": 0.0,
+        "mean": -4.853173561362226e-26,
+        "minimum": -6.421908455636568e-26,
+        "rmse": 5.494130545224102e-26
+      },
+      "imu.settled_force_x_error_m_s2": {
+        "count": 51,
+        "maximum": -8.449016654329382e-11,
+        "mean": -8.449169298724799e-11,
+        "minimum": -8.449277580017693e-11,
+        "rmse": 8.449169298905854e-11
+      },
+      "imu.settled_force_y_error_m_s2": {
+        "count": 51,
+        "maximum": 2.9883967514565717e-15,
+        "mean": -5.5506879848097475e-16,
+        "minimum": -4.9673469464976614e-15,
+        "rmse": 2.088120030601583e-15
+      },
+      "imu.settled_force_z_error_m_s2": {
+        "count": 51,
+        "maximum": 8.881784197001252e-15,
+        "mean": 1.2538989454590004e-15,
+        "minimum": -5.329070518200751e-15,
+        "rmse": 3.638748262658967e-15
+      }
+    }
+  },
+  "invalid_count": 0,
+  "rejection_diagnostics": [
+    {
+      "acquisition_ns": 10000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 30000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 130000000,
+      "reasons": [
+        "MISSING_OBSERVATION"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 110000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 170000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 210000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 230000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 260000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 290000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 310000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 340000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 380000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 430000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 450000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 520000000,
+      "reasons": [
+        "MISSING_OBSERVATION"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 510000000,
+      "reasons": [
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 530000000,
+      "reasons": [
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 550000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 580000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 600000000,
+      "reasons": [
+        "MISSING_OBSERVATION"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 620000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 640000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 670000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 710000000,
+      "reasons": [
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 740000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 790000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 820000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 850000000,
+      "reasons": [
+        "MISSING_OBSERVATION"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 900000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 940000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 930000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 980000000,
+      "reasons": [
+        "MISSING_OBSERVATION"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 970000000,
+      "reasons": [
+        "MISSING_OBSERVATION",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 990000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1010000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1040000000,
+      "reasons": [
+        "MISSING_OBSERVATION"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1050000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1140000000,
+      "reasons": [
+        "MISSING_OBSERVATION"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1200000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1240000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1260000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1270000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1290000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1330000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1320000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1350000000,
+      "reasons": [
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1370000000,
+      "reasons": [
+        "MISSING_OBSERVATION",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1380000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1410000000,
+      "reasons": [
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1420000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1440000000,
+      "reasons": [
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1470000000,
+      "reasons": [
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1480000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1510000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1550000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1580000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1600000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1630000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1650000000,
+      "reasons": [
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1660000000,
+      "reasons": [
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1680000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1670000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1690000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1740000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1770000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1790000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1800000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1840000000,
+      "reasons": [
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1850000000,
+      "reasons": [
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1860000000,
+      "reasons": [
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1870000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1880000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1910000000,
+      "reasons": [
+        "OUT_OF_ORDER",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1950000000,
+      "reasons": [
+        "MISSING_OBSERVATION"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1930000000,
+      "reasons": [
+        "MISSING_OBSERVATION",
+        "STALE"
+      ],
+      "sensor": "imu"
+    },
+    {
+      "acquisition_ns": 1960000000,
+      "reasons": [
+        "OUT_OF_ORDER"
+      ],
+      "sensor": "imu"
+    }
+  ],
+  "schema_version": 1,
+  "source_diagnostics": [],
+  "source_sha256": "444f104edfecb19ae8fc7e7ed036886b493cd7064034a1bad5f39c8d19110965",
+  "summary": {
+    "barometer": {
+      "bias_and_drift": [
+        {
+          "bias": 0.3,
+          "drift_per_second": -0.1,
+          "field": "pressure",
+          "noise_std": 0.2,
+          "schema_version": 1,
+          "sensor": "barometer",
+          "unit": "Pa"
+        }
+      ],
+      "delivered": 101,
+      "dropout_rate": 0.0,
+      "dropped": 0,
+      "latency_ns": {
+        "count": 101,
+        "maximum": 0,
+        "mean": 0.0,
+        "minimum": 0,
+        "rmse": 0.0
+      },
+      "out_of_order": 0,
+      "perturbation": {
+        "pressure": {
+          "count": 101,
+          "maximum": 0.8457581969851162,
+          "mean": 0.19542376003282877,
+          "minimum": -0.3104359096905682,
+          "rmse": 0.2860012746641831
+        },
+        "variance": {
+          "count": 101,
+          "maximum": 0.0,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "rmse": 0.0
+        }
+      },
+      "samples": 101,
+      "stale": 0
+    },
+    "gnss": {
+      "bias_and_drift": [],
+      "delivered": 41,
+      "dropout_rate": 0.0,
+      "dropped": 0,
+      "latency_ns": {
+        "count": 41,
+        "maximum": 0,
+        "mean": 0.0,
+        "minimum": 0,
+        "rmse": 0.0
+      },
+      "out_of_order": 0,
+      "perturbation": {
+        "altitude": {
+          "count": 41,
+          "maximum": 0.0,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "rmse": 0.0
+        },
+        "latitude": {
+          "count": 41,
+          "maximum": 0.0,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "rmse": 0.0
+        },
+        "longitude": {
+          "count": 41,
+          "maximum": 0.0,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "rmse": 0.0
+        }
+      },
+      "samples": 41,
+      "stale": 0
+    },
+    "imu": {
+      "bias_and_drift": [],
+      "delivered": 190,
+      "dropout_rate": 0.05472636815920398,
+      "dropped": 11,
+      "latency_ns": {
+        "count": 190,
+        "maximum": 39896365,
+        "mean": 19341152.236842107,
+        "minimum": 175982,
+        "rmse": 22374742.96555761
+      },
+      "out_of_order": 53,
+      "perturbation": {
+        "acceleration.x": {
+          "count": 190,
+          "maximum": 0.0,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "rmse": 0.0
+        },
+        "acceleration.y": {
+          "count": 190,
+          "maximum": 0.0,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "rmse": 0.0
+        },
+        "acceleration.z": {
+          "count": 190,
+          "maximum": 0.0,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "rmse": 0.0
+        },
+        "angular_velocity.x": {
+          "count": 190,
+          "maximum": 0.0,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "rmse": 0.0
+        },
+        "angular_velocity.y": {
+          "count": 190,
+          "maximum": 0.0,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "rmse": 0.0
+        },
+        "angular_velocity.z": {
+          "count": 190,
+          "maximum": 0.0,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "rmse": 0.0
+        },
+        "orientation.w": {
+          "count": 190,
+          "maximum": 0.0,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "rmse": 0.0
+        },
+        "orientation.x": {
+          "count": 190,
+          "maximum": 0.0,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "rmse": 0.0
+        },
+        "orientation.y": {
+          "count": 190,
+          "maximum": 0.0,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "rmse": 0.0
+        },
+        "orientation.z": {
+          "count": 190,
+          "maximum": 0.0,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "rmse": 0.0
+        }
+      },
+      "samples": 201,
+      "stale": 38
+    }
+  },
+  "validation_runs": [
+    {
+      "bytes": 650765,
+      "elapsed_s": 0.68,
+      "peak_rss_kib": 24784,
+      "run": "1",
+      "sha256": "8fdf1dfd7258a78103459ce5ba445bdddf3ecaebfa54a6a489c03e54f4e3aa1c"
+    },
+    {
+      "bytes": 650765,
+      "elapsed_s": 0.71,
+      "peak_rss_kib": 24840,
+      "run": "2",
+      "sha256": "8fdf1dfd7258a78103459ce5ba445bdddf3ecaebfa54a6a489c03e54f4e3aa1c"
+    },
+    {
+      "bytes": 650765,
+      "elapsed_s": 1.07,
+      "peak_rss_kib": 24812,
+      "run": "3",
+      "sha256": "8fdf1dfd7258a78103459ce5ba445bdddf3ecaebfa54a6a489c03e54f4e3aa1c"
+    },
+    {
+      "bytes": 652797,
+      "elapsed_s": 0.78,
+      "peak_rss_kib": 25020,
+      "run": "alternate",
+      "sha256": "d1f9252d7be979969df2b3ea8253bb1f790ef1b4b97cd5e432cd23a9c64cb699"
+    }
+  ]
+}
