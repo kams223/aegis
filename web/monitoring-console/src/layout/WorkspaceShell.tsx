@@ -15,7 +15,7 @@ export function WorkspaceShell({ page, onNavigate, focusRequest, fixtureId, fixt
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { if (focusRequest > 0) heading.current?.focus(); }, [focusRequest]);
   const pageLabel = workspace.pages.find(p => p.id === page)!.label;
-  const fixtureContext = workspace.id === 'command' || workspace.id === 'sensors' || workspace.id === 'investigation';
+  const fixtureContext = page !== 'Sensor Telemetry' && (workspace.id === 'command' || workspace.id === 'sensors' || workspace.id === 'investigation');
   return <div className="console workspace-shell">
     <a className="skip-link" href="#main-content">Skip to monitoring content</a>
     <aside className="sidebar">
@@ -29,7 +29,7 @@ export function WorkspaceShell({ page, onNavigate, focusRequest, fixtureId, fixt
     <div className="workspace">
       <header className="topbar"><span className="simulation">OFFLINE</span><strong>{workspace.label}</strong>{fixtureContext && fixtureMetadata}<span className="read-only">READ ONLY</span></header>
       <main id="main-content" tabIndex={-1}>
-        <div className="page-heading"><div><span className="eyebrow">{workspace.label}</span><h1 ref={heading} tabIndex={-1}>{page === 'Overview' ? 'Monitoring overview' : pageLabel}</h1><p>{workspace.context}</p></div>
+        <div className="page-heading"><div><span className="eyebrow">{workspace.label}</span><h1 ref={heading} tabIndex={-1}>{page === 'Overview' ? 'Monitoring overview' : pageLabel}</h1><p>{page === 'Sensor Telemetry' ? 'Recorded simulation telemetry; caller-selected evaluation clock.' : workspace.context}</p></div>
           {fixtureContext && <div className="snapshot-label"><span>MONITORING FIXTURE · FINAL SNAPSHOT</span><code>{fixtureId}</code></div>}
         </div>
         <nav className="workspace-pages" aria-label="Workspace pages">

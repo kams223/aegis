@@ -167,9 +167,10 @@ it('implements reduced-motion and bounded responsive decorative sizing in CSS', 
 });
 
 it('preserves external CSS and the restrictive CSP', () => {
-  expect(html.match(/rel="stylesheet"/g)).toHaveLength(2);
+  expect(html.match(/rel="stylesheet"/g)).toHaveLength(3);
   expect(html).toContain('href="./src/styles.css"');
   expect(html).toContain('href="./src/layout/workspace-shell.css"');
+  expect(html).toContain('href="./src/sensor/sensor.css"');
   expect(html).toContain("style-src 'self'"); expect(html).toContain("connect-src 'none'");
   expect(html).not.toMatch(/unsafe-inline|https?:/);
   expect(main).not.toContain('styles.css');
