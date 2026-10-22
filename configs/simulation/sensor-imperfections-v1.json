@@ -1,0 +1,1 @@
+{"schema_version":1,"seed":75,"reference_ns":1000000,"stale_after_ns":30000000,"rules":[{"schema_version":1,"sensor":"barometer","field":"pressure","unit":"Pa","noise_std":0.2,"bias":0.3,"drift_per_second":-0.1}],"policies":[{"schema_version":1,"sensor":"imu","dropout_probability":0.05,"latency_ns":20000000,"jitter_ns":20000000}]}

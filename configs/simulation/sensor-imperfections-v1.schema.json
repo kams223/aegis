@@ -1,0 +1,130 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "seed",
+    "reference_ns",
+    "stale_after_ns",
+    "rules",
+    "policies"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "reference_ns": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "stale_after_ns": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "rules": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "sensor",
+          "field",
+          "unit",
+          "noise_std",
+          "bias",
+          "drift_per_second"
+        ],
+        "properties": {
+          "schema_version": {
+            "const": 1,
+            "type": "integer"
+          },
+          "sensor": {
+            "enum": [
+              "imu",
+              "gnss",
+              "barometer"
+            ]
+          },
+          "field": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "noise_std": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "bias": {
+            "type": "number",
+            "minimum": -1000000,
+            "maximum": 1000000
+          },
+          "drift_per_second": {
+            "type": "number",
+            "minimum": -1000000,
+            "maximum": 1000000
+          }
+        }
+      }
+    },
+    "policies": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "sensor",
+          "dropout_probability",
+          "latency_ns",
+          "jitter_ns"
+        ],
+        "properties": {
+          "schema_version": {
+            "const": 1,
+            "type": "integer"
+          },
+          "sensor": {
+            "enum": [
+              "imu",
+              "gnss",
+              "barometer"
+            ]
+          },
+          "dropout_probability": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "latency_ns": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000000000
+          },
+          "jitter_ns": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 18446744073709551615
+          }
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:aegis:sensor-imperfections:1",
+  "description": "Structural schema. Runtime additionally enforces field/unit pairs, uniqueness, and jitter <= latency. Gaussian noise_std and bias use field units; drift_per_second uses field units/s; jitter is uniform integer nanoseconds."
+}
