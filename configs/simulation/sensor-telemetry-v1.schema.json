@@ -1,0 +1,1153 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "observations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "observations": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema_version",
+              "observation_type",
+              "source",
+              "acquisition",
+              "simulation",
+              "delivery",
+              "frame",
+              "origin",
+              "source_sha256",
+              "config_json",
+              "config_sha256",
+              "seed_identifier",
+              "values"
+            ],
+            "properties": {
+              "schema_version": {
+                "const": 1,
+                "type": "integer"
+              },
+              "observation_type": {
+                "const": "imu"
+              },
+              "source": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schema_version",
+                  "session_id",
+                  "vehicle_id",
+                  "component_id",
+                  "source_id",
+                  "data_origin",
+                  "clock_domain"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "const": 1,
+                    "type": "integer"
+                  },
+                  "session_id": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                  },
+                  "vehicle_id": {
+                    "const": "passive_aircraft"
+                  },
+                  "component_id": {
+                    "enum": [
+                      "imu",
+                      "gnss",
+                      "barometer"
+                    ]
+                  },
+                  "source_id": {
+                    "enum": [
+                      "passive_aircraft::body::imu",
+                      "passive_aircraft::body::gnss",
+                      "passive_aircraft::body::barometer"
+                    ]
+                  },
+                  "data_origin": {
+                    "const": "recorded"
+                  },
+                  "clock_domain": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                  }
+                }
+              },
+              "acquisition": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schema_version",
+                  "value_ns",
+                  "domain",
+                  "unit"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "const": 1,
+                    "type": "integer"
+                  },
+                  "value_ns": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "domain": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                  },
+                  "unit": {
+                    "const": "ns"
+                  }
+                }
+              },
+              "simulation": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schema_version",
+                  "value_ns",
+                  "domain",
+                  "unit"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "const": 1,
+                    "type": "integer"
+                  },
+                  "value_ns": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "domain": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                  },
+                  "unit": {
+                    "const": "ns"
+                  }
+                }
+              },
+              "delivery": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "schema_version",
+                      "value_ns",
+                      "domain",
+                      "unit"
+                    ],
+                    "properties": {
+                      "schema_version": {
+                        "const": 1,
+                        "type": "integer"
+                      },
+                      "value_ns": {
+                        "type": "string",
+                        "pattern": "^(0|[1-9][0-9]{0,19})$"
+                      },
+                      "domain": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                      },
+                      "unit": {
+                        "const": "ns"
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "frame": {
+                "const": "passive_aircraft::body::imu"
+              },
+              "origin": {
+                "enum": [
+                  "raw",
+                  "impaired"
+                ]
+              },
+              "source_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "config_json": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "config_sha256": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "seed_identifier": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "values": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 10,
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "acceleration.x"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "m/s^2"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "acceleration.y"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "m/s^2"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "acceleration.z"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "m/s^2"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "angular_velocity.x"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "rad/s"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "angular_velocity.y"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "rad/s"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "angular_velocity.z"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "rad/s"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "orientation.x"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "1"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "orientation.y"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "1"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "orientation.z"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "1"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "orientation.w"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "1"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema_version",
+              "observation_type",
+              "source",
+              "acquisition",
+              "simulation",
+              "delivery",
+              "frame",
+              "origin",
+              "source_sha256",
+              "config_json",
+              "config_sha256",
+              "seed_identifier",
+              "values"
+            ],
+            "properties": {
+              "schema_version": {
+                "const": 1,
+                "type": "integer"
+              },
+              "observation_type": {
+                "const": "gnss"
+              },
+              "source": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schema_version",
+                  "session_id",
+                  "vehicle_id",
+                  "component_id",
+                  "source_id",
+                  "data_origin",
+                  "clock_domain"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "const": 1,
+                    "type": "integer"
+                  },
+                  "session_id": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                  },
+                  "vehicle_id": {
+                    "const": "passive_aircraft"
+                  },
+                  "component_id": {
+                    "enum": [
+                      "imu",
+                      "gnss",
+                      "barometer"
+                    ]
+                  },
+                  "source_id": {
+                    "enum": [
+                      "passive_aircraft::body::imu",
+                      "passive_aircraft::body::gnss",
+                      "passive_aircraft::body::barometer"
+                    ]
+                  },
+                  "data_origin": {
+                    "const": "recorded"
+                  },
+                  "clock_domain": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                  }
+                }
+              },
+              "acquisition": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schema_version",
+                  "value_ns",
+                  "domain",
+                  "unit"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "const": 1,
+                    "type": "integer"
+                  },
+                  "value_ns": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "domain": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                  },
+                  "unit": {
+                    "const": "ns"
+                  }
+                }
+              },
+              "simulation": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schema_version",
+                  "value_ns",
+                  "domain",
+                  "unit"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "const": 1,
+                    "type": "integer"
+                  },
+                  "value_ns": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "domain": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                  },
+                  "unit": {
+                    "const": "ns"
+                  }
+                }
+              },
+              "delivery": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "schema_version",
+                      "value_ns",
+                      "domain",
+                      "unit"
+                    ],
+                    "properties": {
+                      "schema_version": {
+                        "const": 1,
+                        "type": "integer"
+                      },
+                      "value_ns": {
+                        "type": "string",
+                        "pattern": "^(0|[1-9][0-9]{0,19})$"
+                      },
+                      "domain": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                      },
+                      "unit": {
+                        "const": "ns"
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "frame": {
+                "const": "passive_aircraft::body::gnss"
+              },
+              "origin": {
+                "enum": [
+                  "raw",
+                  "impaired"
+                ]
+              },
+              "source_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "config_json": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "config_sha256": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "seed_identifier": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "values": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 3,
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "latitude"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "deg"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "longitude"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "deg"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "altitude"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "m"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema_version",
+              "observation_type",
+              "source",
+              "acquisition",
+              "simulation",
+              "delivery",
+              "frame",
+              "origin",
+              "source_sha256",
+              "config_json",
+              "config_sha256",
+              "seed_identifier",
+              "values"
+            ],
+            "properties": {
+              "schema_version": {
+                "const": 1,
+                "type": "integer"
+              },
+              "observation_type": {
+                "const": "barometer"
+              },
+              "source": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schema_version",
+                  "session_id",
+                  "vehicle_id",
+                  "component_id",
+                  "source_id",
+                  "data_origin",
+                  "clock_domain"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "const": 1,
+                    "type": "integer"
+                  },
+                  "session_id": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                  },
+                  "vehicle_id": {
+                    "const": "passive_aircraft"
+                  },
+                  "component_id": {
+                    "enum": [
+                      "imu",
+                      "gnss",
+                      "barometer"
+                    ]
+                  },
+                  "source_id": {
+                    "enum": [
+                      "passive_aircraft::body::imu",
+                      "passive_aircraft::body::gnss",
+                      "passive_aircraft::body::barometer"
+                    ]
+                  },
+                  "data_origin": {
+                    "const": "recorded"
+                  },
+                  "clock_domain": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                  }
+                }
+              },
+              "acquisition": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schema_version",
+                  "value_ns",
+                  "domain",
+                  "unit"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "const": 1,
+                    "type": "integer"
+                  },
+                  "value_ns": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "domain": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                  },
+                  "unit": {
+                    "const": "ns"
+                  }
+                }
+              },
+              "simulation": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schema_version",
+                  "value_ns",
+                  "domain",
+                  "unit"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "const": 1,
+                    "type": "integer"
+                  },
+                  "value_ns": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,19})$"
+                  },
+                  "domain": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                  },
+                  "unit": {
+                    "const": "ns"
+                  }
+                }
+              },
+              "delivery": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "schema_version",
+                      "value_ns",
+                      "domain",
+                      "unit"
+                    ],
+                    "properties": {
+                      "schema_version": {
+                        "const": 1,
+                        "type": "integer"
+                      },
+                      "value_ns": {
+                        "type": "string",
+                        "pattern": "^(0|[1-9][0-9]{0,19})$"
+                      },
+                      "domain": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+                      },
+                      "unit": {
+                        "const": "ns"
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "frame": {
+                "const": "passive_aircraft::body::barometer"
+              },
+              "origin": {
+                "enum": [
+                  "raw",
+                  "impaired"
+                ]
+              },
+              "source_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "config_json": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "config_sha256": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "seed_identifier": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "values": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 3,
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "pressure"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "Pa"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "variance"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "Pa^2"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "schema_version",
+                            "name",
+                            "value",
+                            "unit"
+                          ],
+                          "properties": {
+                            "schema_version": {
+                              "const": 1,
+                              "type": "integer"
+                            },
+                            "name": {
+                              "const": "derived_altitude"
+                            },
+                            "value": {
+                              "type": "number",
+                              "minimum": -1000000.0,
+                              "maximum": 1000000.0
+                            },
+                            "unit": {
+                              "const": "m"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:aegis:offline-sensor-telemetry:1",
+  "description": "Closed wire structure. sensor_telemetry.SensorTelemetry additionally enforces uint64, coupled identities, complete vectors, required quantities, distinct fields, timestamp ordering, and impairment provenance."
+}
