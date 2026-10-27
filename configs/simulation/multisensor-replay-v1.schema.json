@@ -1,0 +1,315 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_kind",
+    "evaluation",
+    "stale_after_ns",
+    "timeline",
+    "sensors",
+    "diagnostics",
+    "diagnostics_dropped",
+    "inputs"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "artifact_kind": {
+      "const": "offline_multisensor_replay"
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "value_ns",
+        "domain",
+        "unit"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1,
+          "type": "integer"
+        },
+        "value_ns": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "domain": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]*$"
+        },
+        "unit": {
+          "const": "ns"
+        }
+      }
+    },
+    "stale_after_ns": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$"
+    },
+    "timeline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "dataset",
+          "index",
+          "available_ns",
+          "record"
+        ],
+        "properties": {
+          "dataset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1023
+          },
+          "available_ns": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]{0,19})$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "record": {
+            "$ref": "sensor-telemetry-v1.schema.json#/properties/observations/items"
+          }
+        }
+      },
+      "maxItems": 1024
+    },
+    "sensors": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sensor",
+          "status",
+          "channels"
+        ],
+        "properties": {
+          "sensor": {
+            "enum": [
+              "imu",
+              "gnss",
+              "barometer"
+            ]
+          },
+          "status": {
+            "enum": [
+              "fresh",
+              "stale",
+              "missing",
+              "invalid"
+            ]
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "history_index",
+                "timeline_index",
+                "status",
+                "age_ns"
+              ],
+              "properties": {
+                "history_index": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1023
+                },
+                "timeline_index": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 1023
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "status": {
+                  "enum": [
+                    "fresh",
+                    "stale",
+                    "missing",
+                    "invalid"
+                  ]
+                },
+                "age_ns": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^(0|[1-9][0-9]{0,19})$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            },
+            "maxItems": 1024
+          }
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "evidence",
+          "dataset",
+          "index",
+          "sensor",
+          "detail"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 1024
+          },
+          "evidence": {
+            "enum": [
+              "input",
+              "limitation"
+            ]
+          },
+          "dataset": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "index": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1023
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sensor": {
+            "anyOf": [
+              {
+                "enum": [
+                  "imu",
+                  "gnss",
+                  "barometer"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        }
+      },
+      "maxItems": 4096
+    },
+    "diagnostics_dropped": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65536
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "inspection_sha256",
+          "input_sha256",
+          "example_kind",
+          "evidence_attestation"
+        ],
+        "properties": {
+          "inspection_sha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "input_sha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "example_kind": {
+            "anyOf": [
+              {
+                "const": "synthetic_fixture"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence_attestation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1024
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Offline multi-sensor replay inspection v1 (Phase 76A)"
+}

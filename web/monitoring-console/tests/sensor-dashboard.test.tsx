@@ -79,7 +79,7 @@ it('renders dropouts, rejected diagnostics, ordering and untrusted metadata safe
   const d = await impaired(true); d.rejected = [{index: 1, sensor: 'barometer', diagnostic: {code: 'UNITS', path: 'values', explanation: '<img src=x onerror=alert(1)>'}}]; d.summary.barometer.rejected = 1;
   d.anomalies = [{index: 2, code: 'DELIVERY_REGRESSION'}]; d.source_diagnostics = [{index: 0, sensor: 'barometer', acquisition_ns: '0', reasons: ['MISSING_OBSERVATION', 'STALE']}];
   const {container} = render(<SensorDashboard />); upload(d); await screen.findByText('MISSING');
-  expect(screen.getAllByText(/MISSING \/ dropout/).length).toBeGreaterThan(0); expect(screen.getByText(/<img src=x/)).toBeInTheDocument(); expect(container.querySelector('img')).toBeNull(); expect(screen.getByText(/DELIVERY_REGRESSION/)).toBeInTheDocument(); expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  expect(screen.getAllByText(/MISSING \/ dropout/).length).toBeGreaterThan(0); expect(within(screen.getByRole('region', {name: 'Data quality'})).getByText(/<img src=x/)).toBeInTheDocument(); expect(container.querySelector('img')).toBeNull(); expect(within(screen.getByRole('region', {name: 'Data quality'})).getByText(/DELIVERY_REGRESSION/)).toBeInTheDocument(); expect(screen.queryByRole('img')).not.toBeInTheDocument();
 });
 it('compares original with missing impaired without zero fill', async () => {
   render(<SensorDashboard />); upload(fixture()); await screen.findByText('STALE'); upload(await impaired(true), 'Comparison inspection JSON');
