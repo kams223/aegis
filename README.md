@@ -1896,3 +1896,9 @@ inspection path. No association, state estimation, tracking or actuation is adde
 
 See [SF1_ADMISSION.md](simulation/SF1_ADMISSION.md) for public examples, supported
 measurements, covariance and timing policies, duplicate protection, limits and tests.
+
+SF-2 adds deterministic, non-actuating timing and geometry integration for SF-1
+external-object measurements: explicit clock mappings, passive coordinate
+transforms, exact linear marginal covariance propagation and acquisition
+completeness. See [SF-2 timing and geometry](simulation/SF2_TIMING_GEOMETRY.md)
+for contracts, supported operations and limitations.
