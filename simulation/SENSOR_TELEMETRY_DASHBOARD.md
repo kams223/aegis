@@ -379,3 +379,21 @@ frontend, 274 MiB typecheck, 240 MiB build and 394 MiB Python. Only the five fil
 listed above are intended for the commit; generated artifacts, dependencies,
 contracts, baselines and evidence remain outside the diff. GitHub Actions status
 will be reported on the PR; the existing workflow runs Python tests only.
+
+
+## Phase 76A shared temporal replay
+
+The primary dataset also exposes a shared acquisition timeline and selected-time
+IMU/GNSS/barometer panels. Known delivery is required for these panels; raw files
+with unknown delivery remain historical inspection only. Existing Phase 75D
+freshness summaries, charts, comparison and evidence are unchanged. See
+[MULTISENSOR_REPLAY.md](MULTISENSOR_REPLAY.md) for eligibility, provenance channels,
+diagnostics, bounds, the offline CLI and reproducible fabricated example.
+Phase 75F browser results above do not cover the new replay panel.
+
+Phase 76A now has separate real-browser checks in existing Windows Edge, covering
+the new panel, delivery-boundary/status transitions, clock/source warnings,
+keyboard traversal and desktop/narrow layouts. See the final review section of
+[MULTISENSOR_REPLAY.md](MULTISENSOR_REPLAY.md) for the exact coverage, screenshots
+and remaining device/screen-reader limitations. The delivery explanation was
+corrected to “at or before evaluation” to match the existing inclusive rule.

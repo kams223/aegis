@@ -1,3 +1,4 @@
+import { SharedReplay } from './SharedReplay';
 import { useMemo, useRef, useState } from 'react';
 import example from '../../../../examples/sensor_telemetry_example.json?raw';
 import { chartData, filterRecords, freshness, loadInspection, matchOriginal, MAX_BYTES, SENSORS, sha256, uint64 } from './model';
@@ -101,6 +102,7 @@ export function SensorDashboard() {
         {selected ? <><p role="status">Observation {Math.min(index, rows.length - 1) + 1} / {rows.length} · {selected.observation_type} · <strong>{clockError ? 'freshness unavailable' : freshness(selected, clock, threshold).toUpperCase()}</strong></p>
           <button type="button" onClick={() => setEvaluation(selected.acquisition.value_ns)}>Evaluate at selected acquisition</button><Reading record={selected} /></> : <p>No observations for this sensor. Missing stream; expected sample rate unknown.</p>}
       </section>
+      <SharedReplay key={loaded.digest} doc={loaded.doc} evaluation={clock} threshold={threshold} />
       {SENSORS.filter(s => sensor === 'all' || s === sensor).map(s => { const history = rows.filter(r => r.observation_type === s && r.source.session_id === selected?.source.session_id && r.source.vehicle_id === selected?.source.vehicle_id && r.source_sha256 === selected?.source_sha256 && (r.origin === 'raw' || r.config_sha256 === selected?.config_sha256)); const fields = new Map(history.flatMap(r => r.values ?? []).map(f => [f.name, f.unit])); return <section key={s} aria-label={`${s} history`}><h2>{s === 'imu' ? 'IMU' : s === 'gnss' ? 'GNSS' : 'Barometer'}</h2>
         <p>{s === 'imu' ? 'Body FLU sensor frame. Acceleration is specific force; orientation is quaternion xyzw relative to initial world alignment.' : s === 'gnss' ? 'WGS84 degrees; altitude relative to configured spherical origin. Simulated reference only; geographic elevation accuracy is not established.' : 'Scalar pressure at sensor origin. Derived altitude shown only when supplied; atmosphere/reference assumptions are not exported by Phase 75D and are not inferred.'}</p>
         <p>Charts use the selected observation’s session, vehicle, recording digest and impairment configuration.</p><p>Frame: {[...new Set(history.map(r => r.frame))].join(', ') || 'unavailable'} · Missing observations: {history.filter(r => r.values === null).length}</p>
