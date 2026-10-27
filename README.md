@@ -1881,3 +1881,18 @@ record rejections is rendered successfully with its rejection summary intact.
 Select “Recorded offline SITL snapshot” and import that file in Flight Operations.
 Only that user-selected file is read; input text is escaped, paths are not executed,
 and the restrictive CSP, camera catalog and monitoring fixture remain unchanged.
+
+
+## Strict fusion admission (SF-1)
+
+The additive Python operations `validate_covariance` and `admit_batch` validate
+normalized external-object measurements, declared marginal covariance, provenance
+and selected-time eligibility before future estimation. They return structured
+admitted/deferred/rejected/duplicate outcomes without changing existing evidence
+contracts or the legacy scalar averaging prototype. Exact PSD/rank checks use
+standard-library arithmetic; unknown uncertainty and correlation restrictions
+remain explicit. Native aircraft telemetry remains on its separate Phase 75D/76A
+inspection path. No association, state estimation, tracking or actuation is added.
+
+See [SF1_ADMISSION.md](simulation/SF1_ADMISSION.md) for public examples, supported
+measurements, covariance and timing policies, duplicate protection, limits and tests.
