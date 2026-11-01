@@ -1902,3 +1902,9 @@ external-object measurements: explicit clock mappings, passive coordinate
 transforms, exact linear marginal covariance propagation and acquisition
 completeness. See [SF-2 timing and geometry](simulation/SF2_TIMING_GEOMETRY.md)
 for contracts, supported operations and limitations.
+
+SF-3 provides a bounded, offline constant-velocity reference estimator for
+synthetic trajectories with explicitly known correspondence, exact covariance
+updates and reproducible ground-truth evaluation. See
+[SF3_REFERENCE_ESTIMATOR.md](simulation/SF3_REFERENCE_ESTIMATOR.md) for the model,
+SF-1/SF-2 adapter restrictions, analytical tests and scientific limitations.
