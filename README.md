@@ -1908,3 +1908,10 @@ synthetic trajectories with explicitly known correspondence, exact covariance
 updates and reproducible ground-truth evaluation. See
 [SF3_REFERENCE_ESTIMATOR.md](simulation/SF3_REFERENCE_ESTIMATOR.md) for the model,
 SF-1/SF-2 adapter restrictions, analytical tests and scientific limitations.
+
+SF-4 adds a separate offline research evaluator for **externally supplied**
+correspondence hypotheses and synthetic oracle identities/opportunities. Its
+closed, digest-bound inputs preserve SF-1/SF-2 evidence; exact count metrics and
+passive lifecycle/continuity diagnostics do not assign identities or update SF-3.
+See [SF4_ASSOCIATION_RESEARCH.md](simulation/SF4_ASSOCIATION_RESEARCH.md) for
+contracts, resource limits, authored examples and scientific limitations.

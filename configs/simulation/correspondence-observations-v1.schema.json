@@ -1,0 +1,5370 @@
+{
+  "type": "object",
+  "properties": {
+    "dataset_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+      "x-byte-limit": 128,
+      "x-identifier": true
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+      "x-byte-limit": 128,
+      "x-identifier": true
+    },
+    "observation_view_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+      "x-byte-limit": 128,
+      "x-identifier": true
+    },
+    "generator": {
+      "$ref": "#/$defs/Generator"
+    },
+    "scenario_clock_domain": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+      "x-byte-limit": 128,
+      "x-identifier": true
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Step"
+      },
+      "maxItems": 1024,
+      "minItems": 0
+    },
+    "clock_mappings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ClockMapping"
+      },
+      "maxItems": 64,
+      "minItems": 0
+    },
+    "occurrences": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Occurrence"
+      },
+      "maxItems": 1024,
+      "minItems": 0
+    },
+    "acquisitions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/AcquisitionEnvelope"
+      },
+      "maxItems": 1024,
+      "minItems": 0
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "artifact_kind": {
+      "const": "offline_correspondence_observations"
+    }
+  },
+  "required": [
+    "dataset_id",
+    "revision",
+    "observation_view_id",
+    "generator",
+    "scenario_clock_domain",
+    "steps",
+    "clock_mappings",
+    "occurrences",
+    "acquisitions",
+    "provenance",
+    "schema_version",
+    "artifact_kind"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "correspondence-observations-v1.schema.json",
+  "$comment": "Closed wire shapes; SF-4 runtime validation is also mandatory for UTF-8 byte limits, scalar canonicality, graph/reference integrity, source admissibility, covariance, temporal rules and report consistency. No remote references.",
+  "$defs": {
+    "Scalar": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "int"
+            },
+            "value": {
+              "type": "string",
+              "pattern": "^(0|-?[1-9][0-9]*)(?![\\s\\S])",
+              "maxLength": 512
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "float"
+            },
+            "value": {
+              "type": "string",
+              "maxLength": 512,
+              "pattern": "^-?0x(?:0\\.0p\\+0|[01]\\.[0-9a-f]{13}p[+-](?:0|[1-9][0-9]*))(?![\\s\\S])"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "IntScalar": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "int"
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^(0|-?[1-9][0-9]*)(?![\\s\\S])",
+          "maxLength": 512
+        }
+      },
+      "required": [
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "Time": {
+      "type": "object",
+      "properties": {
+        "seconds": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "clock_domain": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        }
+      },
+      "required": [
+        "seconds",
+        "clock_domain"
+      ],
+      "additionalProperties": false
+    },
+    "Frame": {
+      "type": "object",
+      "properties": {
+        "frame_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        }
+      },
+      "required": [
+        "frame_id"
+      ],
+      "additionalProperties": false
+    },
+    "EvidenceKey": {
+      "type": "object",
+      "properties": {
+        "sensor_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "source_session_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "observation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        }
+      },
+      "required": [
+        "sensor_id",
+        "source_session_id",
+        "observation_id"
+      ],
+      "additionalProperties": false
+    },
+    "Generator": {
+      "type": "object",
+      "properties": {
+        "generator_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "configuration_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+        }
+      },
+      "required": [
+        "generator_id",
+        "revision",
+        "configuration_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "AssertionProvenance": {
+      "type": "object",
+      "properties": {
+        "assertion_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        }
+      },
+      "required": [
+        "assertion_id",
+        "revision"
+      ],
+      "additionalProperties": false
+    },
+    "LineageEntry": {
+      "type": "object",
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "configuration_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+        },
+        "input_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+        }
+      },
+      "required": [
+        "operation_id",
+        "revision",
+        "configuration_sha256",
+        "input_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "DerivedFrom": {
+      "type": "object",
+      "properties": {
+        "dataset_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+        },
+        "evidence_key": {
+          "$ref": "#/$defs/EvidenceKey"
+        }
+      },
+      "required": [
+        "dataset_sha256",
+        "evidence_key"
+      ],
+      "additionalProperties": false
+    },
+    "Provenance": {
+      "type": "object",
+      "properties": {
+        "generator": {
+          "$ref": "#/$defs/Generator"
+        },
+        "origin": {
+          "enum": [
+            "synthetic_raw",
+            "synthetic_impaired"
+          ]
+        },
+        "upstream_source_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "derived_from": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DerivedFrom"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lineage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LineageEntry"
+          },
+          "maxItems": 16,
+          "minItems": 0
+        }
+      },
+      "required": [
+        "generator",
+        "origin",
+        "upstream_source_sha256",
+        "derived_from",
+        "lineage"
+      ],
+      "additionalProperties": false
+    },
+    "SourceRef": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        }
+      },
+      "required": [
+        "ref"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsAdmissionRequest": {
+      "type": "object",
+      "properties": {
+        "observation": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "source_session_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "entity_kind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "quantity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "basis": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "uncertainty": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceRef"
+            },
+            {
+              "$ref": "#/$defs/SourceRef"
+            }
+          ]
+        },
+        "correlation": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "evaluation": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "available_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_age_seconds": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IntScalar"
+            },
+            {
+              "$ref": "#/$defs/Scalar"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "derivation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "observation",
+        "source_session_id",
+        "entity_kind",
+        "quantity",
+        "basis",
+        "uncertainty",
+        "correlation",
+        "evaluation",
+        "available_at",
+        "max_age_seconds",
+        "derivation"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsSensorObservation": {
+      "type": "object",
+      "properties": {
+        "observation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "sensor_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "measurement_time": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "reference_frame": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "measurement": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "source_local_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "observation_id",
+        "sensor_id",
+        "measurement_time",
+        "reference_frame",
+        "measurement",
+        "source_local_id"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsMeasurementTime": {
+      "type": "object",
+      "properties": {
+        "seconds": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "clock_domain": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        }
+      },
+      "required": [
+        "seconds",
+        "clock_domain"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsReferenceFrame": {
+      "type": "object",
+      "properties": {
+        "frame_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        }
+      },
+      "required": [
+        "frame_id"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsImagePoint": {
+      "type": "object",
+      "properties": {
+        "u_px": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "v_px": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "image_width": {
+          "$ref": "#/$defs/IntScalar"
+        },
+        "image_height": {
+          "$ref": "#/$defs/IntScalar"
+        },
+        "image_frame": {
+          "$ref": "#/$defs/SourceRef"
+        }
+      },
+      "required": [
+        "u_px",
+        "v_px",
+        "image_width",
+        "image_height",
+        "image_frame"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsImageTrackMeasurement": {
+      "type": "object",
+      "properties": {
+        "class_id": {
+          "$ref": "#/$defs/IntScalar"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "confidence": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "x1": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "y1": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "x2": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "y2": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "image_width": {
+          "$ref": "#/$defs/IntScalar"
+        },
+        "image_height": {
+          "$ref": "#/$defs/IntScalar"
+        }
+      },
+      "required": [
+        "class_id",
+        "label",
+        "confidence",
+        "x1",
+        "y1",
+        "x2",
+        "y2",
+        "image_width",
+        "image_height"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsRadarPolarDetectionMeasurement": {
+      "type": "object",
+      "properties": {
+        "range_m": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "azimuth_rad": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "elevation_rad": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Scalar"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radial_velocity_mps": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Scalar"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "range_m",
+        "azimuth_rad",
+        "elevation_rad",
+        "radial_velocity_mps"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsMeasurementBasis": {
+      "type": "object",
+      "properties": {
+        "measurement_kind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "axes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+            "x-byte-limit": 128,
+            "x-identifier": true
+          },
+          "maxItems": 16,
+          "minItems": 0
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+            "x-byte-limit": 128,
+            "x-identifier": true
+          },
+          "maxItems": 16,
+          "minItems": 0
+        },
+        "reference_frame": {
+          "$ref": "#/$defs/SourceRef"
+        }
+      },
+      "required": [
+        "measurement_kind",
+        "axes",
+        "units",
+        "reference_frame"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsUncertaintyProvenance": {
+      "type": "object",
+      "properties": {
+        "model_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        }
+      },
+      "required": [
+        "model_id",
+        "revision",
+        "method"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsCovarianceDeclaration": {
+      "type": "object",
+      "properties": {
+        "matrix": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/IntScalar"
+                },
+                {
+                  "$ref": "#/$defs/Scalar"
+                }
+              ]
+            },
+            "maxItems": 16,
+            "minItems": 0
+          },
+          "maxItems": 16,
+          "minItems": 0
+        },
+        "measurement_basis": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "uncertainty_provenance": {
+          "$ref": "#/$defs/SourceRef"
+        }
+      },
+      "required": [
+        "matrix",
+        "measurement_basis",
+        "uncertainty_provenance"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsUnknownUncertainty": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "maxLength": 512,
+          "x-byte-limit": 512
+        }
+      },
+      "required": [
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsEvidenceKey": {
+      "type": "object",
+      "properties": {
+        "sensor_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "source_session_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "observation_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        }
+      },
+      "required": [
+        "sensor_id",
+        "source_session_id",
+        "observation_id"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsCorrelationClaim": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "unknown",
+            "shared_group",
+            "independence_asserted"
+          ]
+        },
+        "group_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "assumption_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scope": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SourceRef"
+          },
+          "maxItems": 16,
+          "minItems": 0
+        }
+      },
+      "required": [
+        "mode",
+        "group_id",
+        "assumption_id",
+        "scope"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsDerivedSensorEvidence": {
+      "type": "object",
+      "properties": {
+        "source_observation": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "spatial_projection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceRef"
+            },
+            {
+              "$ref": "#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "camera_intrinsics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "spatial_transform": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transformed_geometry": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceRef"
+            },
+            {
+              "$ref": "#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mapped_time": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "source_observation",
+        "spatial_projection",
+        "camera_intrinsics",
+        "spatial_transform",
+        "transformed_geometry",
+        "mapped_time"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsBoundedClockMapping": {
+      "type": "object",
+      "properties": {
+        "source_clock_domain": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "target_clock_domain": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "scale": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "offset_seconds": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "valid_from_source_seconds": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "valid_until_source_seconds": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "error_bound_seconds": {
+          "$ref": "#/$defs/Scalar"
+        }
+      },
+      "required": [
+        "source_clock_domain",
+        "target_clock_domain",
+        "scale",
+        "offset_seconds",
+        "valid_from_source_seconds",
+        "valid_until_source_seconds",
+        "error_bound_seconds"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsMappedTimeInterval": {
+      "type": "object",
+      "properties": {
+        "lower_seconds": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "upper_seconds": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "clock_domain": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "source_time": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "source_mapping": {
+          "$ref": "#/$defs/SourceRef"
+        }
+      },
+      "required": [
+        "lower_seconds",
+        "upper_seconds",
+        "clock_domain",
+        "source_time",
+        "source_mapping"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsCameraRay": {
+      "type": "object",
+      "properties": {
+        "direction_x": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "direction_y": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "direction_z": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "optical_frame": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "source_image_point": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "calibration_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        }
+      },
+      "required": [
+        "direction_x",
+        "direction_y",
+        "direction_z",
+        "optical_frame",
+        "source_image_point",
+        "calibration_id"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsPinholeCameraIntrinsics": {
+      "type": "object",
+      "properties": {
+        "fx_px": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "fy_px": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "cx_px": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "cy_px": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "image_width": {
+          "$ref": "#/$defs/IntScalar"
+        },
+        "image_height": {
+          "$ref": "#/$defs/IntScalar"
+        },
+        "image_frame": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "optical_frame": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "calibration_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        }
+      },
+      "required": [
+        "fx_px",
+        "fy_px",
+        "cx_px",
+        "cy_px",
+        "image_width",
+        "image_height",
+        "image_frame",
+        "optical_frame",
+        "calibration_id"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsRadarPoint": {
+      "type": "object",
+      "properties": {
+        "x_m": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "y_m": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "z_m": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "reference_frame": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "source_measurement": {
+          "$ref": "#/$defs/SourceRef"
+        }
+      },
+      "required": [
+        "x_m",
+        "y_m",
+        "z_m",
+        "reference_frame",
+        "source_measurement"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsRigidTransform": {
+      "type": "object",
+      "properties": {
+        "source_frame": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "target_frame": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "rotation_target_from_source": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "$ref": "#/$defs/Scalar"
+                },
+                {
+                  "$ref": "#/$defs/Scalar"
+                },
+                {
+                  "$ref": "#/$defs/Scalar"
+                }
+              ],
+              "items": false,
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "$ref": "#/$defs/Scalar"
+                },
+                {
+                  "$ref": "#/$defs/Scalar"
+                },
+                {
+                  "$ref": "#/$defs/Scalar"
+                }
+              ],
+              "items": false,
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "$ref": "#/$defs/Scalar"
+                },
+                {
+                  "$ref": "#/$defs/Scalar"
+                },
+                {
+                  "$ref": "#/$defs/Scalar"
+                }
+              ],
+              "items": false,
+              "minItems": 3,
+              "maxItems": 3
+            }
+          ],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "translation_target_from_source_m": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/Scalar"
+            },
+            {
+              "$ref": "#/$defs/Scalar"
+            },
+            {
+              "$ref": "#/$defs/Scalar"
+            }
+          ],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        }
+      },
+      "required": [
+        "source_frame",
+        "target_frame",
+        "rotation_target_from_source",
+        "translation_target_from_source_m"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsRotatedDirection": {
+      "type": "object",
+      "properties": {
+        "direction_x": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "direction_y": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "direction_z": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "reference_frame": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "source_ray": {
+          "$ref": "#/$defs/SourceRef"
+        }
+      },
+      "required": [
+        "direction_x",
+        "direction_y",
+        "direction_z",
+        "reference_frame",
+        "source_ray"
+      ],
+      "additionalProperties": false
+    },
+    "FieldsTransformedPoint": {
+      "type": "object",
+      "properties": {
+        "x_m": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "y_m": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "z_m": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "reference_frame": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "source_point": {
+          "$ref": "#/$defs/SourceRef"
+        }
+      },
+      "required": [
+        "x_m",
+        "y_m",
+        "z_m",
+        "reference_frame",
+        "source_point"
+      ],
+      "additionalProperties": false
+    },
+    "SourceNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "AdmissionRequest"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsAdmissionRequest"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "SensorObservation"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsSensorObservation"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "MeasurementTime"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsMeasurementTime"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "ReferenceFrame"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsReferenceFrame"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "ImagePoint"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsImagePoint"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "ImageTrackMeasurement"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsImageTrackMeasurement"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "RadarPolarDetectionMeasurement"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsRadarPolarDetectionMeasurement"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "MeasurementBasis"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsMeasurementBasis"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "UncertaintyProvenance"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsUncertaintyProvenance"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "CovarianceDeclaration"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsCovarianceDeclaration"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "UnknownUncertainty"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsUnknownUncertainty"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "EvidenceKey"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsEvidenceKey"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "CorrelationClaim"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsCorrelationClaim"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "DerivedSensorEvidence"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsDerivedSensorEvidence"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "BoundedClockMapping"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsBoundedClockMapping"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "MappedTimeInterval"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsMappedTimeInterval"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "CameraRay"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsCameraRay"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "PinholeCameraIntrinsics"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsPinholeCameraIntrinsics"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "RadarPoint"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsRadarPoint"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "RigidTransform"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsRigidTransform"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "RotatedDirection"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsRotatedDirection"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "object_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "type": {
+              "const": "TransformedPoint"
+            },
+            "fields": {
+              "$ref": "#/$defs/FieldsTransformedPoint"
+            }
+          },
+          "required": [
+            "object_id",
+            "type",
+            "fields"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "SourceGraph": {
+      "type": "object",
+      "properties": {
+        "root_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SourceNode"
+          },
+          "maxItems": 128,
+          "minItems": 1
+        }
+      },
+      "required": [
+        "root_ref",
+        "objects"
+      ],
+      "additionalProperties": false
+    },
+    "Mapping": {
+      "type": "object",
+      "properties": {
+        "source_clock_domain": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "target_clock_domain": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "scale": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "offset_seconds": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "valid_from_source_seconds": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "valid_until_source_seconds": {
+          "$ref": "#/$defs/Scalar"
+        },
+        "error_bound_seconds": {
+          "$ref": "#/$defs/Scalar"
+        }
+      },
+      "required": [
+        "source_clock_domain",
+        "target_clock_domain",
+        "scale",
+        "offset_seconds",
+        "valid_from_source_seconds",
+        "valid_until_source_seconds",
+        "error_bound_seconds"
+      ],
+      "additionalProperties": false
+    },
+    "ClockMapping": {
+      "type": "object",
+      "properties": {
+        "mapping_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "mapping": {
+          "$ref": "#/$defs/Mapping"
+        }
+      },
+      "required": [
+        "mapping_id",
+        "revision",
+        "mapping"
+      ],
+      "additionalProperties": false
+    },
+    "Step": {
+      "type": "object",
+      "properties": {
+        "step_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "start": {
+          "$ref": "#/$defs/Time"
+        },
+        "end": {
+          "$ref": "#/$defs/Time"
+        }
+      },
+      "required": [
+        "step_id",
+        "start",
+        "end"
+      ],
+      "additionalProperties": false
+    },
+    "Occurrence": {
+      "type": "object",
+      "properties": {
+        "occurrence_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "step_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "acquisition_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "admission_request": {
+          "$ref": "#/$defs/SourceGraph"
+        },
+        "acquisition_mapping_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "occurrence_received_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        }
+      },
+      "required": [
+        "occurrence_id",
+        "step_ref",
+        "acquisition_ref",
+        "admission_request",
+        "acquisition_mapping_ref",
+        "occurrence_received_at",
+        "provenance"
+      ],
+      "additionalProperties": false
+    },
+    "AcquisitionEnvelope": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "acquisition_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "step_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "sensor_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "source_session_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "acquisition_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "acquisition_time": {
+              "$ref": "#/$defs/Time"
+            },
+            "status": {
+              "const": "completed"
+            },
+            "observation_occurrence_refs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+                "x-byte-limit": 128,
+                "x-identifier": true
+              },
+              "maxItems": 1024,
+              "minItems": 0,
+              "uniqueItems": true
+            },
+            "reason": {
+              "type": "null"
+            },
+            "acquisition_mapping_ref": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+                  "x-byte-limit": 128,
+                  "x-identifier": true
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "available_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "completeness_provenance": {
+              "$ref": "#/$defs/AssertionProvenance"
+            }
+          },
+          "required": [
+            "acquisition_ref",
+            "step_ref",
+            "sensor_id",
+            "source_session_id",
+            "acquisition_id",
+            "acquisition_time",
+            "status",
+            "observation_occurrence_refs",
+            "reason",
+            "acquisition_mapping_ref",
+            "available_at",
+            "completeness_provenance"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "acquisition_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "step_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "sensor_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "source_session_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "acquisition_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "acquisition_time": {
+              "$ref": "#/$defs/Time"
+            },
+            "status": {
+              "const": "unavailable"
+            },
+            "observation_occurrence_refs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+                "x-byte-limit": 128,
+                "x-identifier": true
+              },
+              "maxItems": 0,
+              "minItems": 0
+            },
+            "reason": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512,
+              "minLength": 1
+            },
+            "acquisition_mapping_ref": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+                  "x-byte-limit": 128,
+                  "x-identifier": true
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "available_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "completeness_provenance": {
+              "$ref": "#/$defs/AssertionProvenance"
+            }
+          },
+          "required": [
+            "acquisition_ref",
+            "step_ref",
+            "sensor_id",
+            "source_session_id",
+            "acquisition_id",
+            "acquisition_time",
+            "status",
+            "observation_occurrence_refs",
+            "reason",
+            "acquisition_mapping_ref",
+            "available_at",
+            "completeness_provenance"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "acquisition_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "step_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "sensor_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "source_session_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "acquisition_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "acquisition_time": {
+              "type": "null"
+            },
+            "status": {
+              "const": "unavailable"
+            },
+            "observation_occurrence_refs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+                "x-byte-limit": 128,
+                "x-identifier": true
+              },
+              "maxItems": 0,
+              "minItems": 0
+            },
+            "reason": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512,
+              "minLength": 1
+            },
+            "acquisition_mapping_ref": {
+              "type": "null"
+            },
+            "available_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "completeness_provenance": {
+              "$ref": "#/$defs/AssertionProvenance"
+            }
+          },
+          "required": [
+            "acquisition_ref",
+            "step_ref",
+            "sensor_id",
+            "source_session_id",
+            "acquisition_id",
+            "acquisition_time",
+            "status",
+            "observation_occurrence_refs",
+            "reason",
+            "acquisition_mapping_ref",
+            "available_at",
+            "completeness_provenance"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "acquisition_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "step_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "sensor_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "source_session_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "acquisition_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "acquisition_time": {
+              "$ref": "#/$defs/Time"
+            },
+            "status": {
+              "const": "unconfirmed"
+            },
+            "observation_occurrence_refs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+                "x-byte-limit": 128,
+                "x-identifier": true
+              },
+              "maxItems": 0,
+              "minItems": 0
+            },
+            "reason": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512,
+              "minLength": 1
+            },
+            "acquisition_mapping_ref": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+                  "x-byte-limit": 128,
+                  "x-identifier": true
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "available_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "completeness_provenance": {
+              "$ref": "#/$defs/AssertionProvenance"
+            }
+          },
+          "required": [
+            "acquisition_ref",
+            "step_ref",
+            "sensor_id",
+            "source_session_id",
+            "acquisition_id",
+            "acquisition_time",
+            "status",
+            "observation_occurrence_refs",
+            "reason",
+            "acquisition_mapping_ref",
+            "available_at",
+            "completeness_provenance"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "acquisition_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "step_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "sensor_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "source_session_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "acquisition_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "acquisition_time": {
+              "type": "null"
+            },
+            "status": {
+              "const": "unconfirmed"
+            },
+            "observation_occurrence_refs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+                "x-byte-limit": 128,
+                "x-identifier": true
+              },
+              "maxItems": 0,
+              "minItems": 0
+            },
+            "reason": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512,
+              "minLength": 1
+            },
+            "acquisition_mapping_ref": {
+              "type": "null"
+            },
+            "available_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "completeness_provenance": {
+              "$ref": "#/$defs/AssertionProvenance"
+            }
+          },
+          "required": [
+            "acquisition_ref",
+            "step_ref",
+            "sensor_id",
+            "source_session_id",
+            "acquisition_id",
+            "acquisition_time",
+            "status",
+            "observation_occurrence_refs",
+            "reason",
+            "acquisition_mapping_ref",
+            "available_at",
+            "completeness_provenance"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Entity": {
+      "type": "object",
+      "properties": {
+        "truth_entity_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "episode_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        }
+      },
+      "required": [
+        "truth_entity_id",
+        "episode_id"
+      ],
+      "additionalProperties": false
+    },
+    "TruthLabel": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "evidence_key": {
+              "$ref": "#/$defs/EvidenceKey"
+            },
+            "status": {
+              "const": "known"
+            },
+            "truth_entity_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            }
+          },
+          "required": [
+            "evidence_key",
+            "status",
+            "truth_entity_id"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "evidence_key": {
+              "$ref": "#/$defs/EvidenceKey"
+            },
+            "status": {
+              "const": "ambiguous"
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+                "x-byte-limit": 128,
+                "x-identifier": true
+              },
+              "maxItems": 8,
+              "minItems": 2,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "evidence_key",
+            "status",
+            "candidates"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "evidence_key": {
+              "$ref": "#/$defs/EvidenceKey"
+            },
+            "status": {
+              "const": "unavailable"
+            },
+            "reason": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512
+            }
+          },
+          "required": [
+            "evidence_key",
+            "status",
+            "reason"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Opportunity": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "truth_entity_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "step_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "expectation": {
+              "const": "expected"
+            },
+            "required_acquisition_refs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+                "x-byte-limit": 128,
+                "x-identifier": true
+              },
+              "maxItems": 8,
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "truth_entity_id",
+            "step_ref",
+            "expectation",
+            "required_acquisition_refs"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "truth_entity_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "step_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            "expectation": {
+              "const": "not_observable"
+            },
+            "required_acquisition_refs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+                "x-byte-limit": 128,
+                "x-identifier": true
+              },
+              "maxItems": 0,
+              "minItems": 0
+            }
+          },
+          "required": [
+            "truth_entity_id",
+            "step_ref",
+            "expectation",
+            "required_acquisition_refs"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Terminal": {
+      "type": "object",
+      "properties": {
+        "truth_entity_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "step_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "visible_at": {
+          "$ref": "#/$defs/Time"
+        },
+        "provenance": {
+          "$ref": "#/$defs/AssertionProvenance"
+        }
+      },
+      "required": [
+        "truth_entity_id",
+        "step_ref",
+        "visible_at",
+        "provenance"
+      ],
+      "additionalProperties": false
+    },
+    "ProducerProvenance": {
+      "type": "object",
+      "properties": {
+        "producer_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "alignment_protocol_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "producer_id",
+        "revision",
+        "alignment_protocol_id"
+      ],
+      "additionalProperties": false
+    },
+    "Alignment": {
+      "type": "object",
+      "properties": {
+        "external_label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "truth_entity_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        }
+      },
+      "required": [
+        "external_label",
+        "truth_entity_id"
+      ],
+      "additionalProperties": false
+    },
+    "Decision": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "evidence_key": {
+              "$ref": "#/$defs/EvidenceKey"
+            },
+            "decision_available_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "information_cutoff": {
+              "type": "null"
+            },
+            "input_view_sha256": {
+              "type": "null"
+            },
+            "status": {
+              "const": "assigned"
+            },
+            "external_label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            }
+          },
+          "required": [
+            "evidence_key",
+            "decision_available_at",
+            "information_cutoff",
+            "input_view_sha256",
+            "status",
+            "external_label"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "evidence_key": {
+              "$ref": "#/$defs/EvidenceKey"
+            },
+            "decision_available_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "information_cutoff": {
+              "type": "null"
+            },
+            "input_view_sha256": {
+              "type": "null"
+            },
+            "status": {
+              "const": "ambiguous"
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+                "x-byte-limit": 128,
+                "x-identifier": true
+              },
+              "maxItems": 8,
+              "minItems": 2,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "evidence_key",
+            "decision_available_at",
+            "information_cutoff",
+            "input_view_sha256",
+            "status",
+            "candidates"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "evidence_key": {
+              "$ref": "#/$defs/EvidenceKey"
+            },
+            "decision_available_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "information_cutoff": {
+              "type": "null"
+            },
+            "input_view_sha256": {
+              "type": "null"
+            },
+            "status": {
+              "const": "unresolved"
+            },
+            "reason": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512
+            }
+          },
+          "required": [
+            "evidence_key",
+            "decision_available_at",
+            "information_cutoff",
+            "input_view_sha256",
+            "status",
+            "reason"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "evidence_key": {
+              "$ref": "#/$defs/EvidenceKey"
+            },
+            "decision_available_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "information_cutoff": {
+              "$ref": "#/$defs/Time"
+            },
+            "input_view_sha256": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+            },
+            "status": {
+              "const": "assigned"
+            },
+            "external_label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            }
+          },
+          "required": [
+            "evidence_key",
+            "decision_available_at",
+            "information_cutoff",
+            "input_view_sha256",
+            "status",
+            "external_label"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "evidence_key": {
+              "$ref": "#/$defs/EvidenceKey"
+            },
+            "decision_available_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "information_cutoff": {
+              "$ref": "#/$defs/Time"
+            },
+            "input_view_sha256": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+            },
+            "status": {
+              "const": "ambiguous"
+            },
+            "candidates": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+                "x-byte-limit": 128,
+                "x-identifier": true
+              },
+              "maxItems": 8,
+              "minItems": 2,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "evidence_key",
+            "decision_available_at",
+            "information_cutoff",
+            "input_view_sha256",
+            "status",
+            "candidates"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "evidence_key": {
+              "$ref": "#/$defs/EvidenceKey"
+            },
+            "decision_available_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "information_cutoff": {
+              "$ref": "#/$defs/Time"
+            },
+            "input_view_sha256": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+            },
+            "status": {
+              "const": "unresolved"
+            },
+            "reason": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512
+            }
+          },
+          "required": [
+            "evidence_key",
+            "decision_available_at",
+            "information_cutoff",
+            "input_view_sha256",
+            "status",
+            "reason"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Policy": {
+      "type": "object",
+      "properties": {
+        "policy_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "additional_max_age_seconds": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Scalar"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "policy_id",
+        "revision",
+        "additional_max_age_seconds"
+      ],
+      "additionalProperties": false
+    },
+    "OpportunityKey": {
+      "type": "object",
+      "properties": {
+        "truth_entity_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "step_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        }
+      },
+      "required": [
+        "truth_entity_id",
+        "step_ref"
+      ],
+      "additionalProperties": false
+    },
+    "Scope": {
+      "type": "object",
+      "properties": {
+        "evidence_keys": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/EvidenceKey"
+              },
+              "maxItems": 1024,
+              "minItems": 0,
+              "uniqueItems": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "opportunity_keys": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/OpportunityKey"
+              },
+              "maxItems": 4096,
+              "minItems": 0,
+              "uniqueItems": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "evidence_keys",
+        "opportunity_keys"
+      ],
+      "additionalProperties": false
+    },
+    "ExpectedDigests": {
+      "type": "object",
+      "properties": {
+        "dataset_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+        },
+        "truth_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+        },
+        "hypotheses_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+        }
+      },
+      "required": [
+        "dataset_sha256",
+        "truth_sha256",
+        "hypotheses_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "EvaluationRequest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "evaluation": {
+          "$ref": "#/$defs/Time"
+        },
+        "expected_digests": {
+          "$ref": "#/$defs/ExpectedDigests"
+        },
+        "policy": {
+          "$ref": "#/$defs/Policy"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        }
+      },
+      "required": [
+        "schema_version",
+        "evaluation",
+        "expected_digests",
+        "policy",
+        "scope"
+      ],
+      "additionalProperties": false
+    },
+    "Ratio": {
+      "type": "object",
+      "properties": {
+        "numerator": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "denominator": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        }
+      },
+      "required": [
+        "numerator",
+        "denominator"
+      ],
+      "additionalProperties": false
+    },
+    "Metrics": {
+      "type": "object",
+      "properties": {
+        "conditional_resolved_accuracy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ratio"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resolved_coverage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ratio"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "strict_correctness": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ratio"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unresolved_fraction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ratio"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ambiguous_fraction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ratio"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eligible_data_coverage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ratio"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "known_truth_coverage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ratio"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "conditional_resolved_accuracy",
+        "resolved_coverage",
+        "strict_correctness",
+        "unresolved_fraction",
+        "ambiguous_fraction",
+        "eligible_data_coverage",
+        "known_truth_coverage"
+      ],
+      "additionalProperties": false
+    },
+    "SourceDiagnostic": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 256,
+          "x-byte-limit": 256
+        },
+        "explanation": {
+          "type": "string",
+          "maxLength": 512,
+          "x-byte-limit": 512
+        }
+      },
+      "required": [
+        "code",
+        "path",
+        "explanation"
+      ],
+      "additionalProperties": false
+    },
+    "DiagnosticReference": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "observations"
+            },
+            "collection": {
+              "type": "null"
+            },
+            "index": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "observations"
+            },
+            "collection": {
+              "const": "steps"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1023
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "observations"
+            },
+            "collection": {
+              "const": "clock_mappings"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 63
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "observations"
+            },
+            "collection": {
+              "const": "occurrences"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1023
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "observations"
+            },
+            "collection": {
+              "const": "acquisitions"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1023
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "truth"
+            },
+            "collection": {
+              "type": "null"
+            },
+            "index": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "truth"
+            },
+            "collection": {
+              "const": "entity_catalog"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 127
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "truth"
+            },
+            "collection": {
+              "const": "evidence_labels"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1023
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "truth"
+            },
+            "collection": {
+              "const": "opportunities"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4095
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "truth"
+            },
+            "collection": {
+              "const": "terminal_annotations"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 127
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "hypotheses"
+            },
+            "collection": {
+              "type": "null"
+            },
+            "index": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "hypotheses"
+            },
+            "collection": {
+              "const": "external_label_catalog"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "hypotheses"
+            },
+            "collection": {
+              "const": "label_alignment"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "hypotheses"
+            },
+            "collection": {
+              "const": "decisions"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1023
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "request"
+            },
+            "collection": {
+              "type": "null"
+            },
+            "index": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "report"
+            },
+            "collection": {
+              "type": "null"
+            },
+            "index": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "report"
+            },
+            "collection": {
+              "const": "evidence_rows"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1023
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "report"
+            },
+            "collection": {
+              "const": "lifecycle_rows"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4223
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "report"
+            },
+            "collection": {
+              "const": "entities"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 127
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "report"
+            },
+            "collection": {
+              "const": "labels"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "artifact": {
+              "const": "report"
+            },
+            "collection": {
+              "const": "diagnostics"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "required": [
+            "artifact",
+            "collection",
+            "index"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Diagnostic": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "enum": [
+                "IO_ERROR",
+                "UTF8",
+                "SCHEMA",
+                "VERSION",
+                "BOUND",
+                "DIGEST_MISMATCH"
+              ]
+            },
+            "stage": {
+              "const": "io/schema"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "limitation",
+                "error"
+              ]
+            },
+            "reference": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DiagnosticReference"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "path": {
+              "type": "string",
+              "maxLength": 256,
+              "x-byte-limit": 256
+            },
+            "explanation": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512
+            }
+          },
+          "required": [
+            "code",
+            "stage",
+            "severity",
+            "reference",
+            "path",
+            "explanation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "enum": [
+                "UNKNOWN_REFERENCE",
+                "GRAPH_CYCLE",
+                "GRAPH_TYPE",
+                "EVIDENCE_CONFLICT",
+                "REFERENCE_MEMBERSHIP_CONFLICT",
+                "CONTEXT_POLICY_CONFLICT",
+                "TRUTH_CONFLICT",
+                "HYPOTHESIS_CONFLICT",
+                "TERMINAL_CONFLICT"
+              ]
+            },
+            "stage": {
+              "const": "references"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "limitation",
+                "error"
+              ]
+            },
+            "reference": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DiagnosticReference"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "path": {
+              "type": "string",
+              "maxLength": 256,
+              "x-byte-limit": 256
+            },
+            "explanation": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512
+            }
+          },
+          "required": [
+            "code",
+            "stage",
+            "severity",
+            "reference",
+            "path",
+            "explanation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "enum": [
+                "SOURCE_INVALID",
+                "CLOCK_MAPPING_INVALID",
+                "COMPLETION_CONFLICT"
+              ]
+            },
+            "stage": {
+              "const": "source"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "limitation",
+                "error"
+              ]
+            },
+            "reference": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DiagnosticReference"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "path": {
+              "type": "string",
+              "maxLength": 256,
+              "x-byte-limit": 256
+            },
+            "explanation": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512
+            }
+          },
+          "required": [
+            "code",
+            "stage",
+            "severity",
+            "reference",
+            "path",
+            "explanation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "enum": [
+                "DUPLICATE_EVIDENCE",
+                "DUPLICATE_HYPOTHESIS",
+                "UNCERTAINTY_UNKNOWN",
+                "SINGULAR_UNCERTAINTY"
+              ]
+            },
+            "stage": {
+              "const": "source notes"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "limitation",
+                "error"
+              ]
+            },
+            "reference": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DiagnosticReference"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "path": {
+              "type": "string",
+              "maxLength": 256,
+              "x-byte-limit": 256
+            },
+            "explanation": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512
+            }
+          },
+          "required": [
+            "code",
+            "stage",
+            "severity",
+            "reference",
+            "path",
+            "explanation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "enum": [
+                "SCOPE_EXCLUDED",
+                "CLOCK_MAPPING_REQUIRED",
+                "DELIVERY_CLOCK_UNSUPPORTED",
+                "ACQUISITION_UNKNOWN",
+                "DELIVERY_UNKNOWN",
+                "TEMPORAL_ORDER_AMBIGUOUS",
+                "PENDING_DELIVERY",
+                "STALE_MEASUREMENT"
+              ]
+            },
+            "stage": {
+              "const": "source eligibility"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "limitation",
+                "error"
+              ]
+            },
+            "reference": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DiagnosticReference"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "path": {
+              "type": "string",
+              "maxLength": 256,
+              "x-byte-limit": 256
+            },
+            "explanation": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512
+            }
+          },
+          "required": [
+            "code",
+            "stage",
+            "severity",
+            "reference",
+            "path",
+            "explanation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "enum": [
+                "MISSING_HYPOTHESIS",
+                "HYPOTHESIS_UNRESOLVED",
+                "HYPOTHESIS_PENDING",
+                "HYPOTHESIS_AVAILABILITY_UNKNOWN",
+                "HYPOTHESIS_UNALIGNED",
+                "HYPOTHESIS_CAUSAL_CONFLICT",
+                "HYPOTHESIS_CLOCK_UNSUPPORTED",
+                "HYPOTHESIS_CUTOFF_FUTURE"
+              ]
+            },
+            "stage": {
+              "const": "hypothesis"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "limitation",
+                "error"
+              ]
+            },
+            "reference": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DiagnosticReference"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "path": {
+              "type": "string",
+              "maxLength": 256,
+              "x-byte-limit": 256
+            },
+            "explanation": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512
+            }
+          },
+          "required": [
+            "code",
+            "stage",
+            "severity",
+            "reference",
+            "path",
+            "explanation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "enum": [
+                "INPUT_VIEW_MISMATCH"
+              ]
+            },
+            "stage": {
+              "const": "hypothesis view"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "limitation",
+                "error"
+              ]
+            },
+            "reference": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DiagnosticReference"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "path": {
+              "type": "string",
+              "maxLength": 256,
+              "x-byte-limit": 256
+            },
+            "explanation": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512
+            }
+          },
+          "required": [
+            "code",
+            "stage",
+            "severity",
+            "reference",
+            "path",
+            "explanation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "enum": [
+                "TRUTH_UNAVAILABLE",
+                "TRUTH_AMBIGUOUS",
+                "LABEL_MATCH",
+                "LABEL_MISMATCH",
+                "CAUSAL_PROVENANCE_UNVERIFIED"
+              ]
+            },
+            "stage": {
+              "const": "comparison"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "limitation",
+                "error"
+              ]
+            },
+            "reference": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DiagnosticReference"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "path": {
+              "type": "string",
+              "maxLength": 256,
+              "x-byte-limit": 256
+            },
+            "explanation": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512
+            }
+          },
+          "required": [
+            "code",
+            "stage",
+            "severity",
+            "reference",
+            "path",
+            "explanation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "enum": [
+                "ACQUISITION_UNCONFIRMED",
+                "ACQUISITION_UNAVAILABLE",
+                "ACQUISITION_PENDING",
+                "COMPLETION_UNKNOWN",
+                "UNKNOWN_MEMBER_TRUTH",
+                "NOT_SCHEDULED",
+                "NOT_OBSERVABLE",
+                "STALE_AT_EVALUATION"
+              ]
+            },
+            "stage": {
+              "const": "lifecycle"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "limitation",
+                "error"
+              ]
+            },
+            "reference": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DiagnosticReference"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "path": {
+              "type": "string",
+              "maxLength": 256,
+              "x-byte-limit": 256
+            },
+            "explanation": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512
+            }
+          },
+          "required": [
+            "code",
+            "stage",
+            "severity",
+            "reference",
+            "path",
+            "explanation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "enum": [
+                "OPPORTUNITY_UNASSESSED",
+                "IDENTITY_SPLIT",
+                "LABEL_COLLISION",
+                "CONTAMINATED_LABEL",
+                "MIXED_STEP"
+              ]
+            },
+            "stage": {
+              "const": "continuity"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "limitation",
+                "error"
+              ]
+            },
+            "reference": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DiagnosticReference"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "path": {
+              "type": "string",
+              "maxLength": 256,
+              "x-byte-limit": 256
+            },
+            "explanation": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512
+            }
+          },
+          "required": [
+            "code",
+            "stage",
+            "severity",
+            "reference",
+            "path",
+            "explanation"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "enum": [
+                "EMPTY_POPULATION",
+                "OUTPUT_BOUND"
+              ]
+            },
+            "stage": {
+              "const": "summary"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "limitation",
+                "error"
+              ]
+            },
+            "reference": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DiagnosticReference"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "path": {
+              "type": "string",
+              "maxLength": 256,
+              "x-byte-limit": 256
+            },
+            "explanation": {
+              "type": "string",
+              "maxLength": 512,
+              "x-byte-limit": 512
+            }
+          },
+          "required": [
+            "code",
+            "stage",
+            "severity",
+            "reference",
+            "path",
+            "explanation"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Bindings": {
+      "type": "object",
+      "properties": {
+        "dataset_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "truth_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hypotheses_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "policy_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "dataset_sha256",
+        "truth_sha256",
+        "hypotheses_sha256",
+        "policy_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "EvidenceRow": {
+      "type": "object",
+      "properties": {
+        "evidence_key": {
+          "$ref": "#/$defs/EvidenceKey"
+        },
+        "occurrence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+            "x-byte-limit": 128,
+            "x-identifier": true
+          },
+          "maxItems": 1024,
+          "minItems": 0
+        },
+        "step_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "acquisition_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "source_ref": {
+          "type": "object",
+          "properties": {
+            "primary_occurrence_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+              "x-byte-limit": 128,
+              "x-identifier": true
+            }
+          },
+          "required": [
+            "primary_occurrence_ref"
+          ],
+          "additionalProperties": false
+        },
+        "truth_ref": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "hypothesis_refs": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "maxItems": 1024,
+          "minItems": 0
+        },
+        "timing_status": {
+          "enum": [
+            "eligible",
+            "ineligible"
+          ]
+        },
+        "temporal_reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "SCOPE_EXCLUDED",
+                "CLOCK_MAPPING_REQUIRED",
+                "DELIVERY_CLOCK_UNSUPPORTED",
+                "ACQUISITION_UNKNOWN",
+                "DELIVERY_UNKNOWN",
+                "TEMPORAL_ORDER_AMBIGUOUS",
+                "PENDING_DELIVERY",
+                "STALE_MEASUREMENT"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "admission_status": {
+          "enum": [
+            "admitted",
+            "deferred",
+            "rejected",
+            "not_evaluated"
+          ]
+        },
+        "source_diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SourceDiagnostic"
+          },
+          "maxItems": 8,
+          "minItems": 0
+        },
+        "restrictions": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+                "x-byte-limit": 128,
+                "x-identifier": true
+              },
+              "maxItems": 32,
+              "minItems": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "uncertainty_status": {
+          "enum": [
+            "known_psd",
+            "unknown"
+          ]
+        },
+        "truth_status": {
+          "enum": [
+            "known",
+            "ambiguous",
+            "unavailable"
+          ]
+        },
+        "hypothesis_status": {
+          "enum": [
+            "assigned",
+            "ambiguous",
+            "unresolved",
+            "missing",
+            "pending",
+            "unaligned",
+            "invalid_context"
+          ]
+        },
+        "comparison_status": {
+          "enum": [
+            "correct",
+            "incorrect",
+            "ambiguous",
+            "unresolved",
+            "unscored"
+          ]
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "IO_ERROR",
+              "UTF8",
+              "SCHEMA",
+              "VERSION",
+              "BOUND",
+              "DIGEST_MISMATCH",
+              "UNKNOWN_REFERENCE",
+              "GRAPH_CYCLE",
+              "GRAPH_TYPE",
+              "EVIDENCE_CONFLICT",
+              "REFERENCE_MEMBERSHIP_CONFLICT",
+              "CONTEXT_POLICY_CONFLICT",
+              "TRUTH_CONFLICT",
+              "HYPOTHESIS_CONFLICT",
+              "TERMINAL_CONFLICT",
+              "SOURCE_INVALID",
+              "CLOCK_MAPPING_INVALID",
+              "COMPLETION_CONFLICT",
+              "DUPLICATE_EVIDENCE",
+              "DUPLICATE_HYPOTHESIS",
+              "UNCERTAINTY_UNKNOWN",
+              "SINGULAR_UNCERTAINTY",
+              "SCOPE_EXCLUDED",
+              "CLOCK_MAPPING_REQUIRED",
+              "DELIVERY_CLOCK_UNSUPPORTED",
+              "ACQUISITION_UNKNOWN",
+              "DELIVERY_UNKNOWN",
+              "TEMPORAL_ORDER_AMBIGUOUS",
+              "PENDING_DELIVERY",
+              "STALE_MEASUREMENT",
+              "MISSING_HYPOTHESIS",
+              "HYPOTHESIS_UNRESOLVED",
+              "HYPOTHESIS_PENDING",
+              "HYPOTHESIS_AVAILABILITY_UNKNOWN",
+              "HYPOTHESIS_UNALIGNED",
+              "HYPOTHESIS_CAUSAL_CONFLICT",
+              "HYPOTHESIS_CLOCK_UNSUPPORTED",
+              "HYPOTHESIS_CUTOFF_FUTURE",
+              "INPUT_VIEW_MISMATCH",
+              "TRUTH_UNAVAILABLE",
+              "TRUTH_AMBIGUOUS",
+              "LABEL_MATCH",
+              "LABEL_MISMATCH",
+              "CAUSAL_PROVENANCE_UNVERIFIED",
+              "ACQUISITION_UNCONFIRMED",
+              "ACQUISITION_UNAVAILABLE",
+              "ACQUISITION_PENDING",
+              "COMPLETION_UNKNOWN",
+              "UNKNOWN_MEMBER_TRUTH",
+              "NOT_SCHEDULED",
+              "NOT_OBSERVABLE",
+              "STALE_AT_EVALUATION",
+              "OPPORTUNITY_UNASSESSED",
+              "IDENTITY_SPLIT",
+              "LABEL_COLLISION",
+              "CONTAMINATED_LABEL",
+              "MIXED_STEP",
+              "EMPTY_POPULATION",
+              "OUTPUT_BOUND"
+            ]
+          },
+          "maxItems": 59,
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "continuity_eligibility": {
+          "enum": [
+            "assessed",
+            "unassessed"
+          ]
+        }
+      },
+      "required": [
+        "evidence_key",
+        "occurrence_refs",
+        "step_ref",
+        "acquisition_ref",
+        "source_ref",
+        "truth_ref",
+        "hypothesis_refs",
+        "timing_status",
+        "temporal_reason",
+        "admission_status",
+        "source_diagnostics",
+        "restrictions",
+        "uncertainty_status",
+        "truth_status",
+        "hypothesis_status",
+        "comparison_status",
+        "reason_codes",
+        "continuity_eligibility"
+      ],
+      "additionalProperties": false
+    },
+    "LifecycleRow": {
+      "type": "object",
+      "properties": {
+        "truth_entity_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "step_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "status": {
+          "enum": [
+            "observed",
+            "temporarily_missing",
+            "resumed",
+            "ended",
+            "unknown",
+            "not_observable"
+          ]
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "IO_ERROR",
+              "UTF8",
+              "SCHEMA",
+              "VERSION",
+              "BOUND",
+              "DIGEST_MISMATCH",
+              "UNKNOWN_REFERENCE",
+              "GRAPH_CYCLE",
+              "GRAPH_TYPE",
+              "EVIDENCE_CONFLICT",
+              "REFERENCE_MEMBERSHIP_CONFLICT",
+              "CONTEXT_POLICY_CONFLICT",
+              "TRUTH_CONFLICT",
+              "HYPOTHESIS_CONFLICT",
+              "TERMINAL_CONFLICT",
+              "SOURCE_INVALID",
+              "CLOCK_MAPPING_INVALID",
+              "COMPLETION_CONFLICT",
+              "DUPLICATE_EVIDENCE",
+              "DUPLICATE_HYPOTHESIS",
+              "UNCERTAINTY_UNKNOWN",
+              "SINGULAR_UNCERTAINTY",
+              "SCOPE_EXCLUDED",
+              "CLOCK_MAPPING_REQUIRED",
+              "DELIVERY_CLOCK_UNSUPPORTED",
+              "ACQUISITION_UNKNOWN",
+              "DELIVERY_UNKNOWN",
+              "TEMPORAL_ORDER_AMBIGUOUS",
+              "PENDING_DELIVERY",
+              "STALE_MEASUREMENT",
+              "MISSING_HYPOTHESIS",
+              "HYPOTHESIS_UNRESOLVED",
+              "HYPOTHESIS_PENDING",
+              "HYPOTHESIS_AVAILABILITY_UNKNOWN",
+              "HYPOTHESIS_UNALIGNED",
+              "HYPOTHESIS_CAUSAL_CONFLICT",
+              "HYPOTHESIS_CLOCK_UNSUPPORTED",
+              "HYPOTHESIS_CUTOFF_FUTURE",
+              "INPUT_VIEW_MISMATCH",
+              "TRUTH_UNAVAILABLE",
+              "TRUTH_AMBIGUOUS",
+              "LABEL_MATCH",
+              "LABEL_MISMATCH",
+              "CAUSAL_PROVENANCE_UNVERIFIED",
+              "ACQUISITION_UNCONFIRMED",
+              "ACQUISITION_UNAVAILABLE",
+              "ACQUISITION_PENDING",
+              "COMPLETION_UNKNOWN",
+              "UNKNOWN_MEMBER_TRUTH",
+              "NOT_SCHEDULED",
+              "NOT_OBSERVABLE",
+              "STALE_AT_EVALUATION",
+              "OPPORTUNITY_UNASSESSED",
+              "IDENTITY_SPLIT",
+              "LABEL_COLLISION",
+              "CONTAMINATED_LABEL",
+              "MIXED_STEP",
+              "EMPTY_POPULATION",
+              "OUTPUT_BOUND"
+            ]
+          },
+          "maxItems": 59,
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "opportunity_ref": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EvidenceKey"
+          },
+          "maxItems": 1024,
+          "minItems": 0
+        }
+      },
+      "required": [
+        "truth_entity_id",
+        "step_ref",
+        "status",
+        "reason_codes",
+        "opportunity_ref",
+        "evidence_refs"
+      ],
+      "additionalProperties": false
+    },
+    "EntitySummary": {
+      "type": "object",
+      "properties": {
+        "truth_entity_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "assessed_steps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "resolved_steps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "assessed_gaps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "unassessed_opportunities": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "not_observable_steps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "unassessed_breaks": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "fragment_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "same_label_links": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "changed_label_links": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "split_steps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "mixed_steps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "confirmed_reappearances": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "block_segment_counts": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "maxItems": 4096,
+          "minItems": 0
+        },
+        "resolved_step_coverage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ratio"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "identity_retention": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Ratio"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "truth_entity_id",
+        "assessed_steps",
+        "resolved_steps",
+        "assessed_gaps",
+        "unassessed_opportunities",
+        "not_observable_steps",
+        "unassessed_breaks",
+        "fragment_count",
+        "same_label_links",
+        "changed_label_links",
+        "split_steps",
+        "mixed_steps",
+        "confirmed_reappearances",
+        "block_segment_counts",
+        "resolved_step_coverage",
+        "identity_retention"
+      ],
+      "additionalProperties": false
+    },
+    "LabelSummary": {
+      "type": "object",
+      "properties": {
+        "external_label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+          "x-byte-limit": 128,
+          "x-identifier": true
+        },
+        "assigned_known_truth_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "truth_support": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+            "x-byte-limit": 128,
+            "x-identifier": true
+          },
+          "maxItems": 128,
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "contaminated": {
+          "type": "boolean"
+        },
+        "collision_step_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "adjacent_step_identity_changes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "assessed_adjacent_links": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        }
+      },
+      "required": [
+        "external_label",
+        "assigned_known_truth_count",
+        "truth_support",
+        "contaminated",
+        "collision_step_count",
+        "adjacent_step_identity_changes",
+        "assessed_adjacent_links"
+      ],
+      "additionalProperties": false
+    },
+    "Continuity": {
+      "type": "object",
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EntitySummary"
+          },
+          "maxItems": 128,
+          "minItems": 0
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LabelSummary"
+          },
+          "maxItems": 256,
+          "minItems": 0
+        }
+      },
+      "required": [
+        "entities",
+        "labels"
+      ],
+      "additionalProperties": false
+    },
+    "Populations": {
+      "type": "object",
+      "properties": {
+        "occurrence_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "logical_evidence_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "in_scope_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "eligible_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "known_truth_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "duplicate_occurrence_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "excluded_scope_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "truth_ambiguous_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "truth_unavailable_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "correct_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "incorrect_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "ambiguous_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "unresolved_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "excluded_by_reason": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "reason_code": {
+                "enum": [
+                  "SCOPE_EXCLUDED",
+                  "CLOCK_MAPPING_REQUIRED",
+                  "DELIVERY_CLOCK_UNSUPPORTED",
+                  "ACQUISITION_UNKNOWN",
+                  "DELIVERY_UNKNOWN",
+                  "TEMPORAL_ORDER_AMBIGUOUS",
+                  "PENDING_DELIVERY",
+                  "STALE_MEASUREMENT"
+                ]
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000
+              }
+            },
+            "required": [
+              "reason_code",
+              "count"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 59,
+          "minItems": 0
+        }
+      },
+      "required": [
+        "occurrence_count",
+        "logical_evidence_count",
+        "in_scope_count",
+        "eligible_count",
+        "known_truth_count",
+        "duplicate_occurrence_count",
+        "excluded_scope_count",
+        "truth_ambiguous_count",
+        "truth_unavailable_count",
+        "correct_count",
+        "incorrect_count",
+        "ambiguous_count",
+        "unresolved_count",
+        "excluded_by_reason"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

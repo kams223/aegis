@@ -1,0 +1,341 @@
+{
+  "type": "object",
+  "properties": {
+    "status": {
+      "enum": [
+        "complete",
+        "incomplete",
+        "rejected"
+      ]
+    },
+    "bindings": {
+      "$ref": "correspondence-observations-v1.schema.json#/$defs/Bindings"
+    },
+    "evaluation": {
+      "anyOf": [
+        {
+          "$ref": "correspondence-observations-v1.schema.json#/$defs/Time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "policy": {
+      "anyOf": [
+        {
+          "$ref": "correspondence-observations-v1.schema.json#/$defs/Policy"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "scope": {
+      "anyOf": [
+        {
+          "$ref": "correspondence-observations-v1.schema.json#/$defs/Scope"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "populations": {
+      "anyOf": [
+        {
+          "$ref": "correspondence-observations-v1.schema.json#/$defs/Populations"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evidence_rows": {
+      "type": "array",
+      "items": {
+        "$ref": "correspondence-observations-v1.schema.json#/$defs/EvidenceRow"
+      },
+      "maxItems": 1024,
+      "minItems": 0
+    },
+    "lifecycle_rows": {
+      "type": "array",
+      "items": {
+        "$ref": "correspondence-observations-v1.schema.json#/$defs/LifecycleRow"
+      },
+      "maxItems": 4224,
+      "minItems": 0
+    },
+    "continuity": {
+      "$ref": "correspondence-observations-v1.schema.json#/$defs/Continuity"
+    },
+    "metrics": {
+      "anyOf": [
+        {
+          "$ref": "correspondence-observations-v1.schema.json#/$defs/Metrics"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "correspondence-observations-v1.schema.json#/$defs/Diagnostic"
+      },
+      "maxItems": 256,
+      "minItems": 0
+    },
+    "diagnostics_dropped": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100000
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "artifact_kind": {
+      "const": "offline_correspondence_evaluation"
+    }
+  },
+  "required": [
+    "status",
+    "bindings",
+    "evaluation",
+    "policy",
+    "scope",
+    "populations",
+    "evidence_rows",
+    "lifecycle_rows",
+    "continuity",
+    "metrics",
+    "diagnostics",
+    "diagnostics_dropped",
+    "schema_version",
+    "artifact_kind"
+  ],
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "complete",
+            "incomplete"
+          ]
+        },
+        "bindings": {
+          "$ref": "correspondence-observations-v1.schema.json#/$defs/Bindings"
+        },
+        "evaluation": {
+          "$ref": "correspondence-observations-v1.schema.json#/$defs/Time"
+        },
+        "policy": {
+          "$ref": "correspondence-observations-v1.schema.json#/$defs/Policy"
+        },
+        "scope": {
+          "$ref": "correspondence-observations-v1.schema.json#/$defs/Scope"
+        },
+        "populations": {
+          "$ref": "correspondence-observations-v1.schema.json#/$defs/Populations"
+        },
+        "evidence_rows": {
+          "type": "array",
+          "items": {
+            "$ref": "correspondence-observations-v1.schema.json#/$defs/EvidenceRow"
+          },
+          "maxItems": 1024,
+          "minItems": 0
+        },
+        "lifecycle_rows": {
+          "type": "array",
+          "items": {
+            "$ref": "correspondence-observations-v1.schema.json#/$defs/LifecycleRow"
+          },
+          "maxItems": 4224,
+          "minItems": 0
+        },
+        "continuity": {
+          "$ref": "correspondence-observations-v1.schema.json#/$defs/Continuity"
+        },
+        "metrics": {
+          "$ref": "correspondence-observations-v1.schema.json#/$defs/Metrics"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "correspondence-observations-v1.schema.json#/$defs/Diagnostic"
+          },
+          "maxItems": 256,
+          "minItems": 0
+        },
+        "diagnostics_dropped": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "artifact_kind": {
+          "const": "offline_correspondence_evaluation"
+        }
+      },
+      "required": [
+        "status",
+        "bindings",
+        "evaluation",
+        "policy",
+        "scope",
+        "populations",
+        "evidence_rows",
+        "lifecycle_rows",
+        "continuity",
+        "metrics",
+        "diagnostics",
+        "diagnostics_dropped",
+        "schema_version",
+        "artifact_kind"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "status": {
+          "const": "rejected"
+        },
+        "bindings": {
+          "$ref": "correspondence-observations-v1.schema.json#/$defs/Bindings"
+        },
+        "evaluation": {
+          "anyOf": [
+            {
+              "$ref": "correspondence-observations-v1.schema.json#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "policy": {
+          "anyOf": [
+            {
+              "$ref": "correspondence-observations-v1.schema.json#/$defs/Policy"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "correspondence-observations-v1.schema.json#/$defs/Scope"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "populations": {
+          "anyOf": [
+            {
+              "$ref": "correspondence-observations-v1.schema.json#/$defs/Populations"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_rows": {
+          "type": "array",
+          "items": {
+            "$ref": "correspondence-observations-v1.schema.json#/$defs/EvidenceRow"
+          },
+          "maxItems": 0,
+          "minItems": 0
+        },
+        "lifecycle_rows": {
+          "type": "array",
+          "items": {
+            "$ref": "correspondence-observations-v1.schema.json#/$defs/LifecycleRow"
+          },
+          "maxItems": 0,
+          "minItems": 0
+        },
+        "continuity": {
+          "type": "object",
+          "properties": {
+            "entities": {
+              "type": "array",
+              "items": {
+                "$ref": "correspondence-observations-v1.schema.json#/$defs/EntitySummary"
+              },
+              "maxItems": 0,
+              "minItems": 0
+            },
+            "labels": {
+              "type": "array",
+              "items": {
+                "$ref": "correspondence-observations-v1.schema.json#/$defs/LabelSummary"
+              },
+              "maxItems": 0,
+              "minItems": 0
+            }
+          },
+          "required": [
+            "entities",
+            "labels"
+          ],
+          "additionalProperties": false
+        },
+        "metrics": {
+          "type": "null"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "correspondence-observations-v1.schema.json#/$defs/Diagnostic"
+          },
+          "maxItems": 256,
+          "minItems": 0
+        },
+        "diagnostics_dropped": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "artifact_kind": {
+          "const": "offline_correspondence_evaluation"
+        }
+      },
+      "required": [
+        "status",
+        "bindings",
+        "evaluation",
+        "policy",
+        "scope",
+        "populations",
+        "evidence_rows",
+        "lifecycle_rows",
+        "continuity",
+        "metrics",
+        "diagnostics",
+        "diagnostics_dropped",
+        "schema_version",
+        "artifact_kind"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "correspondence-report-v1.schema.json",
+  "$comment": "Closed wire shapes; SF-4 runtime validation is also mandatory for UTF-8 byte limits, scalar canonicality, graph/reference integrity, source admissibility, covariance, temporal rules and report consistency. No remote references."
+}
