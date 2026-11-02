@@ -1,0 +1,80 @@
+{
+  "type": "object",
+  "properties": {
+    "dataset_sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+    },
+    "truth_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+      "x-byte-limit": 128,
+      "x-identifier": true
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+      "x-byte-limit": 128,
+      "x-identifier": true
+    },
+    "entity_catalog": {
+      "type": "array",
+      "items": {
+        "$ref": "correspondence-observations-v1.schema.json#/$defs/Entity"
+      },
+      "maxItems": 128,
+      "minItems": 0
+    },
+    "evidence_labels": {
+      "type": "array",
+      "items": {
+        "$ref": "correspondence-observations-v1.schema.json#/$defs/TruthLabel"
+      },
+      "maxItems": 1024,
+      "minItems": 0
+    },
+    "opportunities": {
+      "type": "array",
+      "items": {
+        "$ref": "correspondence-observations-v1.schema.json#/$defs/Opportunity"
+      },
+      "maxItems": 4096,
+      "minItems": 0
+    },
+    "terminal_annotations": {
+      "type": "array",
+      "items": {
+        "$ref": "correspondence-observations-v1.schema.json#/$defs/Terminal"
+      },
+      "maxItems": 128,
+      "minItems": 0
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "artifact_kind": {
+      "const": "offline_correspondence_truth"
+    }
+  },
+  "required": [
+    "dataset_sha256",
+    "truth_id",
+    "revision",
+    "entity_catalog",
+    "evidence_labels",
+    "opportunities",
+    "terminal_annotations",
+    "schema_version",
+    "artifact_kind"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "correspondence-truth-v1.schema.json",
+  "$comment": "Closed wire shapes; SF-4 runtime validation is also mandatory for UTF-8 byte limits, scalar canonicality, graph/reference integrity, source admissibility, covariance, temporal rules and report consistency. No remote references."
+}

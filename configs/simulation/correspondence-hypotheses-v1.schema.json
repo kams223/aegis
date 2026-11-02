@@ -1,0 +1,81 @@
+{
+  "type": "object",
+  "properties": {
+    "dataset_sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+    },
+    "hypothesis_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+      "x-byte-limit": 128,
+      "x-identifier": true
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+      "x-byte-limit": 128,
+      "x-identifier": true
+    },
+    "producer_provenance": {
+      "$ref": "correspondence-observations-v1.schema.json#/$defs/ProducerProvenance"
+    },
+    "external_label_catalog": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f]+(?![\\s\\S])",
+        "x-byte-limit": 128,
+        "x-identifier": true
+      },
+      "maxItems": 256,
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "label_alignment": {
+      "type": "array",
+      "items": {
+        "$ref": "correspondence-observations-v1.schema.json#/$defs/Alignment"
+      },
+      "maxItems": 256,
+      "minItems": 0
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "$ref": "correspondence-observations-v1.schema.json#/$defs/Decision"
+      },
+      "maxItems": 1024,
+      "minItems": 0
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "artifact_kind": {
+      "const": "offline_correspondence_hypotheses"
+    }
+  },
+  "required": [
+    "dataset_sha256",
+    "hypothesis_id",
+    "revision",
+    "producer_provenance",
+    "external_label_catalog",
+    "label_alignment",
+    "decisions",
+    "schema_version",
+    "artifact_kind"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "correspondence-hypotheses-v1.schema.json",
+  "$comment": "Closed wire shapes; SF-4 runtime validation is also mandatory for UTF-8 byte limits, scalar canonicality, graph/reference integrity, source admissibility, covariance, temporal rules and report consistency. No remote references."
+}
